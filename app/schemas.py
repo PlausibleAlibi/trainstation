@@ -1,44 +1,40 @@
-from enum import Enum
+import enum
+from typing import Optional, Literal
 from pydantic import BaseModel
 
 # ---------- Enums ----------
-class ControlType(str, Enum):
+class ControlType(str, enum.Enum):
     onOff = "onOff"
     toggle = "toggle"
     timed = "timed"
 
-# ---------- Category ----------
-class CategoryBase(BaseModel):
+# ---------- Categories ----------
+class CategoryCreate(BaseModel):
     name: str
-    description: str | None = None
+    description: Optional[str] = None
     sortOrder: int = 0
 
-class CategoryCreate(CategoryBase):
-    pass
-
-class CategoryRead(CategoryBase):
+class CategoryRead(CategoryCreate):
     id: int
 
-    class Config:
-        from_attributes = True  # Pydantic v2: map ORM -> schema
-
-# ---------- Accessory ----------
-class AccessoryBase(BaseModel):
+# ---------- Accessories ----------
+class AccessoryCreate(BaseModel):
     name: str
     categoryId: int
     controlType: ControlType
     address: str
     isActive: bool = True
 
-class AccessoryCreate(AccessoryBase):
-    pass
-
-class AccessoryRead(AccessoryBase):
+class AccessoryRead(AccessoryCreate):
     id: int
 
-    class Config:
-        from_attributes = True
-
-# Accessory with embedded Category (for includeCategory=true)
 class AccessoryWithCategory(AccessoryRead):
-    category: CategoryRead | None = None
+    category: Optional[CategoryRead] = None
+
+# ---------- Actions / Requests ----------
+class TimedRequest(BaseModel):
+    milliseconds: int = 5000  # default for timed actions
+
+class ApplyRequest(TimedRequest):
+    # Only meaningful for controlType == onOff
+    state: Optional[Literal["on", "off"]] = None
