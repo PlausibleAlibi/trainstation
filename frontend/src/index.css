@@ -1,0 +1,15 @@
+* { box-sizing: border-box; }
+body { margin: 0; background: #fff; color: #111; font-family: ui-sans-serif, system-ui; }
+button {
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  background: #f7f7f7;
+}
+button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+table th, table td { font-size: 14px; }
+h2 { font-size: 16px; }
