@@ -14,6 +14,11 @@ class CategoryCreate(BaseModel):
     description: Optional[str] = None
     sortOrder: int = 0
 
+
+class CategoryCount(BaseModel):
+    categoryId: int
+    count: int
+
 class CategoryRead(CategoryCreate):
     id: int
 

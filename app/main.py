@@ -1,4 +1,5 @@
 import logging
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -11,6 +12,10 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 # --- App ---
 app = FastAPI(title="Lionel Control API")
 
+@app.get("/version", summary="Version info")
+def version():
+    return {"commit": os.getenv("GIT_COMMIT", "dev"),
+            "built_at": os.getenv("BUILT_AT", "")}
 # --- CORS (allow your UI to call the API from browser) ---
 app.add_middleware(
     CORSMiddleware,
