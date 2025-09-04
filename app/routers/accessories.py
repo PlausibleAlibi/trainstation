@@ -22,12 +22,13 @@ def create_accessory(payload: schemas.AccessoryCreate, db: Session = Depends(get
         raise HTTPException(status_code=400, detail="categoryId does not exist")
 
     item = models.Accessory(
-        name=payload.name,
-        category_id=payload.categoryId,
-        control_type=payload.controlType,
-        address=payload.address,
-        is_active=payload.isActive,
-    )
+  name=payload.name,
+  category_id=payload.categoryId,
+  control_type=payload.controlType,
+  address=payload.address,
+  is_active=payload.isActive,
+  timed_ms=payload.timedMs,
+)
     db.add(item)
     db.commit()
     db.refresh(item)
@@ -38,6 +39,7 @@ def create_accessory(payload: schemas.AccessoryCreate, db: Session = Depends(get
         controlType=item.control_type,
         address=item.address,
         isActive=item.is_active,
+        timedMs=item.timed_ms,
     )
 
 # -------- List (with filters & optional embedded category) --------
@@ -149,3 +151,4 @@ def delete_accessory(id: int, db: Session = Depends(get_db)):
     db.delete(r)
     db.commit()
     return {"status": "ok"}
+

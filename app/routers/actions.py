@@ -1,17 +1,19 @@
+from typing import Optional
 import threading
 import time
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..db import SessionLocal
-from .. import models
-from ..schemas import ApplyRequest, ControlType
+from .. import models, schemas
 from ..hardware.provider import HardwareProvider
 
 router = APIRouter(prefix="/actions", tags=["actions"])
 hw = HardwareProvider()
 
 
+# ---- DB session dependency ---------------------------------------------------
 def get_db():
     db = SessionLocal()
     try:
@@ -20,86 +22,101 @@ def get_db():
         db.close()
 
 
-# --------------------------- helpers ---------------------------
+# ---- Helpers -----------------------------------------------------------------
+def _delayed_off(address: str, ms: int):
+    """Background helper to turn an accessory OFF after ms milliseconds."""
+    try:
+        time.sleep(ms / 1000.0)
+        hw.set_off(address)
+    except Exception:
+        # Intentionally swallow exceptions to avoid crashing the thread.
+        # Consider logging if you add a logger.
+        pass
+
 
 def _get_accessory_or_404(db: Session, id: int) -> models.Accessory:
     acc = db.query(models.Accessory).get(id)
     if not acc:
-        raise HTTPException(404, "Accessory not found")
-    if acc.is_active is False:
-        raise HTTPException(400, "Accessory is inactive")
+        raise HTTPException(status_code=404, detail="Accessory not found")
     return acc
 
 
-def _delayed_off(address: str, ms: int):
-    time.sleep(ms / 1000)
-    hw.set_off(address)
-
-
-# ----------------------- explicit actions ----------------------
-
+# ---- Simple actions -----------------------------------------------------------
 @router.post("/accessories/{id}/on")
 def accessory_on(id: int, db: Session = Depends(get_db)):
     acc = _get_accessory_or_404(db, id)
     hw.set_on(acc.address)
-    return {"status": "ok"}
+    return {"status": "ok", "action": "on", "id": id}
 
 
 @router.post("/accessories/{id}/off")
 def accessory_off(id: int, db: Session = Depends(get_db)):
     acc = _get_accessory_or_404(db, id)
     hw.set_off(acc.address)
-    return {"status": "ok"}
+    return {"status": "ok", "action": "off", "id": id}
 
 
 @router.post("/accessories/{id}/pulse/{ms}")
 def accessory_pulse(id: int, ms: int, db: Session = Depends(get_db)):
-    if ms <= 0 or ms > 10000:
-        raise HTTPException(400, "ms must be between 1 and 10000")
     acc = _get_accessory_or_404(db, id)
+    if ms <= 0:
+        raise HTTPException(status_code=400, detail="ms must be > 0")
     hw.pulse(acc.address, ms)
-    return {"status": "ok", "ms": ms}
+    return {"status": "ok", "action": "pulse", "id": id, "ms": ms}
 
 
-# ------------------- controlType-aware apply -------------------
-
+# ---- Smart "apply" action -----------------------------------------------------
 @router.post("/accessories/{id}/apply")
 def accessory_apply(
     id: int,
-    body: ApplyRequest | None = None,   # state (on/off) only relevant for onOff; milliseconds for timed
+    body: Optional[schemas.ApplyRequest] = None,
     db: Session = Depends(get_db),
 ):
     """
-    Applies the accessory's controlType:
-
-      • onOff  -> use optional body.state = "on" | "off" (defaults to "on")
-      • toggle -> 250 ms pulse
-      • timed  -> ON then OFF after body.milliseconds (default 5000)
+    Applies the 'intended' behavior for an accessory based on its controlType.
+    - onOff:
+        - If body.state is "on" or "off", do that.
+        - Else default to "on".
+    - toggle:
+        - Pulse for body.milliseconds if provided, else 250ms default.
+    - timed:
+        - Turn ON immediately, then OFF after:
+            body.milliseconds OR accessory.timed_ms OR 5000ms fallback.
     """
     acc = _get_accessory_or_404(db, id)
-    ctype = acc.control_type
+    ctype = acc.control_type  # stored as string matching schemas.ControlType enum values
 
-    if ctype == ControlType.onOff.value:
-        state = (body.state.lower() if body and body.state else "on")
+    # ---- onOff ----
+    if ctype == schemas.ControlType.onOff.value:
+        state = (body.state if body and body.state else "on")  # type: ignore[attr-defined]
         if state not in ("on", "off"):
-            raise HTTPException(400, "state must be 'on' or 'off'")
+            raise HTTPException(status_code=400, detail="Invalid state for onOff (use 'on' or 'off')")
         if state == "on":
             hw.set_on(acc.address)
         else:
             hw.set_off(acc.address)
-        return {"status": "ok", "action": "onOff", "state": state}
+        return {"status": "ok", "action": "onOff", "state": state, "id": id}
 
-    if ctype == ControlType.toggle.value:
-        ms = 250
+    # ---- toggle ----
+    if ctype == schemas.ControlType.toggle.value:
+        ms = None
+        if body and getattr(body, "milliseconds", None) is not None:  # type: ignore[attr-defined]
+            ms = int(body.milliseconds)  # type: ignore[attr-defined]
+        if not ms or ms <= 0:
+            ms = 250
         hw.pulse(acc.address, ms)
-        return {"status": "ok", "action": "pulse", "ms": ms}
+        return {"status": "ok", "action": "toggle", "ms": ms, "id": id}
 
-    if ctype == ControlType.timed.value:
-        ms = (body.milliseconds if body else 5000)
-        if ms <= 0 or ms > 600000:  # 10-minute safety cap
-            raise HTTPException(400, "milliseconds must be between 1 and 600000")
+    # ---- timed ----
+    if ctype == schemas.ControlType.timed.value:
+        # precedence: request body -> accessory.timed_ms -> fallback
+        requested = getattr(body, "milliseconds", None) if body else None  # type: ignore[attr-defined]
+        ms = int(requested) if (requested is not None and int(requested) > 0) else (acc.timed_ms or 5000)  # type: ignore[attr-defined]
+        if ms <= 0:
+            ms = 5000
         hw.set_on(acc.address)
+        # fire-and-forget OFF
         threading.Thread(target=_delayed_off, args=(acc.address, ms), daemon=True).start()
-        return {"status": "ok", "action": "timed", "ms": ms}
+        return {"status": "ok", "action": "timed", "ms": ms, "id": id}
 
-    raise HTTPException(400, "Unknown controlType")
+    raise HTTPException(status_code=400, detail="Unknown controlType")

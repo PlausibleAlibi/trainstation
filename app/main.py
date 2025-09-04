@@ -17,17 +17,26 @@ def version():
     return {"commit": os.getenv("GIT_COMMIT", "dev"),
             "built_at": os.getenv("BUILT_AT", "")}
 # --- CORS (allow your UI to call the API from browser) ---
+
+
+app = FastAPI(title="Lionel Control API", version="0.1.0")
+
+# allow Vite dev and common variants
+ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://trainstation.local:5173",  # if you ever open the UI via this host
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",    # React default
-        "http://localhost:5173",    # Vite default
-        "http://trainstation.local" # your VM hostname
-    ],
+    allow_origins=ALLOWED_ORIGINS,   # exact origins here
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ... your existing routes: health, version, include_router(categories/accessories/actions) ...
 
 # --- Health check ---
 @app.get("/health", summary="Health")

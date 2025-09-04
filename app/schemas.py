@@ -2,6 +2,7 @@ import enum
 from typing import Optional, Literal
 from pydantic import BaseModel
 
+
 # ---------- Enums ----------
 class ControlType(str, enum.Enum):
     onOff = "onOff"
@@ -23,12 +24,15 @@ class CategoryRead(CategoryCreate):
     id: int
 
 # ---------- Accessories ----------
+
+
 class AccessoryCreate(BaseModel):
     name: str
     categoryId: int
-    controlType: ControlType
+    controlType: Literal["onOff","toggle","timed"]
     address: str
     isActive: bool = True
+    timedMs: int | None = None
 
 class AccessoryRead(AccessoryCreate):
     id: int
