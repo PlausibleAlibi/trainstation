@@ -5,9 +5,9 @@ import time
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from ..db import SessionLocal
-from .. import models, schemas
-from ..hardware.provider import HardwareProvider
+from db import SessionLocal
+import models, schemas
+from hardware.provider import HardwareProvider
 
 router = APIRouter(prefix="/actions", tags=["actions"])
 hw = HardwareProvider()
@@ -35,7 +35,7 @@ def _delayed_off(address: str, ms: int):
 
 
 def _get_accessory_or_404(db: Session, id: int) -> models.Accessory:
-    acc = db.query(models.Accessory).get(id)
+    acc = db.get(models.Accessory, id)  # SQLAlchemy 2.x style
     if not acc:
         raise HTTPException(status_code=404, detail="Accessory not found")
     return acc
@@ -74,17 +74,12 @@ def accessory_apply(
 ):
     """
     Applies the 'intended' behavior for an accessory based on its controlType.
-    - onOff:
-        - If body.state is "on" or "off", do that.
-        - Else default to "on".
-    - toggle:
-        - Pulse for body.milliseconds if provided, else 250ms default.
-    - timed:
-        - Turn ON immediately, then OFF after:
-            body.milliseconds OR accessory.timed_ms OR 5000ms fallback.
+    - onOff:  state "on"/"off" (default "on")
+    - toggle: pulse for milliseconds (default 250ms)
+    - timed:  ON then OFF after requested/accessory.timed_ms/fallback(5000ms)
     """
     acc = _get_accessory_or_404(db, id)
-    ctype = acc.control_type  # stored as string matching schemas.ControlType enum values
+    ctype = acc.control_type  # stored as string matching schemas.ControlType values
 
     # ---- onOff ----
     if ctype == schemas.ControlType.onOff.value:

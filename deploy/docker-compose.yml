@@ -1,10 +1,14 @@
 #version: "3.8"
 services:
   web:
-    image: ghcr.io/plausiblealibi/trainstation:latest   # or pin: ghcr.io/plausiblealibi/trainstation:v1.0.0
+    #image: ghcr.io/plausiblealibi/trainstation:latest
+    build:
+      context: ..
+      dockerfile: docker/prod.Dockerfile
     env_file:
       - .env
     environment:
+      - PYTHONPATH=/app
       - PORT=8000
       - UVICORN_WORKERS=1
       - APP_MODULE=main:app      # <- your /app/main.py exposes `app`
@@ -37,5 +41,14 @@ services:
       retries: 6
       start_period: 20s
 
+  frontend:
+      build:
+        context: ../frontend   # path to your frontend project folder
+        dockerfile: Dockerfile
+      ports:
+        - "3000:80"            # visit UI at http://localhost:3000
+      depends_on:
+        - web
+      restart: unless-stopped
 volumes:
   dbdata:

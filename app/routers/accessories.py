@@ -1,8 +1,17 @@
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from ..db import SessionLocal
-from .. import models, schemas
+from sqlalchemy import func  # keep if you use it later
+
+from db import SessionLocal
+from models import Accessory, Category
+from schemas import (
+    AccessoryCreate,
+    AccessoryUpdate,         # if you actually use a different schema for update
+    AccessoryRead,
+    AccessoryWithCategory,
+    CategoryRead,
+)
 
 router = APIRouter(prefix="/accessories", tags=["accessories"])
 
@@ -14,25 +23,25 @@ def get_db():
         db.close()
 
 # -------- Create --------
-@router.post("", response_model=schemas.AccessoryRead)
-def create_accessory(payload: schemas.AccessoryCreate, db: Session = Depends(get_db)):
+@router.post("", response_model=AccessoryRead)
+def create_accessory(payload: AccessoryCreate, db: Session = Depends(get_db)):
     # Validate category exists
-    cat = db.query(models.Category).get(payload.categoryId)
+    cat = db.get(Category, payload.categoryId)
     if not cat:
         raise HTTPException(status_code=400, detail="categoryId does not exist")
 
-    item = models.Accessory(
-  name=payload.name,
-  category_id=payload.categoryId,
-  control_type=payload.controlType,
-  address=payload.address,
-  is_active=payload.isActive,
-  timed_ms=payload.timedMs,
-)
+    item = Accessory(
+        name=payload.name,
+        category_id=payload.categoryId,
+        control_type=payload.controlType,
+        address=payload.address,
+        is_active=payload.isActive,
+        timed_ms=payload.timedMs,
+    )
     db.add(item)
     db.commit()
     db.refresh(item)
-    return schemas.AccessoryRead(
+    return AccessoryRead(
         id=item.id,
         name=item.name,
         categoryId=item.category_id,
@@ -43,7 +52,7 @@ def create_accessory(payload: schemas.AccessoryCreate, db: Session = Depends(get
     )
 
 # -------- List (with filters & optional embedded category) --------
-@router.get("", response_model=list[schemas.AccessoryRead] | list[schemas.AccessoryWithCategory])
+@router.get("", response_model=list[AccessoryRead] | list[AccessoryWithCategory])
 def list_accessories(
     includeCategory: bool = Query(default=False),
     categoryId: Optional[int] = Query(default=None),
@@ -53,40 +62,41 @@ def list_accessories(
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
 ):
-    qry = db.query(models.Accessory)
+    qry = db.query(Accessory)
     if categoryId is not None:
-        qry = qry.filter(models.Accessory.category_id == categoryId)
+        qry = qry.filter(Accessory.category_id == categoryId)
     if active is not None:
-        qry = qry.filter(models.Accessory.is_active == active)
+        qry = qry.filter(Accessory.is_active == active)
     if q:
         like = f"%{q}%"
         qry = qry.filter(
-            (models.Accessory.name.ilike(like)) |
-            (models.Accessory.address.ilike(like))
+            (Accessory.name.ilike(like)) |
+            (Accessory.address.ilike(like))
         )
-    rows = qry.order_by(models.Accessory.name.asc()).offset(offset).limit(limit).all()
+    rows = qry.order_by(Accessory.name.asc()).offset(offset).limit(limit).all()
 
     if not includeCategory:
         return [
-            schemas.AccessoryRead(
+            AccessoryRead(
                 id=r.id,
                 name=r.name,
                 categoryId=r.category_id,
                 controlType=r.control_type,
                 address=r.address,
                 isActive=r.is_active,
+                timedMs=r.timed_ms,
             ) for r in rows
         ]
 
     return [
-        schemas.AccessoryWithCategory(
+        AccessoryWithCategory(
             id=r.id,
             name=r.name,
             categoryId=r.category_id,
             controlType=r.control_type,
             address=r.address,
             isActive=r.is_active,
-            category=schemas.CategoryRead(
+            category=CategoryRead(
                 id=r.category.id,
                 name=r.category.name,
                 description=r.category.description,
@@ -96,19 +106,19 @@ def list_accessories(
     ]
 
 # -------- Read by id (with embedded category) --------
-@router.get("/{id}", response_model=schemas.AccessoryWithCategory)
+@router.get("/{id}", response_model=AccessoryWithCategory)
 def get_accessory(id: int, db: Session = Depends(get_db)):
-    r = db.query(models.Accessory).get(id)
+    r = db.get(Accessory, id)  # SQLAlchemy 2.x style
     if not r:
         raise HTTPException(404, "Accessory not found")
-    return schemas.AccessoryWithCategory(
+    return AccessoryWithCategory(
         id=r.id,
         name=r.name,
         categoryId=r.category_id,
         controlType=r.control_type,
         address=r.address,
         isActive=r.is_active,
-        category=schemas.CategoryRead(
+        category=CategoryRead(
             id=r.category.id,
             name=r.category.name,
             description=r.category.description,
@@ -117,38 +127,45 @@ def get_accessory(id: int, db: Session = Depends(get_db)):
     )
 
 # -------- Update --------
-@router.put("/{id}", response_model=schemas.AccessoryRead)
-def update_accessory(id: int, payload: schemas.AccessoryCreate, db: Session = Depends(get_db)):
-    r = db.query(models.Accessory).get(id)
+@router.put("/{id}", response_model=AccessoryRead)
+def update_accessory(
+    id: int,
+    payload: AccessoryCreate,   # or AccessoryUpdate if you have one
+    db: Session = Depends(get_db),
+):
+    r = db.get(Accessory, id)
     if not r:
         raise HTTPException(404, "Accessory not found")
+
     # Validate category exists
-    cat = db.query(models.Category).get(payload.categoryId)
+    cat = db.get(Category, payload.categoryId)
     if not cat:
         raise HTTPException(400, "categoryId does not exist")
+
     r.name = payload.name
     r.category_id = payload.categoryId
     r.control_type = payload.controlType
     r.address = payload.address
     r.is_active = payload.isActive
+    r.timed_ms = payload.timedMs
     db.commit()
     db.refresh(r)
-    return schemas.AccessoryRead(
+    return AccessoryRead(
         id=r.id,
         name=r.name,
         categoryId=r.category_id,
         controlType=r.control_type,
         address=r.address,
         isActive=r.is_active,
+        timedMs=r.timed_ms,
     )
 
 # -------- Delete --------
 @router.delete("/{id}")
 def delete_accessory(id: int, db: Session = Depends(get_db)):
-    r = db.query(models.Accessory).get(id)
+    r = db.get(Accessory, id)
     if not r:
         raise HTTPException(404, "Accessory not found")
     db.delete(r)
     db.commit()
     return {"status": "ok"}
-

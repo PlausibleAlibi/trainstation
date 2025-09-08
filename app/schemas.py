@@ -26,6 +26,14 @@ class CategoryRead(CategoryCreate):
 # ---------- Accessories ----------
 
 
+class AccessoryUpdate(BaseModel):
+    name: Optional[str] = None
+    categoryId: Optional[int] = None
+    controlType: Optional[str] = None
+    address: Optional[str] = None
+    isActive: Optional[bool] = None
+    timedMs: Optional[int] = None
+
 class AccessoryCreate(BaseModel):
     name: str
     categoryId: int

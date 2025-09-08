@@ -23,8 +23,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     UVICORN_HOST="0.0.0.0" \
     UVICORN_LOG_LEVEL="info" \
     UVICORN_WORKERS="1" \
-    UVICORN_RELOAD="false"
-
+    UVICORN_RELOAD="false" \
+    PYTHONPATH=/app
 WORKDIR /app
 
 # ---- System dependencies (keep minimal)
@@ -57,6 +57,19 @@ EXPOSE 8000
 
 # ---- Optional healthcheck (enable if you have /health)
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fsS http://localhost:${PORT}/health || exit 1
+
+# in docker/prod.Dockerfile
+COPY docker/entrypoint.sh /entrypoint.sh
+# docker/prod.Dockerfile (tail section)
+WORKDIR /app
+COPY app/ /app/
+
+# Ensure top-level modules (models.py, db.py, etc.) are importable from anywhere
+ENV PYTHONPATH=/app
+# copy entrypoint with perms in one shot
+COPY --chown=root:root --chmod=0755 docker/entrypoint.sh /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
 
 # ---- Start command (Uvicorn)
 # You can override ENV for workers, log level, etc., at runtime or in compose.
