@@ -44,10 +44,12 @@ COPY requirements.txt /app/requirements.txt
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r /app/requirements.txt
 
+    
 # ---- Copy application code
 # Expect your code under app/ with entry at src.main:app (adjust if different)
 COPY app /app
-
+COPY alembic.ini /app/alembic.ini
+COPY alembic /app/alembic
 # ---- Create and use non-root user
 RUN useradd -m appuser
 USER appuser
@@ -69,7 +71,7 @@ ENV PYTHONPATH=/app
 # copy entrypoint with perms in one shot
 COPY --chown=root:root --chmod=0755 docker/entrypoint.sh /entrypoint.sh
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["sh", "/entrypoint.sh"]
 
 # ---- Start command (Uvicorn)
 # You can override ENV for workers, log level, etc., at runtime or in compose.

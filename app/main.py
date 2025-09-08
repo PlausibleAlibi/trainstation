@@ -1,41 +1,30 @@
+# app/main.py
 import logging
 import os
-import traceback, sys
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
-from db import Base, engine
 from routers import categories, accessories, actions
 
-
-@app.exception_handler(Exception)
-async def unhandled(request: Request, exc: Exception):
-    print("UNHANDLED EXCEPTION:", file=sys.stderr)
-    traceback.print_exc()
-    return JSONResponse(status_code=500, content={"detail": "Internal Server Error"})
-
-# --- Logging ---
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
-# --- App ---
+# ---- create the app FIRST (only once) ----
 app = FastAPI(title="Lionel Control API", version="0.1.0")
 
-# --- Version ---
-@app.get("/version", summary="Version info")
-def version():
-    return {
-        "commit": os.getenv("GIT_COMMIT", "dev"),
-        "built_at": os.getenv("BUILT_AT", "")
-    }
+# ---- global exception handler (now app exists) ----
+@app.exception_handler(Exception)
+async def unhandled_exception(request: Request, exc: Exception):
+    logging.exception("Unhandled error on %s %s", request.method, request.url)
+    return JSONResponse(status_code=500, content={"detail": "Internal Server Error"})
 
-# --- CORS ---
+# ---- CORS ----
 ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://trainstation.local:5173",
-    "http://localhost:3000",
+    "http://localhost:3000",   # frontend container
     "http://127.0.0.1:3000",
-    "http://trainstation.local:3000"
+    "http://localhost:5173",   # vite dev
+    "http://127.0.0.1:5173",
+    "http://trainstation.local:3000",
 ]
 app.add_middleware(
     CORSMiddleware,
@@ -45,15 +34,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- Health ---
-@app.get("/health", summary="Health")
+# ---- health/version ----
+@app.get("/health")
 def health():
     return {"status": "ok"}
 
-# --- Temporary: create tables if missing (remove after Alembic baseline is applied) ---
-# Base.metadata.create_all(bind=engine)
+@app.get("/version")
+def version():
+    return {
+        "commit": os.getenv("GIT_COMMIT", "dev"),
+        "built_at": os.getenv("BUILT_AT", ""),
+    }
 
-# --- Routers ---
+# ---- routers ----
 app.include_router(categories.router)
 app.include_router(accessories.router)
 app.include_router(actions.router)

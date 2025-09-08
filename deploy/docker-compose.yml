@@ -1,22 +1,22 @@
-#version: "3.8"
 services:
   web:
-    #image: ghcr.io/plausiblealibi/trainstation:latest
+    depends_on:
+      db:
+        condition: service_healthy
     build:
       context: ..
       dockerfile: docker/prod.Dockerfile
     env_file:
-      - .env
+      - .env                      # this is deploy/.env
     environment:
       - PYTHONPATH=/app
       - PORT=8000
       - UVICORN_WORKERS=1
-      - APP_MODULE=main:app      # <- your /app/main.py exposes `app`
-      - UVICORN_RELOAD=          # empty disables dev reload in prod
+      - APP_MODULE=main:app
+      - UVICORN_RELOAD=
+      - DATABASE_URL=postgresql+psycopg2://trainsAdmin:${POSTGRES_PASSWORD}@db:5432/trains   # ← add this
     ports:
-      - "8080:8000"              # host:container
-    depends_on:
-      - db
+      - "8080:8000"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
@@ -42,13 +42,14 @@ services:
       start_period: 20s
 
   frontend:
-      build:
-        context: ../frontend   # path to your frontend project folder
-        dockerfile: Dockerfile
-      ports:
-        - "3000:80"            # visit UI at http://localhost:3000
-      depends_on:
-        - web
-      restart: unless-stopped
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - web
+    restart: unless-stopped
+
 volumes:
   dbdata:

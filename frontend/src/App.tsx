@@ -19,7 +19,10 @@ type AccessoryRead = {
 type AccessoryWithCategory = AccessoryRead & { category?: Category | null };
 
 /* ------------ Env ------------ */
-const API = import.meta.env.VITE_API_BASE || "http://localhost:8000";
+//const API = import.meta.env.VITE_API_BASE || "http://localhost:8000";
+const API = import.meta.env.VITE_API_BASE ?? "/api";
+
+
 const FALLBACK_VERSION = import.meta.env.VITE_APP_VERSION || "dev";
 const FALLBACK_DEPLOYED = import.meta.env.VITE_APP_DEPLOYED || "";
 
