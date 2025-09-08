@@ -1,11 +1,16 @@
 services:
-  web:   # ⬅️ renamed from app
-    image: ghcr.io/plausiblealibi/trainstation:v1.0.0
+  web:
+    image: ghcr.io/plausiblealibi/trainstation:latest
+    build:
+      context: .
+      dockerfile: docker/prod.Dockerfile
     env_file:
       - .env
     environment:
       - PORT=8000
       - UVICORN_WORKERS=1
+      - APP_MODULE=main:app
+      - UVICORN_RELOAD=
     ports:
       - "8080:8000"
     depends_on:
