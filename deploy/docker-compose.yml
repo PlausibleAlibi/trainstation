@@ -1,14 +1,25 @@
 #version: "3.8"
 services:
   web:
-    image: ghcr.io/plausiblealibi/trainstation:latest   # <- set owner below
+    image: ghcr.io/plausiblealibi/trainstation:latest   # or pin: ghcr.io/plausiblealibi/trainstation:v1.0.0
     env_file:
       - .env
+    environment:
+      - PORT=8000
+      - UVICORN_WORKERS=1
+      - APP_MODULE=main:app      # <- your /app/main.py exposes `app`
+      - UVICORN_RELOAD=          # empty disables dev reload in prod
     ports:
-      - "8000:8000"
+      - "8080:8000"              # host:container
     depends_on:
       - db
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
   db:
     image: postgres:16
@@ -19,6 +30,12 @@ services:
     volumes:
       - dbdata:/var/lib/postgresql/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trainsAdmin -d trains || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
 
 volumes:
   dbdata:
