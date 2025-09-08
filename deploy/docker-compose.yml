@@ -1,6 +1,6 @@
 version: "3.8"
 services:
-  app:
+  web:
     image: ghcr.io/plausiblealibi/trainstation:latest   # <- set owner below
     env_file:
       - .env
