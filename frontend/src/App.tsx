@@ -64,10 +64,10 @@ export default function App() {
   const [ver, setVer] = useState<{ commit: string; built_at: string } | null>(null);
 
   // Toasts
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   useEffect(() => {
     if (!toast) return;
-    const t = setTimeout(() => setToast(null), 2500);
+    const t = setTimeout(() => setToast(null), 3500); // Slightly longer for error messages
     return () => clearTimeout(t);
   }, [toast]);
 
@@ -200,9 +200,9 @@ export default function App() {
           body: body ? JSON.stringify(body) : undefined,
         })
       );
-      if (successMsg) setToast(successMsg);
+      if (successMsg) setToast({ message: successMsg, type: 'success' });
     } catch (e: any) {
-      setErr(e.message || "action failed");
+      setToast({ message: e.message || "action failed", type: 'error' });
     }
   };
 
@@ -222,7 +222,10 @@ export default function App() {
 
   const saveAccessory = async (e: React.FormEvent, id: number) => {
     e.preventDefault();
-    if (!eaName || !eaCat || !eaAddr) { setErr("Please fill Name, Category, and Address"); return; }
+    if (!eaName || !eaCat || !eaAddr) { 
+      setToast({ message: "Please fill Name, Category, and Address", type: 'error' }); 
+      return; 
+    }
     setSavingAcc(true); setErr(null);
     try {
       await j(await fetch(`${API}/accessories/${id}`, {
@@ -240,9 +243,9 @@ export default function App() {
       setEditId(null);
       await loadAccs();
       await loadCatCounts();
-      setToast("Accessory updated");
+      setToast({ message: "Accessory updated", type: 'success' });
     } catch (e:any) {
-      setErr(e.message || "Update accessory failed");
+      setToast({ message: e.message || "Update accessory failed", type: 'error' });
     } finally {
       setSavingAcc(false);
     }
@@ -251,7 +254,7 @@ export default function App() {
   const createAccessory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fName || !fCat || !fAddr) {
-      setErr("Please fill Name, Category, and Address");
+      setToast({ message: "Please fill Name, Category, and Address", type: 'error' });
       return;
     }
     setCreating(true);
@@ -275,9 +278,9 @@ export default function App() {
       setOffset(0);
       await loadAccs();
       await loadCatCounts();
-      setToast("Accessory created");
+      setToast({ message: "Accessory created", type: 'success' });
     } catch (e: any) {
-      setErr(e.message || "create failed");
+      setToast({ message: e.message || "create failed", type: 'error' });
     } finally {
       setCreating(false);
     }
@@ -285,7 +288,10 @@ export default function App() {
 
   const createCategory = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!cName.trim()) { setErr("Category name is required"); return; }
+    if (!cName.trim()) { 
+      setToast({ message: "Category name is required", type: 'error' }); 
+      return; 
+    }
     setCreatingCat(true); setErr(null);
     try {
       const res = await fetch(`${API}/categories`, {
@@ -304,9 +310,9 @@ export default function App() {
       setSelCat(created.id);
       setOffset(0);
       await loadAccs();
-      setToast("Category created");
+      setToast({ message: "Category created", type: 'success' });
     } catch (e: any) {
-      setErr(e.message || "Failed to create category");
+      setToast({ message: e.message || "Failed to create category", type: 'error' });
     } finally {
       setCreatingCat(false);
     }
@@ -315,7 +321,10 @@ export default function App() {
   const saveCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (typeof selCat !== "number") return;
-    if (!eName.trim()) { setErr("Category name is required"); return; }
+    if (!eName.trim()) { 
+      setToast({ message: "Category name is required", type: 'error' }); 
+      return; 
+    }
     setSavingCat(true); setErr(null);
     try {
       await j(await fetch(`${API}/categories/${selCat}`, {
@@ -329,9 +338,9 @@ export default function App() {
       }));
       await loadCats();
       await loadCatCounts();
-      setToast("Category updated");
+      setToast({ message: "Category updated", type: 'success' });
     } catch (e:any) {
-      setErr(e.message || "Update category failed");
+      setToast({ message: e.message || "Update category failed", type: 'error' });
     } finally {
       setSavingCat(false);
     }
@@ -344,9 +353,9 @@ export default function App() {
       await j(await fetch(`${API}/accessories/${id}`, { method: "DELETE" }));
       await loadAccs();
       await loadCatCounts();
-      setToast("Accessory deleted");
+      setToast({ message: "Accessory deleted", type: 'success' });
     } catch (e: any) {
-      setErr(e.message || "Delete accessory failed");
+      setToast({ message: e.message || "Delete accessory failed", type: 'error' });
     }
   };
 
@@ -361,9 +370,9 @@ export default function App() {
       setSelCat("all");
       setOffset(0);
       await loadAccs();
-      setToast("Category deleted");
+      setToast({ message: "Category deleted", type: 'success' });
     } catch (e: any) {
-      setErr(e.message || "Delete category failed (maybe it still has accessories?)");
+      setToast({ message: e.message || "Delete category failed (maybe it still has accessories?)", type: 'error' });
     }
   };
 
@@ -522,7 +531,10 @@ export default function App() {
               {accs.map((a) => {
                 const isEditing = editId === a.id;
                 return (
-                  <tr key={a.id} style={{ borderBottom: "1px solid #f0f0f0" }}>
+                  <tr key={a.id} style={{ 
+                    borderBottom: "1px solid #f0f0f0",
+                    backgroundColor: isEditing ? "#fff3cd" : "transparent"
+                  }}>
                     {/* Name */}
                     <td style={{ padding: "8px" }}>
                       {isEditing ? (
@@ -586,29 +598,55 @@ export default function App() {
                     <td style={{ padding: "8px", display: "flex", gap: 6, flexWrap: "wrap" }}>
                       {isEditing ? (
                         <>
-                          <button onClick={(e) => saveAccessory(e, a.id)} disabled={savingAcc}>
-                            {savingAcc ? "Saving…" : "Save"}
+                          <button onClick={(e) => saveAccessory(e, a.id)} disabled={savingAcc}
+                                  style={{ position: "relative" }}>
+                            {savingAcc ? (
+                              <>
+                                <span style={{ opacity: 0.7 }}>⏳ Saving…</span>
+                              </>
+                            ) : "Save"}
                           </button>
-                          <button onClick={cancelEdit}>Cancel</button>
+                          <button onClick={cancelEdit} title="Cancel editing and discard changes">Cancel</button>
                         </>
                       ) : (
                         <>
-                          <button onClick={() => act(a.id, "on", undefined, "Accessory ON")} disabled={!a.isActive}>On</button>
-                          <button onClick={() => act(a.id, "off", undefined, "Accessory OFF")} disabled={!a.isActive}>Off</button>
+                          <button 
+                            onClick={() => act(a.id, "on", undefined, "Accessory ON")} 
+                            disabled={!a.isActive}
+                            title={!a.isActive ? "This accessory is not active" : "Turn accessory on"}
+                          >
+                            On
+                          </button>
+                          <button 
+                            onClick={() => act(a.id, "off", undefined, "Accessory OFF")} 
+                            disabled={!a.isActive}
+                            title={!a.isActive ? "This accessory is not active" : "Turn accessory off"}
+                          >
+                            Off
+                          </button>
 
                           {/* Apply (default): server will use body.milliseconds OR acc.timed_ms OR fallback */}
-                          <button onClick={() => act(a.id, "apply", undefined, "Applied (default)")} disabled={!a.isActive}>
+                          <button 
+                            onClick={() => act(a.id, "apply", undefined, "Applied (default)")} 
+                            disabled={!a.isActive}
+                            title={!a.isActive ? "This accessory is not active" : "Apply default timing"}
+                          >
                             Apply (default)
                           </button>
 
                           {/* Quick 2s */}
-                          <button onClick={() => act(a.id, "apply", { milliseconds: 2000 }, "Applied 2s")} disabled={!a.isActive}>
+                          <button 
+                            onClick={() => act(a.id, "apply", { milliseconds: 2000 }, "Applied 2s")} 
+                            disabled={!a.isActive}
+                            title={!a.isActive ? "This accessory is not active" : "Apply for 2 seconds"}
+                          >
                             Apply 2s
                           </button>
 
-                          <button onClick={() => beginEdit(a)}>Edit</button>
+                          <button onClick={() => beginEdit(a)} title="Edit this accessory">Edit</button>
                           <button onClick={() => deleteAccessory(a.id)}
-                                  style={{ background: "#fee", border: "1px solid #f99", color: "#900" }}>
+                                  style={{ background: "#fee", border: "1px solid #f99", color: "#900" }}
+                                  title="Delete this accessory permanently">
                             Delete
                           </button>
                         </>
@@ -618,7 +656,39 @@ export default function App() {
                 );
               })}
               {accs.length === 0 && !loading && (
-                <tr><td colSpan={7} style={{ padding: "20px", color: "#777" }}>No accessories</td></tr>
+                <tr>
+                  <td colSpan={7} style={{ 
+                    padding: "40px 20px", 
+                    textAlign: "center",
+                    color: "#666",
+                    backgroundColor: "#f8f9fa",
+                    border: "2px dashed #dee2e6",
+                    borderRadius: "8px"
+                  }}>
+                    <div style={{ fontSize: 48, marginBottom: 16 }}>🚂</div>
+                    <div style={{ fontSize: 18, fontWeight: 500, marginBottom: 8 }}>
+                      No accessories found
+                    </div>
+                    <div style={{ fontSize: 14, marginBottom: 20, opacity: 0.8 }}>
+                      {q.trim() || onlyActive || selCat !== "all" 
+                        ? "Try adjusting your filters or search terms" 
+                        : "Get started by adding your first accessory"}
+                    </div>
+                    {(!q.trim() && !onlyActive && selCat === "all") && (
+                      <div style={{ 
+                        padding: "8px 16px", 
+                        background: "#007bff", 
+                        color: "white", 
+                        borderRadius: 6, 
+                        display: "inline-block",
+                        fontSize: 14,
+                        fontWeight: 500
+                      }}>
+                        👈 Use the "New Accessory" form to add one
+                      </div>
+                    )}
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -634,11 +704,18 @@ export default function App() {
       {/* Toast */}
       {toast && (
         <div style={{
-          position: "fixed", right: 16, bottom: 16, padding: "10px 14px",
-          background: "#003366", color: "#fff", borderRadius: 8,
-          boxShadow: "0 4px 16px rgba(0,0,0,.2)"
+          position: "fixed", right: 16, bottom: 16, padding: "12px 16px",
+          background: toast.type === 'error' ? "#dc3545" : "#28a745",
+          color: "#fff", borderRadius: 8,
+          boxShadow: "0 4px 16px rgba(0,0,0,.25)",
+          border: toast.type === 'error' ? "1px solid #c82333" : "1px solid #1e7e34",
+          maxWidth: "300px",
+          wordBreak: "break-word"
         }}>
-          {toast}
+          <span style={{ marginRight: 8 }}>
+            {toast.type === 'error' ? '❌' : '✅'}
+          </span>
+          {toast.message}
         </div>
       )}
     </div>
