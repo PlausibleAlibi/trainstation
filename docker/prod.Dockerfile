@@ -1,34 +1,67 @@
 # syntax=docker/dockerfile:1.7
+
+##
+## TrainStation Production Dockerfile (multi-arch friendly)
+## - Python slim base
+## - System deps for Postgres/compilation
+## - Cached pip install from requirements.txt
+## - Non-root runtime user
+## - Healthcheck-ready (curl installed)
+## - Flexible entrypoint via env (APP_MODULE, PORT, UVICORN_* options)
+##
+
 ARG PYTHON_VERSION=3.11
-FROM --platform=$BUILDPLATFORM python:${PYTHON_VERSION}-slim
+FROM --platform=$BUILDPLATFORM python:${PYTHON_VERSION}-slim AS runtime
+
+# ---- Runtime settings
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    # Defaults you can override at runtime:
+    APP_MODULE="src.main:app" \
+    PORT=8000 \
+    UVICORN_HOST="0.0.0.0" \
+    UVICORN_LOG_LEVEL="info" \
+    UVICORN_WORKERS="1" \
+    UVICORN_RELOAD="false"
 
 WORKDIR /app
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
 
+# ---- System dependencies (keep minimal)
+# libpq-dev: for psycopg2-binary (and future building if needed)
+# curl: for optional healthchecks
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential curl ca-certificates && \
-    rm -rf /var/lib/apt/lists/*
+      build-essential \
+      libpq-dev \
+      curl \
+      ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy the whole repo so we don't depend on a specific path for requirements
-COPY . /app
+# ---- Install Python dependencies (cache-friendly)
+# Place requirements.txt at repo root (recommended).
+# If you keep it elsewhere, adjust the COPY path accordingly.
+COPY requirements.txt /app/requirements.txt
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r /app/requirements.txt
 
-# Install deps whether you use requirements.txt or pyproject.toml/poetry
-RUN python -m pip install --upgrade pip && \
-    if [ -f "requirements.txt" ]; then \
-        pip install --no-cache-dir -r requirements.txt; \
-    elif [ -f "app/requirements.txt" ]; then \
-        pip install --no-cache-dir -r app/requirements.txt; \
-    elif [ -f "pyproject.toml" ]; then \
-        pip install --no-cache-dir .; \
-    else \
-        echo "No requirements.txt or pyproject.toml found" >&2; exit 1; \
-    fi
+# ---- Copy application code
+# Expect your code under app/ with entry at src.main:app (adjust if different)
+COPY app /app
 
-# (Optional) Non-root user
+# ---- Create and use non-root user
 RUN useradd -m appuser
 USER appuser
 
+# ---- Expose service port
 EXPOSE 8000
-# Update to your real module:callable
-CMD ["python", "-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# ---- Optional healthcheck (enable if you have /health)
+# HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fsS http://localhost:${PORT}/health || exit 1
+
+# ---- Start command (Uvicorn)
+# You can override ENV for workers, log level, etc., at runtime or in compose.
+# Example overrides in compose:
+#   environment:
+#     - UVICORN_WORKERS=2
+#     - PORT=8000
+CMD ["sh", "-lc", "exec uvicorn ${APP_MODULE} --host ${UVICORN_HOST} --port ${PORT} --log-level ${UVICORN_LOG_LEVEL} --proxy-headers --forwarded-allow-ips='*' --workers ${UVICORN_WORKERS} ${UVICORN_RELOAD:+--reload}"]

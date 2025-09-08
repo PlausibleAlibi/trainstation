@@ -1,7 +1,20 @@
-fastapi
-uvicorn[standard]
-psycopg[binary]
-sqlalchemy
-alembic
-python-dotenv
-pydantic
+# Core web framework
+fastapi==0.111.0
+uvicorn[standard]==0.30.0
+
+# Database + ORM
+sqlalchemy==2.0.32
+psycopg2-binary==2.9.9
+
+# Migrations
+alembic==1.13.2
+
+# Env vars
+python-dotenv==1.0.1
+
+# Validation & data handling
+pydantic==2.8.2
+pydantic-settings==2.3.4
+
+# Optional: async Postgres driver (if you go async instead of psycopg2)
+asyncpg==0.29.0
