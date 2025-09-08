@@ -1,44 +1,38 @@
 services:
+  web:   # ⬅️ renamed from app
+    image: ghcr.io/plausiblealibi/trainstation:v1.0.0
+    env_file:
+      - .env
+    environment:
+      - PORT=8000
+      - UVICORN_WORKERS=1
+    ports:
+      - "8080:8000"
+    depends_on:
+      - db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
   db:
     image: postgres:16
-    env_file: .env
-    restart: unless-stopped
-    ports: ["5432:5432"]
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL","pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-
-  api:
-    build:
-      context: .
-    env_file: 
-      - .env
-      - version.env   
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
-    ports: ["8000:8000"]
-    depends_on:
-      db:
-        condition: service_healthy
-
-  web:
-    image: node:22-alpine
-    working_dir: /app
-    volumes:
-      - ./frontend:/app
-    env_file:
-      - version.env 
     environment:
-      # This value is baked into the JS the browser runs; use localhost so the BROWSER can reach your API.
-      - VITE_API_BASE=http://localhost:8000
-    command: sh -c "npm ci || npm i && npm run dev -- --host 0.0.0.0 --port 5173"
-    ports:
-      - "5173:5173"
-    depends_on:
-      - api
+      POSTGRES_DB: trains
+      POSTGRES_USER: trainsAdmin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-brokentrack}
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trainsAdmin -d trains || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
 
 volumes:
-  pgdata:
+  dbdata:

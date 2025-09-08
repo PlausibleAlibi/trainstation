@@ -56,7 +56,7 @@ USER appuser
 EXPOSE 8000
 
 # ---- Optional healthcheck (enable if you have /health)
-# HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fsS http://localhost:${PORT}/health || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fsS http://localhost:${PORT}/health || exit 1
 
 # ---- Start command (Uvicorn)
 # You can override ENV for workers, log level, etc., at runtime or in compose.
