@@ -13,8 +13,7 @@ services:
       - UVICORN_RELOAD=false
       - UVICORN_LOG_LEVEL=warning
       - UVICORN_WORKERS=4
-    ports:
-      - "8082:8000"
+    # Production uses the default port 8080:8000 from base compose file
     # Strict production healthcheck
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
@@ -37,7 +36,7 @@ services:
       POSTGRES_DB: trains_prod
       POSTGRES_USER: trainsAdmin
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    # DO NOT expose DB port in production
+    # DO NOT expose DB port in production for security
     # ports: []
     volumes:
       - dbdata_prod:/var/lib/postgresql/data

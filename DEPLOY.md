@@ -180,9 +180,40 @@ make qa-reset-db
 
 ## Service Endpoints
 
-- **Development:** http://localhost:8080
-- **QA:** http://localhost:8081
-- **Production:** http://localhost:8082
+Each environment uses the same port mapping (8080:8000) but they are isolated using Docker Compose project names:
+
+- **Development:** http://localhost:8080 (project: `trainstation`)
+- **QA:** http://localhost:8080 (project: `trainstation-qa`)  
+- **Production:** http://localhost:8080 (project: `trainstation-prod`)
+
+**Important:** Only one environment should be running at a time on port 8080. Use the make commands to switch between environments.
+
+### Running Multiple Environments Simultaneously
+
+If you need to run multiple environments at the same time, you'll need to modify the port mapping manually:
+
+```bash
+# Start development environment (uses port 8080)
+make dev-up
+
+# In another terminal, start QA on a different port
+docker compose -f docker-compose.yml -f docker-compose.qa.yml -p trainstation-qa up -d --build
+# Then manually map QA to port 8081
+docker compose -f docker-compose.yml -f docker-compose.qa.yml -p trainstation-qa stop web
+docker compose -f docker-compose.yml -f docker-compose.qa.yml -p trainstation-qa run --rm -d -p 8081:8000 --name qa-web web
+
+# QA would then be available at: http://localhost:8081
+```
+
+### Switching Between Environments
+
+```bash
+# Stop current environment  
+make dev-down  # or qa-down, prod-down
+
+# Start different environment
+make qa-up     # or dev-up, prod-up
+```
 
 ### Health Checks
 All environments provide health check endpoints:

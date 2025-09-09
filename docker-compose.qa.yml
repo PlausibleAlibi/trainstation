@@ -16,8 +16,7 @@ services:
       - UVICORN_RELOAD=false
       - UVICORN_LOG_LEVEL=info
       - UVICORN_WORKERS=2
-    ports:
-      - "8081:8000"
+    # QA uses the default port 8080:8000 from base compose file
     # Standard healthcheck for QA
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
@@ -32,7 +31,7 @@ services:
       POSTGRES_USER: trainsAdmin
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-qapassword}
     ports:
-      # Expose DB port for QA testing tools
+      # Expose DB port for QA testing tools (different port to avoid conflicts)
       - "5433:5432"
     volumes:
       - dbdata_qa:/var/lib/postgresql/data

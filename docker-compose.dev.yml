@@ -19,8 +19,7 @@ services:
     volumes:
       # Mount source code for live reloading
       - ./app:/app/app:ro
-    ports:
-      - "8080:8000"
+    # Development uses the default port 8080:8000 from base compose file
     # More relaxed healthcheck for development
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
