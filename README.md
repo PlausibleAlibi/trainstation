@@ -34,14 +34,14 @@ make prod
 - **Backend API**: http://localhost/api (proxied through nginx)
 - **Optimized** for performance and caching
 
-### Legacy Deployment (Deploy Directory)
+### Legacy Deployment (Deprecated)
 
-For legacy deployments, all configurations are located in the `deploy/` directory:
+**⚠️ DEPRECATED:** The `deploy/` directory configuration is being phased out. Use the root-level compose files instead:
 
 ```bash
-make up      # Start all services in background
+make up      # Start all services in background (now uses root compose files)
 make down    # Stop all services  
-make logs    # Follow web service logs
+make logs    # Follow api service logs (updated from 'web' to 'api')
 make ps      # Show running services
 ```
 
@@ -148,6 +148,9 @@ To rebuild all containers (useful after code changes):
 2. Test the optimized build at http://localhost
 3. Stop and return to dev: `make stop && make dev`
 
-All Docker Compose operations should use files from the `deploy/` directory for legacy deployments. The new dev/prod modes use the root directory configuration with nginx reverse proxy for better development experience.
+All Docker Compose operations now use the root-level compose files with override support:
+- `docker-compose.yml` - Base configuration  
+- `docker-compose.dev.yml` - Development overrides
+- `docker-compose.prod.yml` - Production overrides
 
-For CI/CD and production deployments, use the production mode or reference the `deploy/` directory configuration.
+The `deploy/` directory is deprecated and scheduled for removal.

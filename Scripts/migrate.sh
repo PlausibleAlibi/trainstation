@@ -1,18 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Uses root-level docker-compose.yml to run database migrations
+# Runs migration commands inside the 'api' service container
+
 # Always run from repo root (so paths are stable)
 cd "$(dirname "$0")/.."
 
-# Where the compose file lives
-COMPOSE="deploy/docker-compose.yml"
 
 # Alembic config path *inside the container*
 ALEMBIC_CFG="/app/alembic.ini"
 
 run_in_container() {
   # Use a one-off container so it works even if web isn’t running
-  docker compose -f "$COMPOSE" run --rm --entrypoint sh web -lc "$1"
+  docker compose run --rm --entrypoint sh api -lc "$1"
 }
 
 case "${1:-}" in

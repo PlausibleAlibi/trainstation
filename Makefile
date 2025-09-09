@@ -1,11 +1,11 @@
 up:
-	docker compose -f deploy/docker-compose.yml up -d --build
+	docker compose up -d --build
 down:
-	docker compose -f deploy/docker-compose.yml down
+	docker compose down
 logs:
-	docker compose -f deploy/docker-compose.yml logs -f web
+	docker compose logs -f api
 ps:
-	docker compose -f deploy/docker-compose.yml ps
+	docker compose ps
 
 # Development mode (with Vite dev server and HMR)
 dev:

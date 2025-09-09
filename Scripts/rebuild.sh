@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Move into deploy/ so docker-compose.yml is in scope
-cd "$(dirname "$0")/../deploy"
+# Uses root-level docker-compose.yml with production defaults
+# This script rebuilds and restarts all containers
+cd "$(dirname "$0")/.."
 
 CLEAN=0
 if [[ "${1:-}" == "--clean" ]]; then
@@ -26,8 +27,8 @@ docker compose up -d
 echo
 echo "✅ Rebuild complete."
 echo "Check logs: docker compose logs -f"
-echo "API:       http://localhost:8080"
-echo "Frontend:  http://localhost:3000"
+echo "API:       http://localhost"
+echo "Frontend:  http://localhost"
 
 if [[ "$CLEAN" -eq 1 ]]; then
   echo "⚠️  Database volume was reset (dbdata wiped)."

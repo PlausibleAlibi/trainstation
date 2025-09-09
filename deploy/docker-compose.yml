@@ -1,3 +1,9 @@
+# DEPRECATED: This file is scheduled for removal in a future version.
+# Please use the root-level docker-compose.yml with override files:
+# - docker-compose.dev.yml for development
+# - docker-compose.prod.yml for production
+# Example: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+
 services:
   web:
     depends_on:
