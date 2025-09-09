@@ -4,8 +4,11 @@ FROM nginx:1.27-alpine
 RUN ln -sf /dev/stdout /var/log/nginx/access.log \
     && ln -sf /dev/stderr /var/log/nginx/error.log
 
-# Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy nginx configurations
+COPY nginx.*.conf /etc/nginx/conf.d/
+
+# Default to production config - can be overridden by volume mounts
+COPY nginx.prod.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
