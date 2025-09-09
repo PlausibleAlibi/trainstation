@@ -3,6 +3,6 @@ up:
 down:
 	docker compose -f deploy/docker-compose.yml down
 logs:
-	docker compose -f deploy/docker-compose.yml logs -f web
+	docker compose -f deploy/docker-compose.yml logs -f api
 ps:
 	docker compose -f deploy/docker-compose.yml ps

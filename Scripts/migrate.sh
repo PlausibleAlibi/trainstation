@@ -11,8 +11,8 @@ COMPOSE="deploy/docker-compose.yml"
 ALEMBIC_CFG="/app/alembic.ini"
 
 run_in_container() {
-  # Use a one-off container so it works even if web isn’t running
-  docker compose -f "$COMPOSE" run --rm --entrypoint sh web -lc "$1"
+  # Use a one-off container so it works even if api isn’t running
+  docker compose -f "$COMPOSE" run --rm --entrypoint sh api -lc "$1"
 }
 
 case "${1:-}" in
