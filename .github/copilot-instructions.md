@@ -4,8 +4,8 @@
 - **Backend**: Python (likely FastAPI), located in `app/`.
 - **Frontend**: React + TypeScript + Vite, located in `frontend/`.
 - **Database**: Managed via Alembic migrations in `app/alembic/`.
-- **Containerization**: Uses Docker (`Dockerfile`, `docker-compose.yml`).
-- **Build/Run**: Use `Makefile` for common tasks; see also Docker Compose for orchestration.
+- **Containerization**: Uses Docker (`Dockerfile`, deployment config in `deploy/`).
+- **Build/Run**: Use `Makefile` for common tasks; see also Docker Compose in `deploy/` for orchestration.
 
 ## Key Directories & Files
 - `app/`: Main backend code. Includes:
@@ -16,13 +16,13 @@
   - `hardware/`: Hardware abstraction/providers.
   - `alembic/`: Database migrations (see `env.py`).
 - `frontend/`: React app (Vite, TypeScript). Entry: `src/main.tsx`.
+- `deploy/`: Docker Compose and deployment configuration.
 - `requirements.txt`: Python dependencies.
 - `Makefile`: Common build/test commands.
-- `docker-compose.yml`: Multi-service orchestration.
 
 ## Developer Workflows
 - **Backend**:
-  - Run locally: `uvicorn app.main:app --reload` (or use Docker Compose).
+  - Run locally: `uvicorn app.main:app --reload` (or use Docker Compose from `deploy/`).
   - Migrations: Use Alembic via `alembic` CLI in `app/alembic/`.
   - Seed data: Run `seed.py`.
 - **Frontend**:
@@ -33,13 +33,13 @@
 ## Patterns & Conventions
 - **API Routing**: Each API domain has its own file in `app/routers/`.
 - **Models/Schemas**: Keep SQLAlchemy models and Pydantic schemas separate.
-- **Config**: Use `.env`/`version.env` for environment variables.
+- **Config**: Use `deploy/.env`/`version.env` for environment variables.
 - **Frontend**: Uses Vite plugins for React; see `frontend/README.md` for ESLint expansion.
 
 ## Integration Points
 - **Database**: SQLAlchemy + Alembic for migrations.
 - **Frontend/Backend**: Likely communicate via REST endpoints defined in `app/routers/`.
-- **Docker**: All services can be run together with Docker Compose for local development.
+- **Docker**: All services can be run together with Docker Compose from the `deploy/` directory for local development.
 
 ## Examples
 - To add a new API route: create a new file in `app/routers/`, register the router in `main.py`.
