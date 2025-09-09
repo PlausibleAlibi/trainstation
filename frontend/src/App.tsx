@@ -1,4 +1,30 @@
 import { useEffect, useMemo, useState } from "react";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Container,
+  Paper,
+  Box,
+  Button,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  FormControlLabel,
+  Checkbox,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  CircularProgress,
+  Alert,
+  Snackbar,
+} from '@mui/material'
+import { Train as TrainIcon } from '@mui/icons-material'
 
 /* ================= Types ================= */
 type Category = {
@@ -256,221 +282,441 @@ export default function App() {
 
   /* ---- UI ---- */
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", fontFamily: "ui-sans-serif, system-ui" }}>
-      <header style={{ padding: "12px 16px", background: "#003366", color: "#fff", fontSize: 20, fontWeight: 600 }}>
-        🚂 Train Station
-      </header>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <AppBar position="static">
+        <Toolbar>
+          <TrainIcon sx={{ mr: 2 }} />
+          <Typography variant="h6" component="div">
+            Train Station
+          </Typography>
+        </Toolbar>
+      </AppBar>
 
-      <main style={{ flex: 1, display: "grid", gridTemplateColumns: "280px 1fr", gap: 16, padding: 16 }}>
-        {/* Sidebar */}
-        <aside style={{ borderRight: "1px solid #ddd", paddingRight: 16 }}>
-          <h2 style={{ margin: "8px 0" }}>Categories</h2>
+      <Container maxWidth="xl" sx={{ flex: 1, py: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
+          {/* Sidebar */}
+          <Box sx={{ width: { xs: '100%', md: 320 }, flexShrink: 0 }}>
+            <Paper sx={{ p: 2, height: 'fit-content' }}>
+              <Typography variant="h6" gutterBottom>
+                Categories
+              </Typography>
 
-          <button
-            onClick={() => setSelCat("all")}
-            style={{ display: "block", width: "100%", textAlign: "left", padding: 8, marginBottom: 4,
-                     background: selCat === "all" ? "#eef" : "#f7f7f7", border: "1px solid #ddd", borderRadius: 8 }}>
-            All <span style={{ float: "right", opacity: 0.7 }}>{totalAll}</span>
-          </button>
+              <Button
+                onClick={() => setSelCat("all")}
+                variant={selCat === "all" ? "contained" : "outlined"}
+                fullWidth
+                sx={{ mb: 1, justifyContent: 'space-between' }}
+              >
+                <span>All</span>
+                <span style={{ opacity: 0.7 }}>{totalAll}</span>
+              </Button>
 
-          {cats
-            .slice()
-            .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name))
-            .map((c) => (
-              <button
-                key={c.id}
-                onClick={() => setSelCat(c.id)}
-                style={{ display: "block", width: "100%", textAlign: "left", padding: 8, marginBottom: 4,
-                         background: selCat === c.id ? "#eef" : "#f7f7f7", border: "1px solid #ddd", borderRadius: 8 }}>
-                {c.name}
-              </button>
-            ))}
+              {cats
+                .slice()
+                .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name))
+                .map((c) => (
+                  <Button
+                    key={c.id}
+                    onClick={() => setSelCat(c.id)}
+                    variant={selCat === c.id ? "contained" : "outlined"}
+                    fullWidth
+                    sx={{ mb: 1 }}
+                  >
+                    {c.name}
+                  </Button>
+                ))}
 
-          {/* New Category */}
-          <h3 style={{ marginTop: 20, marginBottom: 8, fontSize: 16 }}>New Category</h3>
-          <form onSubmit={createCategory} style={{ display: "grid", gap: 8 }}>
-            <input value={cName} onChange={(e) => setCName(e.target.value)} placeholder="Name"
-                   style={{ padding: "8px 10px", border: "1px solid #ccc", borderRadius: 8 }} />
-            <input value={cDesc} onChange={(e) => setCDesc(e.target.value)} placeholder="Description (optional)"
-                   style={{ padding: "8px 10px", border: "1px solid #ccc", borderRadius: 8 }} />
-            <input type="number" value={cSort}
-                   onChange={(e) => setCSort(e.target.value === "" ? "" : Number(e.target.value))}
-                   placeholder="Sort order"
-                   style={{ padding: "8px 10px", border: "1px solid #ccc", borderRadius: 8 }} />
-            <button disabled={creatingCat} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #ccc" }}>
-              {creatingCat ? "Creating…" : "Create"}
-            </button>
-          </form>
+              {/* New Category */}
+              <Typography variant="h6" sx={{ mt: 3, mb: 2 }}>
+                New Category
+              </Typography>
+              <Box component="form" onSubmit={createCategory} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <TextField
+                  value={cName}
+                  onChange={(e) => setCName(e.target.value)}
+                  label="Name"
+                  size="small"
+                  fullWidth
+                />
+                <TextField
+                  value={cDesc}
+                  onChange={(e) => setCDesc(e.target.value)}
+                  label="Description (optional)"
+                  size="small"
+                  fullWidth
+                />
+                <TextField
+                  type="number"
+                  value={cSort}
+                  onChange={(e) => setCSort(e.target.value === "" ? "" : Number(e.target.value))}
+                  label="Sort order"
+                  size="small"
+                  fullWidth
+                />
+                <Button
+                  type="submit"
+                  disabled={creatingCat}
+                  variant="contained"
+                  fullWidth
+                >
+                  {creatingCat ? "Creating…" : "Create"}
+                </Button>
+              </Box>
 
-          {/* New Accessory */}
-          <h3 style={{ marginTop: 20, marginBottom: 8, fontSize: 16 }}>New Accessory</h3>
-          <form onSubmit={createAccessory} style={{ display: "grid", gap: 8 }}>
-            <input value={fName} onChange={(e) => setFName(e.target.value)} placeholder="Name"
-                   style={{ padding: "8px 10px", border: "1px solid #ccc", borderRadius: 8 }} />
-            <select value={fCat} onChange={(e) => setFCat(e.target.value ? Number(e.target.value) : "")}
-                    style={{ padding: "8px 10px", border: "1px solid #ccc", borderRadius: 8 }}>
-              <option value="">Category…</option>
-              {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-            <select value={fType} onChange={(e) => setFType(e.target.value as any)}
-                    style={{ padding: "8px 10px", border: "1px solid #ccc", borderRadius: 8 }}>
-              <option value="onOff">onOff</option>
-              <option value="toggle">toggle</option>
-              <option value="timed">timed</option>
-            </select>
-            <input value={fAddr} onChange={(e) => setFAddr(e.target.value)} placeholder="Address"
-                   style={{ padding: "8px 10px", border: "1px solid #ccc", borderRadius: 8 }} />
-            <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <input type="checkbox" checked={fActive} onChange={(e) => setFActive(e.target.checked)} /> Active
-            </label>
-            <input type="number" value={fTimedMs}
-                   onChange={(e) => setFTimedMs(e.target.value === "" ? "" : Number(e.target.value))}
-                   placeholder="Timed ms (optional)"
-                   style={{ padding: "8px 10px", border: "1px solid #ccc", borderRadius: 8 }} />
-            <button disabled={creatingAcc} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #ccc" }}>
-              {creatingAcc ? "Creating…" : "Create"}
-            </button>
-          </form>
-        </aside>
+              {/* New Accessory */}
+              <Typography variant="h6" sx={{ mt: 3, mb: 2 }}>
+                New Accessory
+              </Typography>
+              <Box component="form" onSubmit={createAccessory} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <TextField
+                  value={fName}
+                  onChange={(e) => setFName(e.target.value)}
+                  label="Name"
+                  size="small"
+                  fullWidth
+                />
+                <FormControl size="small" fullWidth>
+                  <InputLabel>Category</InputLabel>
+                  <Select
+                    value={fCat}
+                    onChange={(e) => setFCat(e.target.value ? Number(e.target.value) : "")}
+                    label="Category"
+                  >
+                    <MenuItem value="">
+                      <em>Select Category...</em>
+                    </MenuItem>
+                    {cats.map((c) => (
+                      <MenuItem key={c.id} value={c.id}>
+                        {c.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl size="small" fullWidth>
+                  <InputLabel>Type</InputLabel>
+                  <Select
+                    value={fType}
+                    onChange={(e) => setFType(e.target.value as any)}
+                    label="Type"
+                  >
+                    <MenuItem value="onOff">onOff</MenuItem>
+                    <MenuItem value="toggle">toggle</MenuItem>
+                    <MenuItem value="timed">timed</MenuItem>
+                  </Select>
+                </FormControl>
+                <TextField
+                  value={fAddr}
+                  onChange={(e) => setFAddr(e.target.value)}
+                  label="Address"
+                  size="small"
+                  fullWidth
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={fActive}
+                      onChange={(e) => setFActive(e.target.checked)}
+                    />
+                  }
+                  label="Active"
+                />
+                <TextField
+                  type="number"
+                  value={fTimedMs}
+                  onChange={(e) => setFTimedMs(e.target.value === "" ? "" : Number(e.target.value))}
+                  label="Timed ms (optional)"
+                  size="small"
+                  fullWidth
+                />
+                <Button
+                  type="submit"
+                  disabled={creatingAcc}
+                  variant="contained"
+                  fullWidth
+                >
+                  {creatingAcc ? "Creating…" : "Create"}
+                </Button>
+              </Box>
+            </Paper>
+          </Box>
 
-        {/* Content */}
-        <section>
-          <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12 }}>
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search accessories…"
-                   style={{ flex: 1, padding: "8px 10px", border: "1px solid #ccc", borderRadius: 8 }} />
-            <label style={{ display: "inline-flex", alignItems: "center", gap: 6, marginLeft: 8 }}>
-              <input type="checkbox" checked={onlyActive} onChange={(e) => setOnlyActive(e.target.checked)} /> Active only
-            </label>
-            <span style={{ marginLeft: "auto" }}>
-              <label style={{ marginRight: 6 }}>
-                Page size:
-                <select value={limit} onChange={(e) => { setLimit(Number(e.target.value)); setOffset(0); }}
-                        style={{ marginLeft: 6 }}>
-                  {[10, 25, 50, 100].map((n) => <option key={n} value={n}>{n}</option>)}
-                </select>
-              </label>
-              <button disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - limit))}>‹ Prev</button>
-              <button disabled={accs.length < limit} onClick={() => setOffset(offset + limit)} style={{ marginLeft: 6 }}>
-                Next ›
-              </button>
-            </span>
-          </div>
+          {/* Content */}
+          <Box sx={{ flex: 1 }}>
+            <Paper sx={{ p: 2 }}>
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2, flexWrap: 'wrap' }}>
+                <TextField
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  label="Search accessories…"
+                  size="small"
+                  sx={{ flex: 1, minWidth: 200 }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={onlyActive}
+                      onChange={(e) => setOnlyActive(e.target.checked)}
+                    />
+                  }
+                  label="Active only"
+                />
+                <FormControl size="small" sx={{ minWidth: 100 }}>
+                  <InputLabel>Page size</InputLabel>
+                  <Select
+                    value={limit}
+                    onChange={(e) => { setLimit(Number(e.target.value)); setOffset(0); }}
+                    label="Page size"
+                  >
+                    {[10, 25, 50, 100].map((n) => (
+                      <MenuItem key={n} value={n}>
+                        {n}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <Button
+                  disabled={offset === 0}
+                  onClick={() => setOffset(Math.max(0, offset - limit))}
+                  variant="outlined"
+                  size="small"
+                >
+                  ‹ Prev
+                </Button>
+                <Button
+                  disabled={accs.length < limit}
+                  onClick={() => setOffset(offset + limit)}
+                  variant="outlined"
+                  size="small"
+                >
+                  Next ›
+                </Button>
+              </Box>
 
-          {loading && <div>Loading…</div>}
-          {err && <div style={{ color: "#b00", marginBottom: 8 }}>Error: {err}</div>}
-
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ textAlign: "left", borderBottom: "1px solid #ddd" }}>
-                <th style={{ padding: 8 }}>Name</th>
-                <th style={{ padding: 8 }}>Category</th>
-                <th style={{ padding: 8 }}>Type</th>
-                <th style={{ padding: 8 }}>Address</th>
-                <th style={{ padding: 8 }}>Active</th>
-                <th style={{ padding: 8 }}>Timed ms</th>
-                <th style={{ padding: 8 }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {accs.map((a) => {
-                const editing = editId === a.id;
-                return (
-                  <tr key={a.id} style={{ borderBottom: "1px solid #f0f0f0" }}>
-                    <td style={{ padding: 8 }}>
-                      {editing ? (
-                        <input value={eaName} onChange={(e) => setEaName(e.target.value)}
-                               style={{ width: "100%", padding: "6px 8px", border: "1px solid #ccc", borderRadius: 6 }} />
-                      ) : a.name}
-                    </td>
-                    <td style={{ padding: 8 }}>
-                      {editing ? (
-                        <select value={eaCat} onChange={(e) => setEaCat(e.target.value ? Number(e.target.value) : "")}
-                                style={{ width: "100%", padding: "6px 8px", border: "1px solid #ccc", borderRadius: 6 }}>
-                          <option value="">Category…</option>
-                          {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-                      ) : (a.category?.name ?? a.categoryId)}
-                    </td>
-                    <td style={{ padding: 8 }}>
-                      {editing ? (
-                        <select value={eaType} onChange={(e) => setEaType(e.target.value as any)}
-                                style={{ width: "100%", padding: "6px 8px", border: "1px solid #ccc", borderRadius: 6 }}>
-                          <option value="onOff">onOff</option>
-                          <option value="toggle">toggle</option>
-                          <option value="timed">timed</option>
-                        </select>
-                      ) : a.controlType}
-                    </td>
-                    <td style={{ padding: 8 }}>
-                      {editing ? (
-                        <input value={eaAddr} onChange={(e) => setEaAddr(e.target.value)}
-                               style={{ width: "100%", padding: "6px 8px", border: "1px solid #ccc", borderRadius: 6 }} />
-                      ) : a.address}
-                    </td>
-                    <td style={{ padding: 8 }}>
-                      {editing ? (
-                        <label style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                          <input type="checkbox" checked={eaActive} onChange={(e) => setEaActive(e.target.checked)} /> Active
-                        </label>
-                      ) : (a.isActive ? "Yes" : "No")}
-                    </td>
-                    <td style={{ padding: 8 }}>
-                      {editing ? (
-                        <input type="number" value={eaTimedMs}
-                               onChange={(e) => setEaTimedMs(e.target.value === "" ? "" : Number(e.target.value))}
-                               placeholder="(optional)"
-                               style={{ width: "100%", padding: "6px 8px", border: "1px solid #ccc", borderRadius: 6 }} />
-                      ) : (a.timedMs ?? "—")}
-                    </td>
-                    <td style={{ padding: 8, display: "flex", gap: 6, flexWrap: "wrap" }}>
-                      {editing ? (
-                        <>
-                          <button onClick={(e) => saveAccessory(e, a.id)} disabled={savingAcc}>
-                            {savingAcc ? "Saving…" : "Save"}
-                          </button>
-                          <button onClick={cancelEdit}>Cancel</button>
-                        </>
-                      ) : (
-                        <>
-                          <button onClick={() => act(a.id, "on", undefined, "ON")} disabled={!a.isActive}>On</button>
-                          <button onClick={() => act(a.id, "off", undefined, "OFF")} disabled={!a.isActive}>Off</button>
-                          <button onClick={() => act(a.id, "apply", undefined, "Applied")} disabled={!a.isActive}>
-                            Apply
-                          </button>
-                          <button onClick={() => act(a.id, "apply", { milliseconds: 2000 }, "2s Applied")} disabled={!a.isActive}>
-                            Apply 2s
-                          </button>
-                          <button onClick={() => beginEdit(a)}>Edit</button>
-                          <button onClick={() => deleteAccessory(a.id)}
-                                  style={{ background: "#fee", border: "1px solid #f99", color: "#900" }}>
-                            Delete
-                          </button>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-              {accs.length === 0 && !loading && (
-                <tr><td colSpan={7} style={{ padding: 20, color: "#777" }}>No accessories</td></tr>
+              {loading && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}>
+                  <CircularProgress />
+                </Box>
               )}
-            </tbody>
-          </table>
-        </section>
-      </main>
+              
+              {err && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {err}
+                </Alert>
+              )}
 
-      <footer style={{ padding: "8px 16px", background: "#f7f7f7", borderTop: "1px solid #ddd", fontSize: 12, color: "#555" }}>
-        Version {ver?.commit || "dev"} {ver?.built_at && `(deployed ${ver.built_at})`}
-      </footer>
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Name</TableCell>
+                      <TableCell>Category</TableCell>
+                      <TableCell>Type</TableCell>
+                      <TableCell>Address</TableCell>
+                      <TableCell>Active</TableCell>
+                      <TableCell>Timed ms</TableCell>
+                      <TableCell>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {accs.map((a) => {
+                      const editing = editId === a.id;
+                      return (
+                        <TableRow key={a.id}>
+                          <TableCell>
+                            {editing ? (
+                              <TextField
+                                value={eaName}
+                                onChange={(e) => setEaName(e.target.value)}
+                                size="small"
+                                fullWidth
+                              />
+                            ) : (
+                              a.name
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {editing ? (
+                              <FormControl size="small" fullWidth>
+                                <Select
+                                  value={eaCat}
+                                  onChange={(e) => setEaCat(e.target.value ? Number(e.target.value) : "")}
+                                  displayEmpty
+                                >
+                                  <MenuItem value="">
+                                    <em>Category…</em>
+                                  </MenuItem>
+                                  {cats.map((c) => (
+                                    <MenuItem key={c.id} value={c.id}>
+                                      {c.name}
+                                    </MenuItem>
+                                  ))}
+                                </Select>
+                              </FormControl>
+                            ) : (
+                              a.category?.name ?? a.categoryId
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {editing ? (
+                              <FormControl size="small" fullWidth>
+                                <Select
+                                  value={eaType}
+                                  onChange={(e) => setEaType(e.target.value as any)}
+                                >
+                                  <MenuItem value="onOff">onOff</MenuItem>
+                                  <MenuItem value="toggle">toggle</MenuItem>
+                                  <MenuItem value="timed">timed</MenuItem>
+                                </Select>
+                              </FormControl>
+                            ) : (
+                              a.controlType
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {editing ? (
+                              <TextField
+                                value={eaAddr}
+                                onChange={(e) => setEaAddr(e.target.value)}
+                                size="small"
+                                fullWidth
+                              />
+                            ) : (
+                              a.address
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {editing ? (
+                              <Checkbox
+                                checked={eaActive}
+                                onChange={(e) => setEaActive(e.target.checked)}
+                              />
+                            ) : (
+                              a.isActive ? "Yes" : "No"
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {editing ? (
+                              <TextField
+                                type="number"
+                                value={eaTimedMs}
+                                onChange={(e) => setEaTimedMs(e.target.value === "" ? "" : Number(e.target.value))}
+                                placeholder="(optional)"
+                                size="small"
+                                fullWidth
+                              />
+                            ) : (
+                              a.timedMs ?? "—"
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                              {editing ? (
+                                <>
+                                  <Button
+                                    onClick={(e) => saveAccessory(e, a.id)}
+                                    disabled={savingAcc}
+                                    variant="contained"
+                                    size="small"
+                                  >
+                                    {savingAcc ? "Saving…" : "Save"}
+                                  </Button>
+                                  <Button
+                                    onClick={cancelEdit}
+                                    variant="outlined"
+                                    size="small"
+                                  >
+                                    Cancel
+                                  </Button>
+                                </>
+                              ) : (
+                                <>
+                                  <Button
+                                    onClick={() => act(a.id, "on", undefined, "ON")}
+                                    disabled={!a.isActive}
+                                    variant="contained"
+                                    color="success"
+                                    size="small"
+                                  >
+                                    On
+                                  </Button>
+                                  <Button
+                                    onClick={() => act(a.id, "off", undefined, "OFF")}
+                                    disabled={!a.isActive}
+                                    variant="contained"
+                                    color="secondary"
+                                    size="small"
+                                  >
+                                    Off
+                                  </Button>
+                                  <Button
+                                    onClick={() => act(a.id, "apply", undefined, "Applied")}
+                                    disabled={!a.isActive}
+                                    variant="outlined"
+                                    size="small"
+                                  >
+                                    Apply
+                                  </Button>
+                                  <Button
+                                    onClick={() => act(a.id, "apply", { milliseconds: 2000 }, "2s Applied")}
+                                    disabled={!a.isActive}
+                                    variant="outlined"
+                                    size="small"
+                                  >
+                                    Apply 2s
+                                  </Button>
+                                  <Button
+                                    onClick={() => beginEdit(a)}
+                                    variant="outlined"
+                                    size="small"
+                                  >
+                                    Edit
+                                  </Button>
+                                  <Button
+                                    onClick={() => deleteAccessory(a.id)}
+                                    variant="contained"
+                                    color="error"
+                                    size="small"
+                                  >
+                                    Delete
+                                  </Button>
+                                </>
+                              )}
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                    {accs.length === 0 && !loading && (
+                      <TableRow>
+                        <TableCell colSpan={7} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                          No accessories
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
+          </Box>
+        </Box>
+      </Container>
 
-      {toast && (
-        <div style={{
-          position: "fixed", right: 16, bottom: 16, padding: "10px 14px",
-          background: "#003366", color: "#fff", borderRadius: 8, boxShadow: "0 4px 16px rgba(0,0,0,.2)"
-        }}>
+      <Box component="footer" sx={{ py: 1, px: 2, bgcolor: 'grey.100', borderTop: 1, borderColor: 'divider' }}>
+        <Typography variant="body2" color="text.secondary">
+          Version {ver?.commit || "dev"} {ver?.built_at && `(deployed ${ver.built_at})`}
+        </Typography>
+      </Box>
+
+      <Snackbar
+        open={!!toast}
+        autoHideDuration={2200}
+        onClose={() => setToast(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={() => setToast(null)} severity="success" sx={{ width: '100%' }}>
           {toast}
-        </div>
-      )}
-    </div>
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 }
