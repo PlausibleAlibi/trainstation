@@ -67,7 +67,7 @@ services:
     restart: unless-stopped
     volumes:
       # Use production config by default for deploy
-      - ../nginx/nginx.deploy.conf:/etc/nginx/conf.d/default.conf:ro
+      - ../nginx/nginx.deploy.conf:/etc/nginx/conf.d/default.conf
       - ../frontend/dist:/usr/share/nginx/html:ro
 
 volumes:
