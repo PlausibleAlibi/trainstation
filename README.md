@@ -89,6 +89,16 @@ make dev
 make prod
 ```
 
+### Validation
+
+Run the validation script to verify the nginx setup:
+
+```bash
+./Scripts/validate.sh
+```
+
+This script checks all configurations, builds, and provides usage instructions.
+
 ### Database Migrations
 
 Use the migration script for database operations:
