@@ -3,6 +3,6 @@ services:
   nginx:
     volumes:
       # Mount the appropriate nginx config
-      - ./nginx/nginx.prod.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/nginx.prod.conf:/etc/nginx/conf.d/default.conf
       # Mount the built frontend files in production mode
       - ./frontend/dist:/usr/share/nginx/html:ro
