@@ -26,10 +26,13 @@ ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
     "http://trainstation.local:3000",
 ]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
-    allow_credentials=True,
+    # Optional: catch any port on these hosts during dev
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1|trainstation\.local)(:\d+)?$",
+    allow_credentials=True,   # ok if you actually need cookies/auth; else set False
     allow_methods=["*"],
     allow_headers=["*"],
 )

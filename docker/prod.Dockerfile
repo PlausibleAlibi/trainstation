@@ -48,11 +48,22 @@ RUN pip install --upgrade pip && \
 # ---- Copy application code
 # Expect your code under app/ with entry at src.main:app (adjust if different)
 COPY app /app
-COPY alembic.ini /app/alembic.ini
-COPY alembic /app/alembic
+#COPY alembic.ini /app/alembic.ini
+#COPY alembic /app/alembic
 # ---- Create and use non-root user
-RUN useradd -m appuser
-USER appuser
+# docker/prod.Dockerfile (snippet)
+ARG APP_UID=10001
+ARG APP_GID=10001
+RUN addgroup --system --gid ${APP_GID} app && adduser --system --uid ${APP_UID} --ingroup app app
+WORKDIR /app
+COPY app/ /app
+RUN chown -R app:app /app
+USER app
+
+
+
+#RUN useradd -m appuser
+#USER appuser
 
 # ---- Expose service port
 EXPOSE 8000

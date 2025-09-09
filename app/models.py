@@ -1,12 +1,8 @@
+# app/models.py
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
-from sqlalchemy import Integer, Column
-from db import Base
+from db import Base  # <-- absolute import
 
-
- 
-    
-    
 class Category(Base):
     __tablename__ = "categories"
     id = Column(Integer, primary_key=True, index=True)
@@ -24,6 +20,6 @@ class Accessory(Base):
     control_type = Column(String(20), nullable=False)  # "onOff" | "toggle" | "timed"
     address = Column(String(50), nullable=False)
     is_active = Column(Boolean, nullable=False, default=True)
+    timed_ms = Column(Integer, nullable=True)
 
     category = relationship("Category", back_populates="accessories", lazy="joined")
-    timed_ms = Column(Integer, nullable=True)
