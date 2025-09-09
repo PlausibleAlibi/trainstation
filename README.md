@@ -11,7 +11,7 @@ All deployment and development configurations are located in the `deploy/` direc
 To start the complete application stack (web backend, frontend, database):
 
 ```bash
-docker-compose -f deploy/docker-compose.yml up
+docker compose -f deploy/docker-compose.yml up
 ```
 
 Or use the provided Makefile shortcuts:
