@@ -26,23 +26,28 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: ${FRONTEND_DOCKERFILE:-Dockerfile}
     restart: unless-stopped
     networks:
       - trainstation
+    environment:
+      - VITE_API_BASE=/api
 
   nginx:
     build:
       context: ./nginx
       dockerfile: Dockerfile
     ports:
-      - "80:80"
+      - "${NGINX_PORT:-80}:80"
     depends_on:
       - api
       - frontend
     restart: unless-stopped
     networks:
       - trainstation
+    volumes:
+      # Mount the appropriate nginx config based on environment
+      - ./nginx/nginx.${MODE:-prod}.conf:/etc/nginx/conf.d/default.conf:ro
 
   db:
     image: postgres:16

@@ -1,0 +1,6 @@
+# Development-specific overrides
+services:
+  nginx:
+    volumes:
+      # Mount the development nginx config
+      - ./nginx/nginx.dev.conf:/etc/nginx/conf.d/default.conf:ro
