@@ -1,0 +1,51 @@
+# docker-compose.dev.yml
+# Development environment overrides
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: docker/prod.Dockerfile
+      target: runtime
+    image: trainstation:dev
+    env_file:
+      - .env.dev
+    environment:
+      - APP_ENV=dev
+      - UVICORN_RELOAD=true
+      - UVICORN_LOG_LEVEL=debug
+      - UVICORN_WORKERS=1
+    volumes:
+      # Mount source code for live reloading
+      - ./app:/app/app:ro
+    ports:
+      - "8080:8000"
+    # More relaxed healthcheck for development
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 45s
+      timeout: 10s
+      retries: 2
+      start_period: 30s
+
+  db:
+    environment:
+      POSTGRES_DB: trains_dev
+      POSTGRES_USER: trainsAdmin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpassword}
+    ports:
+      # Expose DB port for development tools
+      - "5432:5432"
+    volumes:
+      - dbdata_dev:/var/lib/postgresql/data
+    # More relaxed healthcheck
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trainsAdmin -d trains_dev || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  dbdata_dev:

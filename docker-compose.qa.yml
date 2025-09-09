@@ -1,0 +1,60 @@
+# docker-compose.qa.yml
+# QA/Testing environment overrides
+# Usage: docker compose -f docker-compose.yml -f docker-compose.qa.yml up
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: docker/prod.Dockerfile
+      target: runtime
+    image: trainstation:qa
+    env_file:
+      - .env.qa
+    environment:
+      - APP_ENV=qa
+      - UVICORN_RELOAD=false
+      - UVICORN_LOG_LEVEL=info
+      - UVICORN_WORKERS=2
+    ports:
+      - "8081:8000"
+    # Standard healthcheck for QA
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 8s
+      retries: 3
+      start_period: 25s
+
+  db:
+    environment:
+      POSTGRES_DB: trains_qa
+      POSTGRES_USER: trainsAdmin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-qapassword}
+    ports:
+      # Expose DB port for QA testing tools
+      - "5433:5432"
+    volumes:
+      - dbdata_qa:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trainsAdmin -d trains_qa || exit 1"]
+      interval: 12s
+      timeout: 8s
+      retries: 4
+      start_period: 25s
+
+  # Optional: Add a test runner service for QA
+  # test-runner:
+  #   build:
+  #     context: .
+  #     dockerfile: docker/prod.Dockerfile
+  #   env_file:
+  #     - .env.qa
+  #   depends_on:
+  #     - web
+  #     - db
+  #   command: ["python", "-m", "pytest", "tests/"]
+  #   profiles: ["test"]
+
+volumes:
+  dbdata_qa:

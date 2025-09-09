@@ -1,0 +1,61 @@
+# docker-compose.prod.yml
+# Production environment overrides
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up
+
+services:
+  web:
+    # Use the production image from registry
+    image: ghcr.io/plausiblealibi/trainstation:${IMAGE_TAG:-latest}
+    env_file:
+      - .env.prod
+    environment:
+      - APP_ENV=production
+      - UVICORN_RELOAD=false
+      - UVICORN_LOG_LEVEL=warning
+      - UVICORN_WORKERS=4
+    ports:
+      - "8082:8000"
+    # Strict production healthcheck
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    # Production restart policy
+    restart: always
+    # Resource limits for production
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  db:
+    environment:
+      POSTGRES_DB: trains_prod
+      POSTGRES_USER: trainsAdmin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    # DO NOT expose DB port in production
+    # ports: []
+    volumes:
+      - dbdata_prod:/var/lib/postgresql/data
+    # Strict production healthcheck
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trainsAdmin -d trains_prod || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    restart: always
+    # Resource limits for production
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
+volumes:
+  dbdata_prod:
