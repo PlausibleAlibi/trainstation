@@ -64,6 +64,7 @@ class Switch(Base):
     position_x = Column(Float, nullable=True)
     position_y = Column(Float, nullable=True)
     position_z = Column(Float, nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False)
 
     accessory = relationship("Accessory", lazy="joined")
     section = relationship("Section", back_populates="switches", lazy="joined")
