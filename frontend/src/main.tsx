@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
-import App from './App'
+import TrainStationApp from './TrainStationApp'
 
 // Create a basic MUI theme
 const theme = createTheme({
@@ -23,7 +23,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <App />
+      <TrainStationApp />
     </ThemeProvider>
   </React.StrictMode>,
 )

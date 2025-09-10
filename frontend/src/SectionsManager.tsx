@@ -1,0 +1,478 @@
+import { useState, useEffect } from 'react';
+import {
+  Box,
+  Paper,
+  Typography,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  FormControlLabel,
+  Checkbox,
+  IconButton,
+  Alert,
+  CircularProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Chip,
+} from '@mui/material';
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  LinearScale as SectionIcon,
+} from '@mui/icons-material';
+
+// Types
+type TrackLine = {
+  id: number;
+  name: string;
+  description?: string;
+  isActive: boolean;
+};
+
+type Section = {
+  id: number;
+  name: string;
+  trackLineId: number;
+  startPosition?: number;
+  endPosition?: number;
+  length?: number;
+  isOccupied: boolean;
+  isActive: boolean;
+};
+
+type SectionWithTrackLine = Section & {
+  trackLine?: TrackLine;
+};
+
+type SectionCreate = Omit<Section, 'id'>;
+
+// Component
+export default function SectionsManager() {
+  const [sections, setSections] = useState<SectionWithTrackLine[]>([]);
+  const [trackLines, setTrackLines] = useState<TrackLine[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  // Filters
+  const [selectedTrackLine, setSelectedTrackLine] = useState<number | 'all'>('all');
+  const [showOccupiedOnly, setShowOccupiedOnly] = useState(false);
+
+  // Form state
+  const [formData, setFormData] = useState<SectionCreate>({
+    name: '',
+    trackLineId: 0,
+    startPosition: undefined,
+    endPosition: undefined,
+    length: undefined,
+    isOccupied: false,
+    isActive: true,
+  });
+
+  const API = import.meta.env.VITE_API_BASE ?? "http://localhost:8080";
+
+  // API helper
+  async function apiCall<T>(res: Response): Promise<T> {
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+    return res.json();
+  }
+
+  // Load data
+  const loadSections = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams({
+        includeTrackLine: 'true',
+        ...(selectedTrackLine !== 'all' && { trackLineId: String(selectedTrackLine) }),
+        ...(showOccupiedOnly && { occupied: 'true' }),
+      });
+      
+      const response = await fetch(`${API}/sections?${params}`);
+      const data = await apiCall<SectionWithTrackLine[]>(response);
+      setSections(data);
+    } catch (e: any) {
+      setError(e.message || 'Failed to load sections');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadTrackLines = async () => {
+    try {
+      const response = await fetch(`${API}/trackLines?active=true`);
+      const data = await apiCall<TrackLine[]>(response);
+      setTrackLines(data);
+    } catch (e: any) {
+      setError(e.message || 'Failed to load track lines');
+    }
+  };
+
+  useEffect(() => {
+    loadTrackLines();
+  }, []);
+
+  useEffect(() => {
+    loadSections();
+  }, [selectedTrackLine, showOccupiedOnly]);
+
+  // Open dialog for create/edit
+  const openDialog = (section?: SectionWithTrackLine) => {
+    if (section) {
+      setEditingId(section.id);
+      setFormData({
+        name: section.name,
+        trackLineId: section.trackLineId,
+        startPosition: section.startPosition,
+        endPosition: section.endPosition,
+        length: section.length,
+        isOccupied: section.isOccupied,
+        isActive: section.isActive,
+      });
+    } else {
+      setEditingId(null);
+      setFormData({
+        name: '',
+        trackLineId: trackLines.length > 0 ? trackLines[0].id : 0,
+        startPosition: undefined,
+        endPosition: undefined,
+        length: undefined,
+        isOccupied: false,
+        isActive: true,
+      });
+    }
+    setDialogOpen(true);
+  };
+
+  // Close dialog
+  const closeDialog = () => {
+    setDialogOpen(false);
+    setEditingId(null);
+    setError(null);
+  };
+
+  // Save section
+  const saveSection = async () => {
+    if (!formData.name.trim() || !formData.trackLineId) {
+      setError('Section name and track line are required');
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+    try {
+      const url = editingId ? `${API}/sections/${editingId}` : `${API}/sections`;
+      const method = editingId ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          trackLineId: formData.trackLineId,
+          startPosition: formData.startPosition || null,
+          endPosition: formData.endPosition || null,
+          length: formData.length || null,
+          isOccupied: formData.isOccupied,
+          isActive: formData.isActive,
+        }),
+      });
+      
+      await apiCall(response);
+      await loadSections();
+      closeDialog();
+    } catch (e: any) {
+      setError(e.message || 'Failed to save section');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Delete section
+  const deleteSection = async (id: number, name: string) => {
+    if (!confirm(`Delete section "${name}"? This will also remove all associated switches and connections.`)) {
+      return;
+    }
+
+    setError(null);
+    try {
+      const response = await fetch(`${API}/sections/${id}`, { method: 'DELETE' });
+      await apiCall(response);
+      await loadSections();
+    } catch (e: any) {
+      setError(e.message || 'Failed to delete section');
+    }
+  };
+
+  // Group sections by track line for better display
+  const groupedSections = sections.reduce((acc, section) => {
+    const trackLineName = section.trackLine?.name || 'Unknown Track Line';
+    if (!acc[trackLineName]) acc[trackLineName] = [];
+    acc[trackLineName].push(section);
+    return acc;
+  }, {} as Record<string, SectionWithTrackLine[]>);
+
+  return (
+    <Box sx={{ p: 2 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+        <SectionIcon sx={{ mr: 2, color: 'primary.main' }} />
+        <Typography variant="h4" component="h1">
+          Track Sections
+        </Typography>
+      </Box>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
+      {/* Filters */}
+      <Paper sx={{ p: 2, mb: 2 }}>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+          <FormControl size="small" sx={{ minWidth: 200 }}>
+            <InputLabel>Track Line</InputLabel>
+            <Select
+              value={selectedTrackLine}
+              onChange={(e) => setSelectedTrackLine(e.target.value as number | 'all')}
+              label="Track Line"
+            >
+              <MenuItem value="all">All Track Lines</MenuItem>
+              {trackLines.map((tl) => (
+                <MenuItem key={tl.id} value={tl.id}>
+                  {tl.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={showOccupiedOnly}
+                onChange={(e) => setShowOccupiedOnly(e.target.checked)}
+              />
+            }
+            label="Occupied only"
+          />
+
+          <Box sx={{ ml: 'auto' }}>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => openDialog()}
+              disabled={trackLines.length === 0}
+            >
+              Add Section
+            </Button>
+          </Box>
+        </Box>
+        {trackLines.length === 0 && (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            Create track lines first before adding sections.
+          </Typography>
+        )}
+      </Paper>
+
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {Object.entries(groupedSections).map(([trackLineName, trackLineSections]) => (
+            <Paper key={trackLineName}>
+              <Box sx={{ p: 2, bgcolor: 'primary.main', color: 'primary.contrastText' }}>
+                <Typography variant="h6">
+                  {trackLineName} ({trackLineSections.length} sections)
+                </Typography>
+              </Box>
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Name</TableCell>
+                      <TableCell>Position</TableCell>
+                      <TableCell>Length</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell width="150">Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {trackLineSections.map((section) => (
+                      <TableRow key={section.id}>
+                        <TableCell>
+                          <Typography variant="body2" fontWeight="medium">
+                            {section.name}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" color="text.secondary">
+                            {section.startPosition !== undefined && section.endPosition !== undefined
+                              ? `${section.startPosition} - ${section.endPosition}`
+                              : '—'}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          {section.length ? `${section.length}ft` : '—'}
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Chip
+                              size="small"
+                              label={section.isActive ? 'Active' : 'Inactive'}
+                              color={section.isActive ? 'success' : 'default'}
+                            />
+                            {section.isOccupied && (
+                              <Chip size="small" label="Occupied" color="warning" />
+                            )}
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <IconButton
+                            size="small"
+                            onClick={() => openDialog(section)}
+                            color="primary"
+                          >
+                            <EditIcon />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={() => deleteSection(section.id, section.name)}
+                            color="error"
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
+          ))}
+          
+          {sections.length === 0 && (
+            <Paper sx={{ p: 4, textAlign: 'center' }}>
+              <Typography color="text.secondary">
+                No sections found. Create your first section to get started.
+              </Typography>
+            </Paper>
+          )}
+        </Box>
+      )}
+
+      {/* Create/Edit Dialog */}
+      <Dialog open={dialogOpen} onClose={closeDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          {editingId ? 'Edit Section' : 'Create Section'}
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+            <TextField
+              label="Name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              required
+              fullWidth
+            />
+            
+            <FormControl required fullWidth>
+              <InputLabel>Track Line</InputLabel>
+              <Select
+                value={formData.trackLineId}
+                onChange={(e) => setFormData({ ...formData, trackLineId: e.target.value as number })}
+                label="Track Line"
+              >
+                {trackLines.map((tl) => (
+                  <MenuItem key={tl.id} value={tl.id}>
+                    {tl.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                label="Start Position"
+                type="number"
+                value={formData.startPosition || ''}
+                onChange={(e) => setFormData({ 
+                  ...formData, 
+                  startPosition: e.target.value ? parseFloat(e.target.value) : undefined 
+                })}
+                fullWidth
+              />
+              <TextField
+                label="End Position"
+                type="number"
+                value={formData.endPosition || ''}
+                onChange={(e) => setFormData({ 
+                  ...formData, 
+                  endPosition: e.target.value ? parseFloat(e.target.value) : undefined 
+                })}
+                fullWidth
+              />
+            </Box>
+
+            <TextField
+              label="Length (feet)"
+              type="number"
+              value={formData.length || ''}
+              onChange={(e) => setFormData({ 
+                ...formData, 
+                length: e.target.value ? parseFloat(e.target.value) : undefined 
+              })}
+              fullWidth
+            />
+
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.isOccupied}
+                    onChange={(e) => setFormData({ ...formData, isOccupied: e.target.checked })}
+                  />
+                }
+                label="Occupied"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.isActive}
+                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                  />
+                }
+                label="Active"
+              />
+            </Box>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeDialog}>Cancel</Button>
+          <Button
+            onClick={saveSection}
+            variant="contained"
+            disabled={saving || !formData.name.trim() || !formData.trackLineId}
+          >
+            {saving ? 'Saving...' : editingId ? 'Save Changes' : 'Create'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+}
