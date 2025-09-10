@@ -92,7 +92,7 @@ class SectionWithRelations(SectionWithTrackLine):
 
 # ---------- Switches ----------
 class SwitchCreate(BaseModel):
-    name: str
+    name: Optional[str] = None
     accessoryId: int
     sectionId: int
     position: Literal["straight", "divergent", "unknown"] = "unknown"

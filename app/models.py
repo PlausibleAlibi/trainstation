@@ -57,6 +57,7 @@ class Section(Base):
 class Switch(Base):
     __tablename__ = "switches"
     id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=True, index=True)
     accessory_id = Column(Integer, ForeignKey("accessories.id"), nullable=False, index=True)
     section_id = Column(Integer, ForeignKey("sections.id"), nullable=False, index=True)
     kind = Column(String(50), nullable=False)  # Type of switch (turnout, crossover, etc.)

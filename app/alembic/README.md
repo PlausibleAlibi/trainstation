@@ -63,10 +63,14 @@ The database schema includes the following tables managed by these migrations:
 ### e04df18ae98b_add_is_active_column_to_trackline_model.py  
 **Enhancement** - Adds `is_active` column to trackLines table for status management
 
+### ac49b6de16f5_add_name_column_to_switches_table.py
+**Enhancement** - Adds `name` column to switches table for better switch identification and management
+
 ## Database Schema Notes
 
 ### Switches Table
 Contains railway switches/turnouts with full configuration:
+- Optional `name` field for switch identification and labeling
 - Links to accessories and sections via foreign keys
 - Includes `kind` field for switch type (turnout, crossover, etc.)
 - Supports `default_route` for routing configuration
