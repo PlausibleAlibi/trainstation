@@ -109,6 +109,19 @@ Use the migration script for database operations:
 ./Scripts/migrate.sh status      # Check current state
 ```
 
+**⚠️ Important**: Always run migrations after pulling changes:
+```bash
+git pull
+./Scripts/migrate.sh up
+```
+
+The current database schema includes full support for:
+- **switches** - Railway switches/turnouts with positioning and routing
+- **sectionConnections** - Track section connections with switch integration  
+- All supporting tables (categories, sections, accessories, trackLines)
+
+See `app/alembic/README.md` for detailed migration documentation.
+
 ### Rebuilding
 
 To rebuild all containers (useful after code changes):
