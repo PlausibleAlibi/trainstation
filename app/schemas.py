@@ -71,7 +71,6 @@ class AccessoryWithCategory(AccessoryRead):
 class TrackLineCreate(BaseModel):
     name: str
     description: Optional[str] = None
-    length: Optional[float] = None
     isActive: bool = True
 
 class TrackLineRead(TrackLineCreate):
@@ -84,10 +83,6 @@ class TrackLineWithSections(TrackLineRead):
 class SectionCreate(BaseModel):
     name: str
     trackLineId: int
-    startPosition: Optional[float] = None
-    endPosition: Optional[float] = None
-    length: Optional[float] = None
-    isOccupied: bool = False
     isActive: bool = True
 
 class SectionRead(SectionCreate):

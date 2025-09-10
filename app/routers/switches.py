@@ -35,7 +35,7 @@ def create_switch(payload: SwitchCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="sectionId does not exist")
 
     item = Switch(
-        name=payload.name,
+        name=payload.Name,
         accessory_id=payload.accessoryId,
         section_id=payload.sectionId,
         position=payload.position,
@@ -45,12 +45,12 @@ def create_switch(payload: SwitchCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(item)
     return SwitchRead(
-        id=item.id,
-        name=item.name,
-        accessoryId=item.accessory_id,
-        sectionId=item.section_id,
+        id=item.Id,
+        name=item.Name,
+        accessoryId=item.AccessoryId,
+        sectionId=item.SectionId,
         position=item.position,
-        isActive=item.is_active,
+        isActive=item.IsActive,
     )
 
 # -------- List (with filters & optional embedded relations) --------
@@ -68,57 +68,57 @@ def list_switches(
 ):
     qry = db.query(Switch)
     if sectionId is not None:
-        qry = qry.filter(Switch.section_id == sectionId)
+        qry = qry.filter(Switch.SectionId == sectionId)
     if accessoryId is not None:
-        qry = qry.filter(Switch.accessory_id == accessoryId)
+        qry = qry.filter(Switch.AccessoryId == accessoryId)
     if position is not None:
         qry = qry.filter(Switch.position == position)
     if active is not None:
-        qry = qry.filter(Switch.is_active == active)
+        qry = qry.filter(Switch.IsActive == active)
     if q:
         like = f"%{q}%"
-        qry = qry.filter(Switch.name.ilike(like))
+        qry = qry.filter(Switch.Name.ilike(like))
     
-    rows = qry.order_by(Switch.name.asc()).offset(offset).limit(limit).all()
+    rows = qry.order_by(Switch.Name.asc()).offset(offset).limit(limit).all()
 
     if not includeRelations:
         return [
             SwitchRead(
-                id=r.id,
-                name=r.name,
-                accessoryId=r.accessory_id,
-                sectionId=r.section_id,
+                id=r.Id,
+                name=r.Name,
+                accessoryId=r.AccessoryId,
+                sectionId=r.SectionId,
                 position=r.position,
-                isActive=r.is_active,
+                isActive=r.IsActive,
             ) for r in rows
         ]
 
     return [
         SwitchWithRelations(
-            id=r.id,
-            name=r.name,
-            accessoryId=r.accessory_id,
-            sectionId=r.section_id,
+            id=r.Id,
+            name=r.Name,
+            accessoryId=r.AccessoryId,
+            sectionId=r.SectionId,
             position=r.position,
-            isActive=r.is_active,
+            isActive=r.IsActive,
             accessory=AccessoryRead(
-                id=r.accessory.id,
-                name=r.accessory.name,
-                categoryId=r.accessory.category_id,
-                controlType=r.accessory.control_type,
-                address=r.accessory.address,
-                isActive=r.accessory.is_active,
-                timedMs=r.accessory.timed_ms,
+                id=r.Accessory.Id,
+                name=r.Accessory.Name,
+                categoryId=r.Accessory.CategoryId,
+                controlType=r.Accessory.ControlType,
+                address=r.Accessory.address,
+                isActive=r.Accessory.IsActive,
+                timedMs=r.Accessory.TimedMs,
             ) if r.accessory else None,
             section=SectionRead(
-                id=r.section.id,
-                name=r.section.name,
-                trackLineId=r.section.track_line_id,
-                startPosition=r.section.start_position,
-                endPosition=r.section.end_position,
-                length=r.section.length,
-                isOccupied=r.section.is_occupied,
-                isActive=r.section.is_active,
+                id=r.Section.Id,
+                name=r.Section.Name,
+                trackLineId=r.Section.track_line_id,
+                startPosition=r.Section.start_position,
+                endPosition=r.Section.end_position,
+                length=r.Section.length,
+                isOccupied=r.Section.is_occupied,
+                isActive=r.Section.IsActive,
             ) if r.section else None,
         ) for r in rows
     ]
@@ -131,30 +131,30 @@ def get_switch(id: int, db: Session = Depends(get_db)):
         raise HTTPException(404, "Switch not found")
     
     return SwitchWithRelations(
-        id=r.id,
-        name=r.name,
-        accessoryId=r.accessory_id,
-        sectionId=r.section_id,
+        id=r.Id,
+        name=r.Name,
+        accessoryId=r.AccessoryId,
+        sectionId=r.SectionId,
         position=r.position,
-        isActive=r.is_active,
+        isActive=r.IsActive,
         accessory=AccessoryRead(
-            id=r.accessory.id,
-            name=r.accessory.name,
-            categoryId=r.accessory.category_id,
-            controlType=r.accessory.control_type,
-            address=r.accessory.address,
-            isActive=r.accessory.is_active,
-            timedMs=r.accessory.timed_ms,
+            id=r.Accessory.Id,
+            name=r.Accessory.Name,
+            categoryId=r.Accessory.CategoryId,
+            controlType=r.Accessory.ControlType,
+            address=r.Accessory.address,
+            isActive=r.Accessory.IsActive,
+            timedMs=r.Accessory.TimedMs,
         ) if r.accessory else None,
         section=SectionRead(
-            id=r.section.id,
-            name=r.section.name,
-            trackLineId=r.section.track_line_id,
-            startPosition=r.section.start_position,
-            endPosition=r.section.end_position,
-            length=r.section.length,
-            isOccupied=r.section.is_occupied,
-            isActive=r.section.is_active,
+            id=r.Section.Id,
+            name=r.Section.Name,
+            trackLineId=r.Section.track_line_id,
+            startPosition=r.Section.start_position,
+            endPosition=r.Section.end_position,
+            length=r.Section.length,
+            isOccupied=r.Section.is_occupied,
+            isActive=r.Section.IsActive,
         ) if r.section else None,
     )
 
@@ -179,20 +179,20 @@ def update_switch(
     if not section:
         raise HTTPException(400, "sectionId does not exist")
 
-    r.name = payload.name
-    r.accessory_id = payload.accessoryId
-    r.section_id = payload.sectionId
+    r.Name = payload.Name
+    r.AccessoryId = payload.accessoryId
+    r.SectionId = payload.sectionId
     r.position = payload.position
-    r.is_active = payload.isActive
+    r.IsActive = payload.isActive
     db.commit()
     db.refresh(r)
     return SwitchRead(
-        id=r.id,
-        name=r.name,
-        accessoryId=r.accessory_id,
-        sectionId=r.section_id,
+        id=r.Id,
+        name=r.Name,
+        accessoryId=r.AccessoryId,
+        sectionId=r.SectionId,
         position=r.position,
-        isActive=r.is_active,
+        isActive=r.IsActive,
     )
 
 # -------- Delete --------

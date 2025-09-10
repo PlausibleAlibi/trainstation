@@ -45,14 +45,14 @@ def _get_accessory_or_404(db: Session, id: int) -> models.Accessory:
 @router.post("/accessories/{id}/on")
 def accessory_on(id: int, db: Session = Depends(get_db)):
     acc = _get_accessory_or_404(db, id)
-    hw.set_on(acc.address)
+    hw.set_on(acc.Address)
     return {"status": "ok", "action": "on", "id": id}
 
 
 @router.post("/accessories/{id}/off")
 def accessory_off(id: int, db: Session = Depends(get_db)):
     acc = _get_accessory_or_404(db, id)
-    hw.set_off(acc.address)
+    hw.set_off(acc.Address)
     return {"status": "ok", "action": "off", "id": id}
 
 
@@ -61,7 +61,7 @@ def accessory_pulse(id: int, ms: int, db: Session = Depends(get_db)):
     acc = _get_accessory_or_404(db, id)
     if ms <= 0:
         raise HTTPException(status_code=400, detail="ms must be > 0")
-    hw.pulse(acc.address, ms)
+    hw.pulse(acc.Address, ms)
     return {"status": "ok", "action": "pulse", "id": id, "ms": ms}
 
 
@@ -76,10 +76,10 @@ def accessory_apply(
     Applies the 'intended' behavior for an accessory based on its controlType.
     - onOff:  state "on"/"off" (default "on")
     - toggle: pulse for milliseconds (default 250ms)
-    - timed:  ON then OFF after requested/accessory.timed_ms/fallback(5000ms)
+    - timed:  ON then OFF after requested/accessory.TimedMs/fallback(5000ms)
     """
     acc = _get_accessory_or_404(db, id)
-    ctype = acc.control_type  # stored as string matching schemas.ControlType values
+    ctype = acc.ControlType  # stored as string matching schemas.ControlType values
 
     # ---- onOff ----
     if ctype == schemas.ControlType.onOff.value:
@@ -87,9 +87,9 @@ def accessory_apply(
         if state not in ("on", "off"):
             raise HTTPException(status_code=400, detail="Invalid state for onOff (use 'on' or 'off')")
         if state == "on":
-            hw.set_on(acc.address)
+            hw.set_on(acc.Address)
         else:
-            hw.set_off(acc.address)
+            hw.set_off(acc.Address)
         return {"status": "ok", "action": "onOff", "state": state, "id": id}
 
     # ---- toggle ----
@@ -99,19 +99,19 @@ def accessory_apply(
             ms = int(body.milliseconds)  # type: ignore[attr-defined]
         if not ms or ms <= 0:
             ms = 250
-        hw.pulse(acc.address, ms)
+        hw.pulse(acc.Address, ms)
         return {"status": "ok", "action": "toggle", "ms": ms, "id": id}
 
     # ---- timed ----
     if ctype == schemas.ControlType.timed.value:
-        # precedence: request body -> accessory.timed_ms -> fallback
+        # precedence: request body -> accessory.TimedMs -> fallback
         requested = getattr(body, "milliseconds", None) if body else None  # type: ignore[attr-defined]
-        ms = int(requested) if (requested is not None and int(requested) > 0) else (acc.timed_ms or 5000)  # type: ignore[attr-defined]
+        ms = int(requested) if (requested is not None and int(requested) > 0) else (acc.TimedMs or 5000)  # type: ignore[attr-defined]
         if ms <= 0:
             ms = 5000
-        hw.set_on(acc.address)
+        hw.set_on(acc.Address)
         # fire-and-forget OFF
-        threading.Thread(target=_delayed_off, args=(acc.address, ms), daemon=True).start()
+        threading.Thread(target=_delayed_off, args=(acc.Address, ms), daemon=True).start()
         return {"status": "ok", "action": "timed", "ms": ms, "id": id}
 
     raise HTTPException(status_code=400, detail="Unknown controlType")

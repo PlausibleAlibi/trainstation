@@ -31,24 +31,24 @@ def create_accessory(payload: AccessoryCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="categoryId does not exist")
 
     item = Accessory(
-        name=payload.name,
-        category_id=payload.categoryId,
-        control_type=payload.controlType,
-        address=payload.address,
-        is_active=payload.isActive,
-        timed_ms=payload.timedMs,
+        Name=payload.name,
+        CategoryId=payload.categoryId,
+        ControlType=payload.controlType,
+        Address=payload.address,
+        IsActive=payload.isActive,
+        TimedMs=payload.timedMs,
     )
     db.add(item)
     db.commit()
     db.refresh(item)
     return AccessoryRead(
-        id=item.id,
-        name=item.name,
-        categoryId=item.category_id,
-        controlType=item.control_type,
-        address=item.address,
-        isActive=item.is_active,
-        timedMs=item.timed_ms,
+        id=item.Id,
+        name=item.Name,
+        categoryId=item.CategoryId,
+        controlType=item.ControlType,
+        address=item.Address,
+        isActive=item.IsActive,
+        timedMs=item.TimedMs,
     )
 
 # -------- List (with filters & optional embedded category) --------
@@ -64,44 +64,44 @@ def list_accessories(
 ):
     qry = db.query(Accessory)
     if categoryId is not None:
-        qry = qry.filter(Accessory.category_id == categoryId)
+        qry = qry.filter(Accessory.CategoryId == categoryId)
     if active is not None:
-        qry = qry.filter(Accessory.is_active == active)
+        qry = qry.filter(Accessory.IsActive == active)
     if q:
         like = f"%{q}%"
         qry = qry.filter(
-            (Accessory.name.ilike(like)) |
-            (Accessory.address.ilike(like))
+            (Accessory.Name.ilike(like)) |
+            (Accessory.Address.ilike(like))
         )
-    rows = qry.order_by(Accessory.name.asc()).offset(offset).limit(limit).all()
+    rows = qry.order_by(Accessory.Name.asc()).offset(offset).limit(limit).all()
 
     if not includeCategory:
         return [
             AccessoryRead(
-                id=r.id,
-                name=r.name,
-                categoryId=r.category_id,
-                controlType=r.control_type,
-                address=r.address,
-                isActive=r.is_active,
-                timedMs=r.timed_ms,
+                id=r.Id,
+                name=r.Name,
+                categoryId=r.CategoryId,
+                controlType=r.ControlType,
+                address=r.Address,
+                isActive=r.IsActive,
+                timedMs=r.TimedMs,
             ) for r in rows
         ]
 
     return [
         AccessoryWithCategory(
-            id=r.id,
-            name=r.name,
-            categoryId=r.category_id,
-            controlType=r.control_type,
-            address=r.address,
-            isActive=r.is_active,
+            id=r.Id,
+            name=r.Name,
+            categoryId=r.CategoryId,
+            controlType=r.ControlType,
+            address=r.Address,
+            isActive=r.IsActive,
             category=CategoryRead(
-                id=r.category.id,
-                name=r.category.name,
-                description=r.category.description,
-                sortOrder=r.category.sort_order,
-            ) if r.category else None,
+                id=r.Category.Id,
+                name=r.Category.Name,
+                description=r.Category.Description,
+                sortOrder=r.Category.SortOrder,
+            ) if r.Category else None,
         ) for r in rows
     ]
 
@@ -112,18 +112,18 @@ def get_accessory(id: int, db: Session = Depends(get_db)):
     if not r:
         raise HTTPException(404, "Accessory not found")
     return AccessoryWithCategory(
-        id=r.id,
-        name=r.name,
-        categoryId=r.category_id,
-        controlType=r.control_type,
-        address=r.address,
-        isActive=r.is_active,
+        id=r.Id,
+        name=r.Name,
+        categoryId=r.CategoryId,
+        controlType=r.ControlType,
+        address=r.Address,
+        isActive=r.IsActive,
         category=CategoryRead(
-            id=r.category.id,
-            name=r.category.name,
-            description=r.category.description,
-            sortOrder=r.category.sort_order,
-        ) if r.category else None,
+            id=r.Category.Id,
+            name=r.Category.Name,
+            description=r.Category.Description,
+            sortOrder=r.Category.SortOrder,
+        ) if r.Category else None,
     )
 
 # -------- Update --------
@@ -142,22 +142,22 @@ def update_accessory(
     if not cat:
         raise HTTPException(400, "categoryId does not exist")
 
-    r.name = payload.name
-    r.category_id = payload.categoryId
-    r.control_type = payload.controlType
-    r.address = payload.address
-    r.is_active = payload.isActive
-    r.timed_ms = payload.timedMs
+    r.Name = payload.name
+    r.CategoryId = payload.categoryId
+    r.ControlType = payload.controlType
+    r.Address = payload.address
+    r.IsActive = payload.isActive
+    r.TimedMs = payload.timedMs
     db.commit()
     db.refresh(r)
     return AccessoryRead(
-        id=r.id,
-        name=r.name,
-        categoryId=r.category_id,
-        controlType=r.control_type,
-        address=r.address,
-        isActive=r.is_active,
-        timedMs=r.timed_ms,
+        id=r.Id,
+        name=r.Name,
+        categoryId=r.CategoryId,
+        controlType=r.ControlType,
+        address=r.Address,
+        isActive=r.IsActive,
+        timedMs=r.TimedMs,
     )
 
 # -------- Delete --------
