@@ -133,6 +133,51 @@ To rebuild all containers (useful after code changes):
 - `nginx/nginx.prod.conf` - Production mode (serves static files)
 - `nginx/nginx.deploy.conf` - Legacy deploy configuration
 
+## 🏷️ Automated Version Stamping
+
+TrainStation includes an automated version stamping system that ensures every build includes up-to-date version information displayed in the frontend footer.
+
+### How It Works
+
+1. **Version Script**: `Scripts/stamp_version.sh` generates version metadata
+   - Accepts optional tag/version argument: `./Scripts/stamp_version.sh v1.2.3`
+   - Defaults to latest git tag or commit hash if no argument provided
+   - Writes version info to `version.env` and copies `VITE_` variables to `frontend/.env`
+
+2. **Prebuild Hook**: Frontend automatically runs the version script before building
+   - Configured in `frontend/package.json` as a `prebuild` script
+   - Runs automatically when you execute `npm run build`
+
+3. **Frontend Display**: Footer component shows version info using Vite environment variables
+   - Uses `import.meta.env.VITE_APP_VERSION` and `import.meta.env.VITE_APP_DEPLOYED`
+   - Includes fallback values for development mode
+   - Automatically formats deployment date for user-friendly display
+
+### Accessing Version Info
+
+**In the Frontend:**
+```javascript
+// Access version info in any component
+const version = import.meta.env.VITE_APP_VERSION || 'dev'
+const deployed = import.meta.env.VITE_APP_DEPLOYED || null
+```
+
+**Manual Version Stamping:**
+```bash
+# Stamp with current git info (auto-detects latest tag)
+./Scripts/stamp_version.sh
+
+# Stamp with specific version
+./Scripts/stamp_version.sh v1.2.3
+```
+
+### Generated Files
+
+- `version.env` - Shared environment file with all version variables
+- `frontend/.env` - Updated automatically with `VITE_` prefixed variables
+
+This system ensures every build includes accurate version metadata without manual intervention.
+
 ## 🔧 Contributing
 
 ### Development Workflow

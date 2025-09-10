@@ -25,6 +25,7 @@ import {
   Snackbar,
 } from '@mui/material'
 import { Train as TrainIcon } from '@mui/icons-material'
+import Footer from './components/Footer'
 
 /* ================= Types ================= */
 type Category = {
@@ -45,8 +46,6 @@ type AccessoryRead = {
 };
 
 type AccessoryWithCategory = AccessoryRead & { category?: Category | null };
-
-type VersionInfo = { commit: string; built_at: string };
 
 /* ================= Config ================= */
 // For now, talk directly to backend (compose maps 8080:8000).
@@ -76,7 +75,6 @@ export default function App() {
   const [limit, setLimit] = useState(25);
   const [offset, setOffset] = useState(0);
 
-  const [ver, setVer] = useState<VersionInfo | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   // Create Accessory
@@ -144,7 +142,6 @@ export default function App() {
   /* ---- Effects ---- */
   useEffect(() => {
     loadCats();
-    fetch(`${API}/version`).then(r => r.ok ? r.json() : Promise.reject()).then(setVer).catch(() => setVer(null));
   }, []);
 
   useEffect(() => {
@@ -701,11 +698,7 @@ export default function App() {
         </Box>
       </Container>
 
-      <Box component="footer" sx={{ py: 1, px: 2, bgcolor: 'grey.100', borderTop: 1, borderColor: 'divider' }}>
-        <Typography variant="body2" color="text.secondary">
-          Version {ver?.commit || "dev"} {ver?.built_at && `(deployed ${ver.built_at})`}
-        </Typography>
-      </Box>
+      <Footer />
 
       <Snackbar
         open={!!toast}
