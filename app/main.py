@@ -24,6 +24,7 @@ ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:5173",   # vite dev
     "http://127.0.0.1:5173",
+    "http://trainstation:3000",
     "http://trainstation.local:3000",
 ]
 
