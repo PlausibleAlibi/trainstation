@@ -160,7 +160,7 @@ export default function TrainStationApp() {
             }}>
               <img 
                 src={trainCollisionImage} 
-                alt="Train Collision Scene - Two trains colliding with dramatic explosion"
+                alt="Train Collision"
                 style={{ 
                   width: '100%', 
                   height: 'auto',
@@ -180,7 +180,7 @@ export default function TrainStationApp() {
               lineHeight: 1.6,
               fontStyle: 'italic'
             }}>
-              Experience the dramatic world of model railway management with our comprehensive control center
+              Your all-in-one solution for managing model railway accessories, track lines, sections, switches, and connections.
             </Typography>
           </Box>
         </TabPanel>
