@@ -2,3 +2,4 @@ test_env/
 .venv/
 **/__pycache__/
 app/test.db
+*.db
