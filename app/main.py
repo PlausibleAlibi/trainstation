@@ -5,7 +5,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from routers import categories, accessories, actions
+from routers import categories, accessories, actions, track_lines, sections, switches, section_connections
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
@@ -53,3 +53,7 @@ def version():
 app.include_router(categories.router)
 app.include_router(accessories.router)
 app.include_router(actions.router)
+app.include_router(track_lines.router)
+app.include_router(sections.router)
+app.include_router(switches.router)
+app.include_router(section_connections.router)
