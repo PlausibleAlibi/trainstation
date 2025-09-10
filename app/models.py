@@ -1,87 +1,114 @@
 # app/models.py
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Float
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Float, DateTime
 from sqlalchemy.orm import relationship
+from datetime import datetime
 from db import Base  # <-- absolute import
 
 class Category(Base):
-    __tablename__ = "categories"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(50), nullable=False, unique=True, index=True)
-    description = Column(String(255), nullable=True)
-    sort_order = Column(Integer, nullable=False, default=0)
+    __tablename__ = "Categories"
+    Id = Column(Integer, primary_key=True, index=True)
+    Name = Column(String(50), nullable=False, unique=True, index=True)
+    Description = Column(String(255), nullable=True)
+    SortOrder = Column(Integer, nullable=False, default=0)
 
-    accessories = relationship("Accessory", back_populates="category", lazy="selectin")
+    Accessories = relationship("Accessory", back_populates="Category", lazy="selectin")
 
 class Accessory(Base):
-    __tablename__ = "accessories"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), nullable=False, index=True)
-    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
-    control_type = Column(String(20), nullable=False)  # "onOff" | "toggle" | "timed"
-    address = Column(String(50), nullable=False)
-    is_active = Column(Boolean, nullable=False, default=True)
-    timed_ms = Column(Integer, nullable=True)
-    section_id = Column(Integer, ForeignKey("sections.id"), nullable=True, index=True)
+    __tablename__ = "Accessories"
+    Id = Column(Integer, primary_key=True, index=True)
+    Name = Column(String(100), nullable=False, index=True)
+    CategoryId = Column(Integer, ForeignKey("Categories.Id"), nullable=False)
+    ControlType = Column(String(20), nullable=False)  # "onOff" | "toggle" | "timed"
+    Address = Column(String(50), nullable=False)
+    IsActive = Column(Boolean, nullable=False, default=True)
+    TimedMs = Column(Integer, nullable=True)
+    SectionId = Column(Integer, ForeignKey("Sections.Id"), nullable=True, index=True)
 
-    category = relationship("Category", back_populates="accessories", lazy="joined")
-    section = relationship("Section", back_populates="accessories", lazy="joined")
+    Category = relationship("Category", back_populates="Accessories", lazy="joined")
+    Section = relationship("Section", back_populates="Accessories", lazy="joined")
 
 
 class TrackLine(Base):
-    __tablename__ = "trackLines"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), nullable=False, unique=True, index=True)
-    description = Column(String(255), nullable=True)
-    is_active = Column(Boolean, nullable=False, default=True)
+    __tablename__ = "TrackLines"
+    Id = Column(Integer, primary_key=True, index=True)
+    Name = Column(String(100), nullable=False, unique=True, index=True)
+    Description = Column(String(255), nullable=True)
+    IsActive = Column(Boolean, nullable=False, default=True)
 
-    sections = relationship("Section", back_populates="track_line", lazy="selectin")
+    Sections = relationship("Section", back_populates="TrackLine", lazy="selectin")
 
 
 class Section(Base):
-    __tablename__ = "sections"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), nullable=False)
-    trackLine_id = Column(Integer, ForeignKey("trackLines.id"), nullable=False, index=True)
-    position_x = Column(Float, nullable=True)
-    position_y = Column(Float, nullable=True)
-    position_z = Column(Float, nullable=True)
-    is_active = Column(Boolean, nullable=False, default=True)
+    __tablename__ = "Sections"
+    Id = Column(Integer, primary_key=True, index=True)
+    Name = Column(String(100), nullable=False)
+    TrackLineId = Column(Integer, ForeignKey("TrackLines.Id"), nullable=False, index=True)
+    PositionX = Column(Float, nullable=True)
+    PositionY = Column(Float, nullable=True)
+    PositionZ = Column(Float, nullable=True)
+    IsActive = Column(Boolean, nullable=False, default=True)
 
-    track_line = relationship("TrackLine", back_populates="sections", lazy="joined")
-    accessories = relationship("Accessory", back_populates="section", lazy="selectin")
-    switches = relationship("Switch", back_populates="section", lazy="selectin")
-    outgoing_connections = relationship("SectionConnection", foreign_keys="SectionConnection.from_section_id", back_populates="from_section", lazy="selectin")
-    incoming_connections = relationship("SectionConnection", foreign_keys="SectionConnection.to_section_id", back_populates="to_section", lazy="selectin")
+    TrackLine = relationship("TrackLine", back_populates="Sections", lazy="joined")
+    Accessories = relationship("Accessory", back_populates="Section", lazy="selectin")
+    Switches = relationship("Switch", back_populates="Section", lazy="selectin")
+    OutgoingConnections = relationship("SectionConnection", foreign_keys="SectionConnection.FromSectionId", back_populates="FromSection", lazy="selectin")
+    IncomingConnections = relationship("SectionConnection", foreign_keys="SectionConnection.ToSectionId", back_populates="ToSection", lazy="selectin")
 
 
 class Switch(Base):
-    __tablename__ = "switches"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), nullable=True, index=True)
-    accessory_id = Column(Integer, ForeignKey("accessories.id"), nullable=False, index=True)
-    section_id = Column(Integer, ForeignKey("sections.id"), nullable=False, index=True)
-    kind = Column(String(50), nullable=False)  # Type of switch (turnout, crossover, etc.)
-    default_route = Column(String(50), nullable=True)  # Default routing state
-    orientation = Column(Float, nullable=True)  # Orientation angle in degrees
-    position_x = Column(Float, nullable=True)
-    position_y = Column(Float, nullable=True)
-    position_z = Column(Float, nullable=True)
-    is_active = Column(Boolean, default=True, nullable=False)
+    __tablename__ = "Switches"
+    Id = Column(Integer, primary_key=True, index=True)
+    Name = Column(String(100), nullable=True, index=True)
+    AccessoryId = Column(Integer, ForeignKey("Accessories.Id"), nullable=False, index=True)
+    SectionId = Column(Integer, ForeignKey("Sections.Id"), nullable=False, index=True)
+    Kind = Column(String(50), nullable=False)  # Type of switch (turnout, crossover, etc.)
+    DefaultRoute = Column(String(50), nullable=True)  # Default routing state
+    Orientation = Column(Float, nullable=True)  # Orientation angle in degrees
+    PositionX = Column(Float, nullable=True)
+    PositionY = Column(Float, nullable=True)
+    PositionZ = Column(Float, nullable=True)
+    IsActive = Column(Boolean, default=True, nullable=False)
 
-    accessory = relationship("Accessory", lazy="joined")
-    section = relationship("Section", back_populates="switches", lazy="joined")
-    connections = relationship("SectionConnection", back_populates="switch", lazy="selectin")
+    Accessory = relationship("Accessory", lazy="joined")
+    Section = relationship("Section", back_populates="Switches", lazy="joined")
+    Connections = relationship("SectionConnection", back_populates="Switch", lazy="selectin")
 
 
 class SectionConnection(Base):
-    __tablename__ = "sectionConnections"
-    id = Column(Integer, primary_key=True, index=True)
-    from_section_id = Column(Integer, ForeignKey("sections.id"), nullable=False, index=True)
-    to_section_id = Column(Integer, ForeignKey("sections.id"), nullable=False, index=True)
-    switch_id = Column(Integer, ForeignKey("switches.id"), nullable=True, index=True)
-    route_info = Column(String(255), nullable=True)  # Routing information
-    is_bidirectional = Column(Boolean, nullable=False, default=True)
+    __tablename__ = "SectionConnections"
+    Id = Column(Integer, primary_key=True, index=True)
+    FromSectionId = Column(Integer, ForeignKey("Sections.Id"), nullable=False, index=True)
+    ToSectionId = Column(Integer, ForeignKey("Sections.Id"), nullable=False, index=True)
+    SwitchId = Column(Integer, ForeignKey("Switches.Id"), nullable=True, index=True)
+    RouteInfo = Column(String(255), nullable=True)  # Routing information
+    IsBidirectional = Column(Boolean, nullable=False, default=True)
 
-    from_section = relationship("Section", foreign_keys=[from_section_id], back_populates="outgoing_connections", lazy="joined")
-    to_section = relationship("Section", foreign_keys=[to_section_id], back_populates="incoming_connections", lazy="joined")
-    switch = relationship("Switch", back_populates="connections", lazy="joined")
+    FromSection = relationship("Section", foreign_keys=[FromSectionId], back_populates="OutgoingConnections", lazy="joined")
+    ToSection = relationship("Section", foreign_keys=[ToSectionId], back_populates="IncomingConnections", lazy="joined")
+    Switch = relationship("Switch", back_populates="Connections", lazy="joined")
+
+
+class TrainAsset(Base):
+    __tablename__ = "TrainAssets"
+    Id = Column(Integer, primary_key=True, index=True)
+    AssetId = Column(String(100), nullable=True, index=True)  # optional, client-readable
+    RfidTagId = Column(String(100), nullable=False, unique=True, index=True)  # RFID tag UID
+    Type = Column(String(50), nullable=False)  # enum/string: Engine, Car, Caboose, etc.
+    RoadNumber = Column(String(100), nullable=False, index=True)  # railroad asset number
+    Description = Column(String(255), nullable=True)  # optional info
+    Active = Column(Boolean, nullable=False, default=True)
+    DateAdded = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    LocationEvents = relationship("AssetLocationEvent", back_populates="Asset", lazy="selectin")
+
+
+class AssetLocationEvent(Base):
+    __tablename__ = "AssetLocationEvents"
+    EventId = Column(Integer, primary_key=True, index=True)
+    AssetId = Column(Integer, ForeignKey("TrainAssets.Id"), nullable=False, index=True)  # FK to TrainAsset
+    RfidTagId = Column(String(100), nullable=False, index=True)  # tag detected
+    Location = Column(String(100), nullable=False)  # reader/zone name
+    ReaderId = Column(String(100), nullable=False, index=True)
+    Timestamp = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
+
+    Asset = relationship("TrainAsset", back_populates="LocationEvents", lazy="joined")
