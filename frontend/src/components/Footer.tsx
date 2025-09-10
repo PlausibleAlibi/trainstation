@@ -40,7 +40,9 @@ export default function Footer() {
         mt: 'auto' // Push footer to bottom when used in flex container
       }}
     >
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" color="text.secondary" textAlign="center">
+        Train Station Control Center - Model Railway Management System
+        {' | '}
         Version {version}
         {deployedFormatted && ` (deployed ${deployedFormatted})`}
       </Typography>

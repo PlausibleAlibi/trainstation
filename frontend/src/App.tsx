@@ -1,8 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  AppBar,
-  Toolbar,
-  Typography,
   Container,
   Paper,
   Box,
@@ -23,9 +20,8 @@ import {
   CircularProgress,
   Alert,
   Snackbar,
+  Typography,
 } from '@mui/material'
-import { Train as TrainIcon } from '@mui/icons-material'
-import Footer from './components/Footer'
 
 /* ================= Types ================= */
 type Category = {
@@ -279,17 +275,8 @@ export default function App() {
 
   /* ---- UI ---- */
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <AppBar position="static">
-        <Toolbar>
-          <TrainIcon sx={{ mr: 2 }} />
-          <Typography variant="h6" component="div">
-            Train Station
-          </Typography>
-        </Toolbar>
-      </AppBar>
-
-      <Container maxWidth="xl" sx={{ flex: 1, py: 2 }}>
+    <>
+      <Container maxWidth="xl" sx={{ py: 2 }}>
         <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
           {/* Sidebar */}
           <Box sx={{ width: { xs: '100%', md: 320 }, flexShrink: 0 }}>
@@ -698,8 +685,6 @@ export default function App() {
         </Box>
       </Container>
 
-      <Footer />
-
       <Snackbar
         open={!!toast}
         autoHideDuration={2200}
@@ -710,6 +695,6 @@ export default function App() {
           {toast}
         </Alert>
       </Snackbar>
-    </Box>
+    </>
   );
 }
