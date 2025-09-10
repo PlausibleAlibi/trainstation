@@ -9,6 +9,8 @@ import {
   Container,
 } from '@mui/material';
 import {
+  Home as HomeIcon,
+  Info as InfoIcon,
   Train as TrainIcon,
   LinearScale as SectionIcon,
   CallSplit as SwitchIcon,
@@ -85,6 +87,12 @@ export default function TrainStationApp() {
             }}
           >
             <Tab 
+              icon={<HomeIcon />} 
+              label="Home" 
+              iconPosition="start"
+              sx={{ minHeight: 48 }}
+            />
+            <Tab 
               icon={<AccessoryIcon />} 
               label="Accessories & Categories" 
               iconPosition="start"
@@ -114,25 +122,82 @@ export default function TrainStationApp() {
               iconPosition="start"
               sx={{ minHeight: 48 }}
             />
+            <Tab 
+              icon={<InfoIcon />} 
+              label="About" 
+              iconPosition="start"
+              sx={{ minHeight: 48 }}
+            />
           </Tabs>
         </Box>
       </AppBar>
 
       <Container maxWidth="xl" sx={{ flex: 1, py: 0 }}>
         <TabPanel value={currentTab} index={0}>
-          <App />
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            minHeight: '60vh',
+            textAlign: 'center',
+            gap: 3
+          }}>
+            <Typography variant="h1" sx={{ fontSize: '8rem', lineHeight: 1 }}>
+              🚂💥
+            </Typography>
+            <Typography variant="h4" component="h1" gutterBottom>
+              Welcome to TrainStation!
+            </Typography>
+          </Box>
         </TabPanel>
         <TabPanel value={currentTab} index={1}>
-          <TrackLinesManager />
+          <App />
         </TabPanel>
         <TabPanel value={currentTab} index={2}>
-          <SectionsManager />
+          <TrackLinesManager />
         </TabPanel>
         <TabPanel value={currentTab} index={3}>
-          <SwitchesManager />
+          <SectionsManager />
         </TabPanel>
         <TabPanel value={currentTab} index={4}>
+          <SwitchesManager />
+        </TabPanel>
+        <TabPanel value={currentTab} index={5}>
           <SectionConnectionsManager />
+        </TabPanel>
+        <TabPanel value={currentTab} index={6}>
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            gap: 3,
+            py: 4,
+            maxWidth: 800,
+            margin: '0 auto'
+          }}>
+            <Typography variant="h4" component="h1" gutterBottom>
+              About TrainStation
+            </Typography>
+            <Typography variant="body1" sx={{ textAlign: 'center', mb: 2 }}>
+              Release notes and instructions will appear here soon.
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
+              Version: {version}
+            </Typography>
+            <Box sx={{ 
+              mt: 4, 
+              p: 3, 
+              bgcolor: 'grey.50', 
+              borderRadius: 2,
+              borderLeft: 4,
+              borderColor: 'primary.main'
+            }}>
+              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                <strong>Fun Fact:</strong> Did you know? The longest train ever recorded was over 7.3 km long!
+              </Typography>
+            </Box>
+          </Box>
         </TabPanel>
       </Container>
 
