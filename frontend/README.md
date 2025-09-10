@@ -1,11 +1,37 @@
 # React + TypeScript + Vite + Material UI
 
-This template provides a minimal setup to get React working in Vite with HMR, ESLint rules, and Material UI components.
+This frontend implements a dual-app architecture for TrainStation, providing both administrative CRUD operations and real-time command center functionality.
 
-Currently, two official plugins are available:
+## Architecture
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Dual App Structure
+
+The frontend consists of two main applications:
+
+1. **Admin App** (`src/AdminApp.tsx`) - Original tabbed interface for CRUD operations:
+   - Accessories & Categories management
+   - Track Lines, Sections, Switches management
+   - Connection management
+   - System administration
+
+2. **Command Center** (`src/CommandCenter*.tsx`) - Real-time control interface:
+   - System monitoring dashboard
+   - Track control panels
+   - Virtual track layout (placeholder)
+   - Power and emergency controls
+
+### Shared Components
+
+Located in `shared/` directory:
+- `shared/components/Header.tsx` - Navigation header with app mode switcher
+- `shared/components/Footer.tsx` - Version information footer
+- `shared/theme/index.ts` - Consistent Material UI theme
+
+### Router System
+
+- `src/AppRouter.tsx` - Main router that switches between Admin and Command Center modes
+- Mode selection preserved in URL (`?mode=admin` or `?mode=command-center`)
+- Shared layout components (header/footer) across both apps
 
 ## Material UI Integration
 
