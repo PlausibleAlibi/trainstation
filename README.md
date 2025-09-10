@@ -161,10 +161,45 @@ To rebuild all containers (useful after code changes):
 ./Scripts/rebuild.sh --clean   # Reset database
 ```
 
+## 🎛️ Command Center
+
+TrainStation now includes a Command Center frontend for real-time control and monitoring of model railway operations.
+
+### Features
+
+- **Dual App Architecture**: Switch between Admin (CRUD operations) and Command Center (control operations) modes
+- **Control Dashboard**: Monitor system status, power state, active trains, and warnings
+- **Virtual Track Layout**: Placeholder for future interactive track visualization
+- **Shared Components**: Header, footer, and styling shared between both apps
+- **Real-time Controls**: Power management and emergency stop functionality (placeholders)
+
+### Usage
+
+Access the Command Center by:
+1. Navigate to the main application
+2. Click the "Command Center" button in the header 
+3. Switch back to "Admin" mode for CRUD operations
+
+The mode is preserved in the URL with `?mode=command-center` or `?mode=admin`.
+
+### Future Enhancements
+
+The Command Center foundation supports future features:
+- Individual track section controls
+- Switch position controls  
+- Train speed and direction controls
+- Real-time system monitoring
+- Interactive track layout visualization
+- Historical event logs
+
 ## 📁 Project Structure
 
 - `app/` - FastAPI backend code
-- `frontend/` - React frontend code  
+- `frontend/` - React frontend code with dual app architecture:
+  - `src/AdminApp.tsx` - Admin CRUD interface (original functionality)
+  - `src/CommandCenter*.tsx` - Command Center control interface
+  - `src/AppRouter.tsx` - Main router handling app mode switching
+  - `shared/` - Shared components, theme, and utilities
 - `nginx/` - Nginx reverse proxy configurations
 - `deploy/` - Docker Compose and deployment configuration
 - `Scripts/` - Utility scripts for development
