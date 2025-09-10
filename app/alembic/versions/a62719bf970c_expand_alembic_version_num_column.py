@@ -1,7 +1,7 @@
 """Expand alembic_version.version_num column to VARCHAR(128)
 
 Revision ID: a62719bf970c
-Revises: merge_add_track_tables_and_f714679db2b0
+Revises: add_track_tables, f714679db2b0
 Create Date: 2025-01-21 15:00:00.000000
 
 """
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = 'a62719bf970c'
-down_revision = 'merge_add_track_tables_and_f714679db2b0'
+down_revision = ('add_track_tables', 'f714679db2b0')
 branch_labels = None
 depends_on = None
 
