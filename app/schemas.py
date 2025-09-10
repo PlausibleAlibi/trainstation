@@ -1,6 +1,7 @@
 import enum
 from typing import Optional, Literal
 from pydantic import BaseModel
+from datetime import datetime
 
 
 # ---------- Enums ----------
@@ -18,6 +19,14 @@ class ConnectionType(str, enum.Enum):
     direct = "direct"
     switch = "switch"
     junction = "junction"
+
+class TrainAssetType(str, enum.Enum):
+    Engine = "Engine"
+    Car = "Car"
+    Caboose = "Caboose"
+    Locomotive = "Locomotive"
+    FreightCar = "FreightCar"
+    PassengerCar = "PassengerCar"
 
 # ---------- Categories ----------
 class CategoryCreate(BaseModel):
@@ -62,7 +71,6 @@ class AccessoryWithCategory(AccessoryRead):
 class TrackLineCreate(BaseModel):
     name: str
     description: Optional[str] = None
-    length: Optional[float] = None
     isActive: bool = True
 
 class TrackLineRead(TrackLineCreate):
@@ -75,10 +83,6 @@ class TrackLineWithSections(TrackLineRead):
 class SectionCreate(BaseModel):
     name: str
     trackLineId: int
-    startPosition: Optional[float] = None
-    endPosition: Optional[float] = None
-    length: Optional[float] = None
-    isOccupied: bool = False
     isActive: bool = True
 
 class SectionRead(SectionCreate):
@@ -128,3 +132,33 @@ class TimedRequest(BaseModel):
 class ApplyRequest(TimedRequest):
     # Only meaningful for controlType == onOff
     state: Optional[Literal["on", "off"]] = None
+
+# ---------- Train Assets ----------
+class TrainAssetCreate(BaseModel):
+    assetId: Optional[str] = None  # optional, client-readable
+    rfidTagId: str  # RFID tag UID
+    type: TrainAssetType  # enum: Engine, Car, Caboose, etc.
+    roadNumber: str  # railroad asset number
+    description: Optional[str] = None  # optional info
+    active: bool = True
+
+class TrainAssetRead(TrainAssetCreate):
+    id: int
+    dateAdded: datetime
+
+class TrainAssetWithEvents(TrainAssetRead):
+    locationEvents: list['AssetLocationEventRead'] = []
+
+# ---------- Asset Location Events ----------
+class AssetLocationEventCreate(BaseModel):
+    assetId: int  # FK to TrainAsset
+    rfidTagId: str  # tag detected
+    location: str  # reader/zone name
+    readerId: str
+
+class AssetLocationEventRead(AssetLocationEventCreate):
+    eventId: int
+    timestamp: datetime
+
+class AssetLocationEventWithAsset(AssetLocationEventRead):
+    asset: Optional[TrainAssetRead] = None

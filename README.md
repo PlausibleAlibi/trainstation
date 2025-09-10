@@ -116,8 +116,38 @@ git pull
 ```
 
 The current database schema includes full support for:
-- **switches** - Railway switches/turnouts with positioning and routing
-- **sectionConnections** - Track section connections with switch integration  
+- **Categories** - Accessory categories and classification
+- **TrackLines** - Railway track line definitions  
+- **Sections** - Individual track sections within lines
+- **Accessories** - Physical accessories (signals, lights, etc.)
+- **Switches** - Railway switches/turnouts with positioning and routing
+- **SectionConnections** - Track section connections with switch integration
+- **TrainAssets** - RFID-enabled train assets (engines, cars, cabooses, etc.)
+- **AssetLocationEvents** - Real-time asset location tracking with timestamps
+
+## 🏷️ Asset Tracking Features
+
+TrainStation now includes comprehensive RFID-based asset tracking:
+
+### Train Assets
+- **Asset Management**: Track engines, cars, cabooses, and other rolling stock
+- **RFID Integration**: Each asset linked to unique RFID tag for automated detection
+- **Asset Types**: Configurable asset types (Engine, Car, Caboose, Locomotive, FreightCar, PassengerCar)
+- **Road Numbers**: Standard railroad asset numbering
+- **Status Tracking**: Active/inactive asset status management
+
+### Location Events
+- **Real-time Tracking**: Automatic location events when RFID tags are detected
+- **Reader Integration**: Support for multiple RFID readers and zones
+- **Historical Data**: Complete location history for each asset
+- **Timestamp Tracking**: Precise timing of all asset movements
+
+### API Endpoints
+- `GET /trainAssets` - List and search assets with filtering options
+- `POST /trainAssets` - Add new assets to the system  
+- `GET /trainAssets/{id}` - Get asset details with location history
+- `GET /assetLocationEvents` - Query location events with filtering
+- `GET /assetLocationEvents/assets/{id}/latest` - Get current asset location
 - All supporting tables (categories, sections, accessories, trackLines)
 
 See `app/alembic/README.md` for detailed migration documentation.

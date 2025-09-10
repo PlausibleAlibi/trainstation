@@ -55,12 +55,12 @@ def create_section_connection(payload: SectionConnectionCreate, db: Session = De
     db.commit()
     db.refresh(item)
     return SectionConnectionRead(
-        id=item.id,
-        fromSectionId=item.from_section_id,
-        toSectionId=item.to_section_id,
+        id=item.Id,
+        fromSectionId=item.FromSectionId,
+        toSectionId=item.ToSectionId,
         connectionType=item.connection_type,
-        switchId=item.switch_id,
-        isActive=item.is_active,
+        switchId=item.SwitchId,
+        isActive=item.IsActive,
     )
 
 # -------- List (with filters & optional embedded relations) --------
@@ -78,65 +78,65 @@ def list_section_connections(
 ):
     qry = db.query(SectionConnection)
     if fromSectionId is not None:
-        qry = qry.filter(SectionConnection.from_section_id == fromSectionId)
+        qry = qry.filter(SectionConnection.FromSectionId == fromSectionId)
     if toSectionId is not None:
-        qry = qry.filter(SectionConnection.to_section_id == toSectionId)
+        qry = qry.filter(SectionConnection.ToSectionId == toSectionId)
     if connectionType is not None:
         qry = qry.filter(SectionConnection.connection_type == connectionType)
     if switchId is not None:
-        qry = qry.filter(SectionConnection.switch_id == switchId)
+        qry = qry.filter(SectionConnection.SwitchId == switchId)
     if active is not None:
-        qry = qry.filter(SectionConnection.is_active == active)
+        qry = qry.filter(SectionConnection.IsActive == active)
     
-    rows = qry.order_by(SectionConnection.id.asc()).offset(offset).limit(limit).all()
+    rows = qry.order_by(SectionConnection.Id.asc()).offset(offset).limit(limit).all()
 
     if not includeRelations:
         return [
             SectionConnectionRead(
-                id=r.id,
-                fromSectionId=r.from_section_id,
-                toSectionId=r.to_section_id,
+                id=r.Id,
+                fromSectionId=r.FromSectionId,
+                toSectionId=r.ToSectionId,
                 connectionType=r.connection_type,
-                switchId=r.switch_id,
-                isActive=r.is_active,
+                switchId=r.SwitchId,
+                isActive=r.IsActive,
             ) for r in rows
         ]
 
     return [
         SectionConnectionWithRelations(
-            id=r.id,
-            fromSectionId=r.from_section_id,
-            toSectionId=r.to_section_id,
+            id=r.Id,
+            fromSectionId=r.FromSectionId,
+            toSectionId=r.ToSectionId,
             connectionType=r.connection_type,
-            switchId=r.switch_id,
-            isActive=r.is_active,
+            switchId=r.SwitchId,
+            isActive=r.IsActive,
             fromSection=SectionRead(
-                id=r.from_section.id,
-                name=r.from_section.name,
-                trackLineId=r.from_section.track_line_id,
-                startPosition=r.from_section.start_position,
-                endPosition=r.from_section.end_position,
-                length=r.from_section.length,
-                isOccupied=r.from_section.is_occupied,
-                isActive=r.from_section.is_active,
+                id=r.FromSection.Id,
+                name=r.FromSection.Name,
+                trackLineId=r.FromSection.track_line_id,
+                startPosition=r.FromSection.start_position,
+                endPosition=r.FromSection.end_position,
+                length=r.FromSection.length,
+                isOccupied=r.FromSection.is_occupied,
+                isActive=r.FromSection.IsActive,
             ) if r.from_section else None,
             toSection=SectionRead(
-                id=r.to_section.id,
-                name=r.to_section.name,
-                trackLineId=r.to_section.track_line_id,
-                startPosition=r.to_section.start_position,
-                endPosition=r.to_section.end_position,
-                length=r.to_section.length,
-                isOccupied=r.to_section.is_occupied,
-                isActive=r.to_section.is_active,
+                id=r.ToSection.Id,
+                name=r.ToSection.Name,
+                trackLineId=r.ToSection.track_line_id,
+                startPosition=r.ToSection.start_position,
+                endPosition=r.ToSection.end_position,
+                length=r.ToSection.length,
+                isOccupied=r.ToSection.is_occupied,
+                isActive=r.ToSection.IsActive,
             ) if r.to_section else None,
             switch=SwitchRead(
-                id=r.switch.id,
-                name=r.switch.name,
-                accessoryId=r.switch.accessory_id,
-                sectionId=r.switch.section_id,
-                position=r.switch.position,
-                isActive=r.switch.is_active,
+                id=r.Switch.Id,
+                name=r.Switch.Name,
+                accessoryId=r.Switch.accessory_id,
+                sectionId=r.Switch.SectionId,
+                position=r.Switch.position,
+                isActive=r.Switch.IsActive,
             ) if r.switch else None,
         ) for r in rows
     ]
@@ -149,39 +149,39 @@ def get_section_connection(id: int, db: Session = Depends(get_db)):
         raise HTTPException(404, "Section connection not found")
     
     return SectionConnectionWithRelations(
-        id=r.id,
-        fromSectionId=r.from_section_id,
-        toSectionId=r.to_section_id,
+        id=r.Id,
+        fromSectionId=r.FromSectionId,
+        toSectionId=r.ToSectionId,
         connectionType=r.connection_type,
-        switchId=r.switch_id,
-        isActive=r.is_active,
+        switchId=r.SwitchId,
+        isActive=r.IsActive,
         fromSection=SectionRead(
-            id=r.from_section.id,
-            name=r.from_section.name,
-            trackLineId=r.from_section.track_line_id,
-            startPosition=r.from_section.start_position,
-            endPosition=r.from_section.end_position,
-            length=r.from_section.length,
-            isOccupied=r.from_section.is_occupied,
-            isActive=r.from_section.is_active,
+            id=r.FromSection.Id,
+            name=r.FromSection.Name,
+            trackLineId=r.FromSection.track_line_id,
+            startPosition=r.FromSection.start_position,
+            endPosition=r.FromSection.end_position,
+            length=r.FromSection.length,
+            isOccupied=r.FromSection.is_occupied,
+            isActive=r.FromSection.IsActive,
         ) if r.from_section else None,
         toSection=SectionRead(
-            id=r.to_section.id,
-            name=r.to_section.name,
-            trackLineId=r.to_section.track_line_id,
-            startPosition=r.to_section.start_position,
-            endPosition=r.to_section.end_position,
-            length=r.to_section.length,
-            isOccupied=r.to_section.is_occupied,
-            isActive=r.to_section.is_active,
+            id=r.ToSection.Id,
+            name=r.ToSection.Name,
+            trackLineId=r.ToSection.track_line_id,
+            startPosition=r.ToSection.start_position,
+            endPosition=r.ToSection.end_position,
+            length=r.ToSection.length,
+            isOccupied=r.ToSection.is_occupied,
+            isActive=r.ToSection.IsActive,
         ) if r.to_section else None,
         switch=SwitchRead(
-            id=r.switch.id,
-            name=r.switch.name,
-            accessoryId=r.switch.accessory_id,
-            sectionId=r.switch.section_id,
-            position=r.switch.position,
-            isActive=r.switch.is_active,
+            id=r.Switch.Id,
+            name=r.Switch.Name,
+            accessoryId=r.Switch.accessory_id,
+            sectionId=r.Switch.SectionId,
+            position=r.Switch.position,
+            isActive=r.Switch.IsActive,
         ) if r.switch else None,
     )
 
@@ -216,20 +216,20 @@ def update_section_connection(
     if payload.fromSectionId == payload.toSectionId:
         raise HTTPException(400, "Cannot connect section to itself")
 
-    r.from_section_id = payload.fromSectionId
-    r.to_section_id = payload.toSectionId
+    r.FromSectionId = payload.fromSectionId
+    r.ToSectionId = payload.toSectionId
     r.connection_type = payload.connectionType
-    r.switch_id = payload.switchId
-    r.is_active = payload.isActive
+    r.SwitchId = payload.switchId
+    r.IsActive = payload.isActive
     db.commit()
     db.refresh(r)
     return SectionConnectionRead(
-        id=r.id,
-        fromSectionId=r.from_section_id,
-        toSectionId=r.to_section_id,
+        id=r.Id,
+        fromSectionId=r.FromSectionId,
+        toSectionId=r.ToSectionId,
         connectionType=r.connection_type,
-        switchId=r.switch_id,
-        isActive=r.is_active,
+        switchId=r.SwitchId,
+        isActive=r.IsActive,
     )
 
 # -------- Delete --------

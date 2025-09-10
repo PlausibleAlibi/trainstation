@@ -30,7 +30,7 @@ def create_section(payload: SectionCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="trackLineId does not exist")
 
     item = Section(
-        name=payload.name,
+        name=payload.Name,
         track_line_id=payload.trackLineId,
         start_position=payload.startPosition,
         end_position=payload.endPosition,
@@ -42,14 +42,14 @@ def create_section(payload: SectionCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(item)
     return SectionRead(
-        id=item.id,
-        name=item.name,
-        trackLineId=item.track_line_id,
+        id=item.Id,
+        name=item.Name,
+        trackLineId=item.TrackLineId,
         startPosition=item.start_position,
         endPosition=item.end_position,
         length=item.length,
         isOccupied=item.is_occupied,
-        isActive=item.is_active,
+        isActive=item.IsActive,
     )
 
 # -------- List (with filters & optional embedded track line) --------
@@ -66,47 +66,47 @@ def list_sections(
 ):
     qry = db.query(Section)
     if trackLineId is not None:
-        qry = qry.filter(Section.track_line_id == trackLineId)
+        qry = qry.filter(Section.TrackLineId == trackLineId)
     if occupied is not None:
         qry = qry.filter(Section.is_occupied == occupied)
     if active is not None:
-        qry = qry.filter(Section.is_active == active)
+        qry = qry.filter(Section.IsActive == active)
     if q:
         like = f"%{q}%"
-        qry = qry.filter(Section.name.ilike(like))
+        qry = qry.filter(Section.Name.ilike(like))
     
-    rows = qry.order_by(Section.name.asc()).offset(offset).limit(limit).all()
+    rows = qry.order_by(Section.Name.asc()).offset(offset).limit(limit).all()
 
     if not includeTrackLine:
         return [
             SectionRead(
-                id=r.id,
-                name=r.name,
-                trackLineId=r.track_line_id,
+                id=r.Id,
+                name=r.Name,
+                trackLineId=r.TrackLineId,
                 startPosition=r.start_position,
                 endPosition=r.end_position,
                 length=r.length,
                 isOccupied=r.is_occupied,
-                isActive=r.is_active,
+                isActive=r.IsActive,
             ) for r in rows
         ]
 
     return [
         SectionWithTrackLine(
-            id=r.id,
-            name=r.name,
-            trackLineId=r.track_line_id,
+            id=r.Id,
+            name=r.Name,
+            trackLineId=r.TrackLineId,
             startPosition=r.start_position,
             endPosition=r.end_position,
             length=r.length,
             isOccupied=r.is_occupied,
-            isActive=r.is_active,
+            isActive=r.IsActive,
             trackLine=TrackLineRead(
-                id=r.track_line.id,
-                name=r.track_line.name,
-                description=r.track_line.description,
-                length=r.track_line.length,
-                isActive=r.track_line.is_active,
+                id=r.TrackLine.Id,
+                name=r.TrackLine.Name,
+                description=r.TrackLine.description,
+                length=r.TrackLine.length,
+                isActive=r.TrackLine.IsActive,
             ) if r.track_line else None,
         ) for r in rows
     ]
@@ -120,29 +120,29 @@ def get_section(id: int, db: Session = Depends(get_db)):
     
     from schemas import SwitchRead
     return SectionWithRelations(
-        id=r.id,
-        name=r.name,
-        trackLineId=r.track_line_id,
+        id=r.Id,
+        name=r.Name,
+        trackLineId=r.TrackLineId,
         startPosition=r.start_position,
         endPosition=r.end_position,
         length=r.length,
         isOccupied=r.is_occupied,
-        isActive=r.is_active,
+        isActive=r.IsActive,
         trackLine=TrackLineRead(
-            id=r.track_line.id,
-            name=r.track_line.name,
-            description=r.track_line.description,
-            length=r.track_line.length,
-            isActive=r.track_line.is_active,
+            id=r.TrackLine.Id,
+            name=r.TrackLine.Name,
+            description=r.TrackLine.description,
+            length=r.TrackLine.length,
+            isActive=r.TrackLine.IsActive,
         ) if r.track_line else None,
         switches=[
             SwitchRead(
-                id=s.id,
-                name=s.name,
+                id=s.Id,
+                name=s.Name,
                 accessoryId=s.accessory_id,
-                sectionId=s.section_id,
+                sectionId=s.SectionId,
                 position=s.position,
-                isActive=s.is_active,
+                isActive=s.IsActive,
             ) for s in r.switches
         ]
     )
@@ -163,24 +163,24 @@ def update_section(
     if not track_line:
         raise HTTPException(400, "trackLineId does not exist")
 
-    r.name = payload.name
-    r.track_line_id = payload.trackLineId
+    r.Name = payload.Name
+    r.TrackLineId = payload.trackLineId
     r.start_position = payload.startPosition
     r.end_position = payload.endPosition
     r.length = payload.length
     r.is_occupied = payload.isOccupied
-    r.is_active = payload.isActive
+    r.IsActive = payload.isActive
     db.commit()
     db.refresh(r)
     return SectionRead(
-        id=r.id,
-        name=r.name,
-        trackLineId=r.track_line_id,
+        id=r.Id,
+        name=r.Name,
+        trackLineId=r.TrackLineId,
         startPosition=r.start_position,
         endPosition=r.end_position,
         length=r.length,
         isOccupied=r.is_occupied,
-        isActive=r.is_active,
+        isActive=r.IsActive,
     )
 
 # -------- Delete --------
@@ -192,12 +192,12 @@ def delete_section(id: int, db: Session = Depends(get_db)):
     
     # Check if there are switches or connections using this section
     from models import Switch, SectionConnection
-    if db.query(Switch).filter(Switch.section_id == id).first():
+    if db.query(Switch).filter(Switch.SectionId == id).first():
         raise HTTPException(400, "Section has switches; reassign or delete them first")
     
     if (db.query(SectionConnection)
-        .filter((SectionConnection.from_section_id == id) | 
-                (SectionConnection.to_section_id == id))
+        .filter((SectionConnection.FromSectionId == id) | 
+                (SectionConnection.ToSectionId == id))
         .first()):
         raise HTTPException(400, "Section has connections; delete them first")
     

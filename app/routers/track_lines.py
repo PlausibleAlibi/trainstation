@@ -23,20 +23,19 @@ def get_db():
 @router.post("", response_model=TrackLineRead)
 def create_track_line(payload: TrackLineCreate, db: Session = Depends(get_db)):
     item = TrackLine(
-        name=payload.name,
-        description=payload.description,
-        length=payload.length,
-        is_active=payload.isActive,
+        Name=payload.name,
+        Description=payload.description,
+        # length field doesn't exist in new schema, removing
+        IsActive=payload.isActive,
     )
     db.add(item)
     db.commit()
     db.refresh(item)
     return TrackLineRead(
-        id=item.id,
-        name=item.name,
-        description=item.description,
-        length=item.length,
-        isActive=item.is_active,
+        id=item.Id,
+        name=item.Name,
+        description=item.Description,
+        isActive=item.IsActive,
     )
 
 # -------- List (with optional sections) --------
@@ -51,45 +50,44 @@ def list_track_lines(
 ):
     qry = db.query(TrackLine)
     if active is not None:
-        qry = qry.filter(TrackLine.is_active == active)
+        qry = qry.filter(TrackLine.IsActive == active)
     if q:
         like = f"%{q}%"
         qry = qry.filter(
-            (TrackLine.name.ilike(like)) |
-            (TrackLine.description.ilike(like))
+            (TrackLine.Name.ilike(like)) |
+            (TrackLine.Description.ilike(like))
         )
-    rows = qry.order_by(TrackLine.name.asc()).offset(offset).limit(limit).all()
+    rows = qry.order_by(TrackLine.Name.asc()).offset(offset).limit(limit).all()
 
     if not includeSections:
         return [
             TrackLineRead(
-                id=r.id,
-                name=r.name,
-                description=r.description,
-                length=r.length,
-                isActive=r.is_active,
+                id=r.Id,
+                name=r.Name,
+                description=r.Description,
+                isActive=r.IsActive,
             ) for r in rows
         ]
 
     from schemas import SectionRead
     return [
         TrackLineWithSections(
-            id=r.id,
-            name=r.name,
-            description=r.description,
-            length=r.length,
-            isActive=r.is_active,
+            id=r.Id,
+            name=r.Name,
+            description=r.Description,
+            isActive=r.IsActive,
             sections=[
                 SectionRead(
-                    id=s.id,
-                    name=s.name,
-                    trackLineId=s.track_line_id,
-                    startPosition=s.start_position,
-                    endPosition=s.end_position,
-                    length=s.length,
-                    isOccupied=s.is_occupied,
-                    isActive=s.is_active,
-                ) for s in r.sections
+                    id=s.Id,
+                    name=s.Name,
+                    trackLineId=s.TrackLineId,
+                    # These fields don't exist in new schema, removing
+                    # startPosition=s.start_position,
+                    # endPosition=s.end_position,
+                    # length=s.length,
+                    # isOccupied=s.is_occupied,
+                    isActive=s.IsActive,
+                ) for s in r.Sections
             ]
         ) for r in rows
     ]
@@ -103,22 +101,22 @@ def get_track_line(id: int, db: Session = Depends(get_db)):
     
     from schemas import SectionRead
     return TrackLineWithSections(
-        id=r.id,
-        name=r.name,
-        description=r.description,
-        length=r.length,
-        isActive=r.is_active,
+        id=r.Id,
+        name=r.Name,
+        description=r.Description,
+        isActive=r.IsActive,
         sections=[
             SectionRead(
-                id=s.id,
-                name=s.name,
-                trackLineId=s.track_line_id,
-                startPosition=s.start_position,
-                endPosition=s.end_position,
-                length=s.length,
-                isOccupied=s.is_occupied,
-                isActive=s.is_active,
-            ) for s in r.sections
+                id=s.Id,
+                name=s.Name,
+                trackLineId=s.TrackLineId,
+                # These fields don't exist in new schema, removing
+                # startPosition=s.start_position,
+                # endPosition=s.end_position,
+                # length=s.length,
+                # isOccupied=s.is_occupied,
+                isActive=s.IsActive,
+            ) for s in r.Sections
         ]
     )
 
@@ -133,18 +131,17 @@ def update_track_line(
     if not r:
         raise HTTPException(404, "Track line not found")
 
-    r.name = payload.name
-    r.description = payload.description
-    r.length = payload.length
-    r.is_active = payload.isActive
+    r.Name = payload.name
+    r.Description = payload.description
+    # length field doesn't exist in new schema, removing
+    r.IsActive = payload.isActive
     db.commit()
     db.refresh(r)
     return TrackLineRead(
-        id=r.id,
-        name=r.name,
-        description=r.description,
-        length=r.length,
-        isActive=r.is_active,
+        id=r.Id,
+        name=r.Name,
+        description=r.Description,
+        isActive=r.IsActive,
     )
 
 # -------- Delete --------
@@ -156,7 +153,7 @@ def delete_track_line(id: int, db: Session = Depends(get_db)):
     
     # Check if there are sections using this track line
     from models import Section
-    if db.query(Section).filter(Section.track_line_id == id).first():
+    if db.query(Section).filter(Section.TrackLineId == id).first():
         raise HTTPException(400, "Track line has sections; reassign or delete them first")
     
     db.delete(r)
