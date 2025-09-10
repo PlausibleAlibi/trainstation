@@ -18,6 +18,9 @@ import {
   Settings as AccessoryIcon,
 } from '@mui/icons-material';
 
+// Import the train collision image
+import trainCollisionImage from './assets/train-collision.svg';
+
 // Import all the managers
 import TrackLinesManager from './TrackLinesManager';
 import SectionsManager from './SectionsManager';
@@ -141,13 +144,43 @@ export default function TrainStationApp() {
             justifyContent: 'center', 
             minHeight: '60vh',
             textAlign: 'center',
-            gap: 3
+            gap: 4,
+            py: 4
           }}>
-            <Typography variant="h1" sx={{ fontSize: '8rem', lineHeight: 1 }}>
-              🚂💥
-            </Typography>
-            <Typography variant="h4" component="h1" gutterBottom>
+            <Box sx={{
+              maxWidth: 500,
+              width: '100%',
+              height: 'auto',
+              borderRadius: 3,
+              overflow: 'hidden',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+              background: 'linear-gradient(145deg, #f0f0f0, #ffffff)',
+              padding: 2,
+              mb: 2
+            }}>
+              <img 
+                src={trainCollisionImage} 
+                alt="Train Collision Scene - Two trains colliding with dramatic explosion"
+                style={{ 
+                  width: '100%', 
+                  height: 'auto',
+                  borderRadius: '8px'
+                }}
+              />
+            </Box>
+            <Typography variant="h3" component="h1" gutterBottom sx={{
+              fontWeight: 'bold',
+              color: 'primary.main',
+              textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+            }}>
               Welcome to TrainStation!
+            </Typography>
+            <Typography variant="h6" color="text.secondary" sx={{
+              maxWidth: 600,
+              lineHeight: 1.6,
+              fontStyle: 'italic'
+            }}>
+              Experience the dramatic world of model railway management with our comprehensive control center
             </Typography>
           </Box>
         </TabPanel>
