@@ -27,6 +27,7 @@ import SectionsManager from './SectionsManager';
 import SwitchesManager from './SwitchesManager';
 import SectionConnectionsManager from './SectionConnectionsManager';
 import App from './App'; // Original accessories/categories manager
+import Footer from './components/Footer';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -57,8 +58,6 @@ export default function TrainStationApp() {
     setCurrentTab(newValue);
   };
 
-  const version = import.meta.env.VITE_VERSION || 'dev';
-
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <AppBar position="static">
@@ -66,9 +65,6 @@ export default function TrainStationApp() {
           <TrainIcon sx={{ mr: 2 }} />
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Train Station Control Center
-          </Typography>
-          <Typography variant="body2" sx={{ opacity: 0.8 }}>
-            v{version}
           </Typography>
         </Toolbar>
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -215,9 +211,6 @@ export default function TrainStationApp() {
             <Typography variant="body1" sx={{ textAlign: 'center', mb: 2 }}>
               Release notes and instructions will appear here soon.
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
-              Version: {version}
-            </Typography>
             <Box sx={{ 
               mt: 4, 
               p: 3, 
@@ -234,11 +227,7 @@ export default function TrainStationApp() {
         </TabPanel>
       </Container>
 
-      <Box component="footer" sx={{ py: 1, px: 2, bgcolor: 'grey.100', borderTop: 1, borderColor: 'divider' }}>
-        <Typography variant="body2" color="text.secondary" textAlign="center">
-          Train Station Control Center - Model Railway Management System
-        </Typography>
-      </Box>
+      <Footer />
     </Box>
   );
 }
