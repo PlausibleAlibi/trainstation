@@ -1,5 +1,28 @@
 import { useState, useEffect, useMemo } from 'react';
 import EntityForm from './components/EntityForm';
+import {
+  Box,
+  Paper,
+  Typography,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  Alert,
+  CircularProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Chip,
+  FormControlLabel,
+  Checkbox,
+} from '@mui/material';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, LinearScale as SectionIcon } from '@mui/icons-material';
 // ...existing code...
 // ...existing code...
 import { DeleteConfirmationModal } from './components/modal';
@@ -33,6 +56,41 @@ type SectionCreate = Omit<Section, 'id'>;
 export default function SectionsManager() {
   const [sections, setSections] = useState<SectionWithTrackLine[]>([]);
   const [trackLines, setTrackLines] = useState<TrackLine[]>([]);
+  const [loading, setLoading] = useState(false);
+  // Load all track lines
+  const loadTrackLines = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API}/tracklines`);
+      const data = await apiCall<TrackLine[]>(response);
+      setTrackLines(data);
+    } catch (e) {
+      setError('Failed to load track lines');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load all sections (optionally filtered)
+  const loadSections = async () => {
+    setLoading(true);
+    try {
+      let url = `${API}/sections`;
+      if (selectedTrackLine !== 'all') {
+        url += `?trackLineId=${selectedTrackLine}`;
+      }
+      const response = await fetch(url);
+      let data = await apiCall<SectionWithTrackLine[]>(response);
+      if (showOccupiedOnly) {
+        data = data.filter((section) => section.isOccupied);
+      }
+      setSections(data);
+    } catch (e) {
+      setError('Failed to load sections');
+    } finally {
+      setLoading(false);
+    }
+  };
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -54,37 +112,6 @@ export default function SectionsManager() {
     if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
     return res.json();
   }
-import React, { useState, useEffect, useMemo } from 'react';
-import {
-  Box,
-  Paper,
-  Typography,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  IconButton,
-  Alert,
-  CircularProgress,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Chip,
-  FormControlLabel,
-  Checkbox,
-} from '@mui/material';
-import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  LinearScale as SectionIcon,
-} from '@mui/icons-material';
-import { EntityModal, DeleteConfirmationModal } from './components/modal';
-import { createSectionModalConfig } from './components/configs/modalConfigs';
 
   useEffect(() => {
     loadTrackLines();
@@ -200,7 +227,7 @@ import { createSectionModalConfig } from './components/configs/modalConfigs';
             <InputLabel>Track Line</InputLabel>
             <Select
               value={selectedTrackLine}
-              onChange={(e: React.ChangeEvent<{ value: unknown }>) => setSelectedTrackLine(e.target.value as number | 'all')}
+              onChange={(e) => setSelectedTrackLine(e.target.value as number | 'all')}
               label="Track Line"
             >
               <MenuItem value="all">All Track Lines</MenuItem>
