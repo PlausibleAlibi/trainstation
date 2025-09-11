@@ -244,7 +244,7 @@ export default function SwitchesManager() {
             <InputLabel>Section</InputLabel>
             <Select
               value={selectedSection}
-              onChange={(e) => setSelectedSection(e.target.value as number | 'all')}
+              onChange={(e: React.ChangeEvent<{ value: unknown }>) => setSelectedSection(e.target.value as number | 'all')}
               label="Section"
             >
               <MenuItem value="all">All Sections</MenuItem>
@@ -260,7 +260,7 @@ export default function SwitchesManager() {
             <InputLabel>Position</InputLabel>
             <Select
               value={selectedPosition}
-              onChange={(e) => setSelectedPosition(e.target.value)}
+              onChange={(e: React.ChangeEvent<{ value: unknown }>) => setSelectedPosition(e.target.value as string)}
               label="Position"
             >
               <MenuItem value="all">All Positions</MenuItem>
@@ -282,8 +282,8 @@ export default function SwitchesManager() {
           </Box>
         </Box>
         {(accessories.length === 0 || sections.length === 0) && (
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Create accessories and sections before adding switches.
+          <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+            You must create at least one accessory and one section before you can add a switch. Please add them in their respective tabs.
           </Typography>
         )}
       </Paper>

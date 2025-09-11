@@ -252,7 +252,7 @@ export default function SectionConnectionsManager() {
             <InputLabel>Connection Type</InputLabel>
             <Select
               value={selectedConnectionType}
-              onChange={(e) => setSelectedConnectionType(e.target.value)}
+              onChange={(e: React.ChangeEvent<{ value: unknown }>) => setSelectedConnectionType(e.target.value as string)}
               label="Connection Type"
             >
               <MenuItem value="all">All Types</MenuItem>
@@ -266,7 +266,7 @@ export default function SectionConnectionsManager() {
             <InputLabel>From Section</InputLabel>
             <Select
               value={selectedSection}
-              onChange={(e) => setSelectedSection(e.target.value as number | 'all')}
+              onChange={(e: React.ChangeEvent<{ value: unknown }>) => setSelectedSection(e.target.value as number | 'all')}
               label="From Section"
             >
               <MenuItem value="all">All Sections</MenuItem>
@@ -290,8 +290,8 @@ export default function SectionConnectionsManager() {
           </Box>
         </Box>
         {sections.length < 2 && (
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Create at least two sections before adding connections.
+          <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+            You need at least two sections to create a connection. Please add more sections in the "Sections" tab.
           </Typography>
         )}
       </Paper>

@@ -227,7 +227,7 @@ export default function SectionsManager() {
             <InputLabel>Track Line</InputLabel>
             <Select
               value={selectedTrackLine}
-              onChange={(e) => setSelectedTrackLine(e.target.value as number | 'all')}
+              onChange={(e: React.ChangeEvent<{ value: unknown }>) => setSelectedTrackLine(e.target.value as number | 'all')}
               label="Track Line"
             >
               <MenuItem value="all">All Track Lines</MenuItem>
@@ -243,7 +243,7 @@ export default function SectionsManager() {
             control={
               <Checkbox
                 checked={showOccupiedOnly}
-                onChange={(e) => setShowOccupiedOnly(e.target.checked)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setShowOccupiedOnly(e.target.checked)}
               />
             }
             label="Occupied only"
@@ -261,8 +261,8 @@ export default function SectionsManager() {
           </Box>
         </Box>
         {trackLines.length === 0 && (
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Create track lines first before adding sections.
+          <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+            You must create at least one track line before you can add a section. Go to the "Track Lines" tab and create a track line.
           </Typography>
         )}
       </Paper>
