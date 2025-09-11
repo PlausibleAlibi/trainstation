@@ -13,6 +13,7 @@ import {
   CallSplit as SwitchIcon,
   Hub as ConnectionIcon,
   Settings as AccessoryIcon,
+  Build as MaintenanceIcon,
 } from '@mui/icons-material';
 
 // Import the train collision image
@@ -23,6 +24,7 @@ import TrackLinesManager from './TrackLinesManager';
 import SectionsManager from './SectionsManager';
 import SwitchesManager from './SwitchesManager';
 import SectionConnectionsManager from './SectionConnectionsManager';
+import MaintenanceManager from './MaintenanceManager';
 import App from './App'; // Original accessories/categories manager
 
 interface TabPanelProps {
@@ -100,6 +102,12 @@ export default function AdminApp() {
             sx={{ minHeight: 48 }}
           />
           <Tab 
+            icon={<MaintenanceIcon />} 
+            label="Maintenance" 
+            iconPosition="start"
+            sx={{ minHeight: 48 }}
+          />
+          <Tab 
             icon={<InfoIcon />} 
             label="About" 
             iconPosition="start"
@@ -171,6 +179,9 @@ export default function AdminApp() {
           <SectionConnectionsManager />
         </TabPanel>
         <TabPanel value={currentTab} index={6}>
+          <MaintenanceManager />
+        </TabPanel>
+        <TabPanel value={currentTab} index={7}>
           <Box sx={{ 
             display: 'flex', 
             flexDirection: 'column', 
