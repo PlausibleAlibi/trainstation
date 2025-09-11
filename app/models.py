@@ -82,6 +82,8 @@ class SectionConnection(Base):
     SwitchId = Column(Integer, ForeignKey("Switches.Id"), nullable=True, index=True)
     RouteInfo = Column(String(255), nullable=True)  # Routing information
     IsBidirectional = Column(Boolean, nullable=False, default=True)
+    connection_type = Column(String(50), nullable=False, default="direct")  # Connection type: direct, switch, junction
+    IsActive = Column(Boolean, nullable=False, default=True)  # Active status
 
     FromSection = relationship("Section", foreign_keys=[FromSectionId], back_populates="OutgoingConnections", lazy="joined")
     ToSection = relationship("Section", foreign_keys=[ToSectionId], back_populates="IncomingConnections", lazy="joined")

@@ -45,11 +45,11 @@ def create_section_connection(payload: SectionConnectionCreate, db: Session = De
         raise HTTPException(status_code=400, detail="Cannot connect section to itself")
 
     item = SectionConnection(
-        from_section_id=payload.fromSectionId,
-        to_section_id=payload.toSectionId,
+        FromSectionId=payload.fromSectionId,
+        ToSectionId=payload.toSectionId,
         connection_type=payload.connectionType,
-        switch_id=payload.switchId,
-        is_active=payload.isActive,
+        SwitchId=payload.switchId,
+        IsActive=payload.isActive,
     )
     db.add(item)
     db.commit()
