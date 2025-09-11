@@ -67,6 +67,13 @@ The database schema includes the following tables managed by these migrations:
 - Proper foreign key relationships and indexes
 - All field names follow CamelCase convention (Id, Name, IsActive, etc.)
 
+### 002_add_connection_type_column.py
+**SectionConnections Enhancement** - Adds missing columns to SectionConnections table:
+- Adds `connection_type` column (VARCHAR(50), NOT NULL, default='direct')
+- Adds `IsActive` column (BOOLEAN, NOT NULL, default=true)
+- Updates existing rows with default values
+- Maintains backward compatibility with existing data
+
 ## Database Schema Notes
 
 ### TrainAssets Table
@@ -104,6 +111,8 @@ Manages connections between track sections:
 - Optional switch association for switch-controlled connections
 - `RouteInfo` field for routing metadata
 - `IsBidirectional` flag for connection directionality
+- `connection_type` field for connection type (direct, switch, junction) - defaults to "direct"
+- `IsActive` field for active status tracking - defaults to true
 
 ## Fresh Database Setup
 
