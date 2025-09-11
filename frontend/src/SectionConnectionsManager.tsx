@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Box,
   Paper,
@@ -10,10 +10,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   IconButton,
   Alert,
   CircularProgress,
@@ -22,8 +18,6 @@ import {
   Select,
   MenuItem,
   Chip,
-  FormControlLabel,
-  Checkbox,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -32,6 +26,8 @@ import {
   Hub as ConnectionIcon,
   ArrowRightAlt as ArrowIcon,
 } from '@mui/icons-material';
+import { EntityModal, DeleteConfirmationModal } from './components/modal';
+import { createConnectionModalConfig } from './components/configs/modalConfigs';
 
 // Types
 type Section = {
@@ -75,23 +71,19 @@ export default function SectionConnectionsManager() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [editingConnection, setEditingConnection] = useState<SectionConnectionWithRelations | null>(null);
+  const [deletingConnection, setDeletingConnection] = useState<{ id: number; name: string } | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Filters
   const [selectedConnectionType, setSelectedConnectionType] = useState<string | 'all'>('all');
   const [selectedSection, setSelectedSection] = useState<number | 'all'>('all');
 
-  // Form state
-  const [formData, setFormData] = useState<SectionConnectionCreate>({
-    fromSectionId: 0,
-    toSectionId: 0,
-    connectionType: 'direct',
-    switchId: undefined,
-    isActive: true,
-  });
-
   const API = import.meta.env.VITE_API_BASE ?? "http://localhost:8080";
+
+  // Create modal configuration
+  const modalConfig = useMemo(() => createConnectionModalConfig(sections, switches), [sections, switches]);
 
   // API helper
   async function apiCall<T>(res: Response): Promise<T> {
@@ -151,52 +143,25 @@ export default function SectionConnectionsManager() {
 
   // Open dialog for create/edit
   const openDialog = (connection?: SectionConnectionWithRelations) => {
-    if (connection) {
-      setEditingId(connection.id);
-      setFormData({
-        fromSectionId: connection.fromSectionId,
-        toSectionId: connection.toSectionId,
-        connectionType: connection.connectionType,
-        switchId: connection.switchId,
-        isActive: connection.isActive,
-      });
-    } else {
-      setEditingId(null);
-      setFormData({
-        fromSectionId: sections.length > 0 ? sections[0].id : 0,
-        toSectionId: sections.length > 1 ? sections[1].id : 0,
-        connectionType: 'direct',
-        switchId: undefined,
-        isActive: true,
-      });
-    }
+    setEditingConnection(connection || null);
     setDialogOpen(true);
+    setError(null);
   };
 
   // Close dialog
   const closeDialog = () => {
     setDialogOpen(false);
-    setEditingId(null);
+    setEditingConnection(null);
     setError(null);
   };
 
   // Save connection
-  const saveConnection = async () => {
-    if (!formData.fromSectionId || !formData.toSectionId) {
-      setError('Both from and to sections are required');
-      return;
-    }
-
-    if (formData.fromSectionId === formData.toSectionId) {
-      setError('From and to sections must be different');
-      return;
-    }
-
+  const saveConnection = async (formData: SectionConnectionCreate) => {
     setSaving(true);
     setError(null);
     try {
-      const url = editingId ? `${API}/sectionConnections/${editingId}` : `${API}/sectionConnections`;
-      const method = editingId ? 'PUT' : 'POST';
+      const url = editingConnection ? `${API}/sectionConnections/${editingConnection.id}` : `${API}/sectionConnections`;
+      const method = editingConnection ? 'PUT' : 'POST';
       
       const response = await fetch(url, {
         method,
@@ -213,26 +178,41 @@ export default function SectionConnectionsManager() {
       await apiCall(response);
       await loadConnections();
       closeDialog();
-    } catch (e: any) {
-      setError(e.message || 'Failed to save connection');
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : 'Failed to save connection';
+      setError(errorMessage);
+      throw e;
     } finally {
       setSaving(false);
     }
   };
 
+  // Open delete confirmation
+  const openDeleteConfirmation = (connection: SectionConnectionWithRelations) => {
+    const connectionName = `${getSectionName(connection.fromSectionId)} → ${getSectionName(connection.toSectionId)}`;
+    setDeletingConnection({ id: connection.id, name: connectionName });
+    setDeleteModalOpen(true);
+  };
+
+  // Close delete confirmation
+  const closeDeleteConfirmation = () => {
+    setDeleteModalOpen(false);
+    setDeletingConnection(null);
+  };
+
   // Delete connection
-  const deleteConnection = async (id: number) => {
-    if (!confirm('Delete this connection?')) {
-      return;
-    }
+  const deleteConnection = async () => {
+    if (!deletingConnection) return;
 
     setError(null);
     try {
-      const response = await fetch(`${API}/sectionConnections/${id}`, { method: 'DELETE' });
+      const response = await fetch(`${API}/sectionConnections/${deletingConnection.id}`, { method: 'DELETE' });
       await apiCall(response);
       await loadConnections();
-    } catch (e: any) {
-      setError(e.message || 'Failed to delete connection');
+      closeDeleteConfirmation();
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : 'Failed to delete connection';
+      setError(errorMessage);
     }
   };
 
@@ -387,13 +367,15 @@ export default function SectionConnectionsManager() {
                         size="small"
                         onClick={() => openDialog(connection)}
                         color="primary"
+                        aria-label="Edit connection"
                       >
                         <EditIcon />
                       </IconButton>
                       <IconButton
                         size="small"
-                        onClick={() => deleteConnection(connection.id)}
+                        onClick={() => openDeleteConfirmation(connection)}
                         color="error"
+                        aria-label="Delete connection"
                       >
                         <DeleteIcon />
                       </IconButton>
@@ -413,108 +395,33 @@ export default function SectionConnectionsManager() {
         </Paper>
       )}
 
-      {/* Create/Edit Dialog */}
-      <Dialog open={dialogOpen} onClose={closeDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          {editingId ? 'Edit Connection' : 'Create Connection'}
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <FormControl required fullWidth>
-              <InputLabel>From Section</InputLabel>
-              <Select
-                value={formData.fromSectionId}
-                onChange={(e) => setFormData({ ...formData, fromSectionId: e.target.value as number })}
-                label="From Section"
-              >
-                {sections.map((section) => (
-                  <MenuItem key={section.id} value={section.id} disabled={section.id === formData.toSectionId}>
-                    {section.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+      {/* Create/Edit Modal */}
+      <EntityModal<SectionConnectionCreate>
+        open={dialogOpen}
+        onClose={closeDialog}
+        onSave={saveConnection}
+        config={modalConfig}
+        initialData={editingConnection ? {
+          fromSectionId: editingConnection.fromSectionId,
+          toSectionId: editingConnection.toSectionId,
+          connectionType: editingConnection.connectionType,
+          switchId: editingConnection.switchId,
+          isActive: editingConnection.isActive,
+        } : undefined}
+        isEditing={!!editingConnection}
+        loading={saving}
+        error={error}
+      />
 
-            <FormControl required fullWidth>
-              <InputLabel>To Section</InputLabel>
-              <Select
-                value={formData.toSectionId}
-                onChange={(e) => setFormData({ ...formData, toSectionId: e.target.value as number })}
-                label="To Section"
-              >
-                {sections.map((section) => (
-                  <MenuItem key={section.id} value={section.id} disabled={section.id === formData.fromSectionId}>
-                    {section.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth>
-              <InputLabel>Connection Type</InputLabel>
-              <Select
-                value={formData.connectionType}
-                onChange={(e) => {
-                  const newType = e.target.value as 'direct' | 'switch' | 'junction';
-                  setFormData({ 
-                    ...formData, 
-                    connectionType: newType,
-                    switchId: newType === 'switch' ? (switches[0]?.id || undefined) : undefined
-                  });
-                }}
-                label="Connection Type"
-              >
-                <MenuItem value="direct">Direct</MenuItem>
-                <MenuItem value="switch">Switch</MenuItem>
-                <MenuItem value="junction">Junction</MenuItem>
-              </Select>
-            </FormControl>
-
-            {formData.connectionType === 'switch' && (
-              <FormControl fullWidth>
-                <InputLabel>Switch</InputLabel>
-                <Select
-                  value={formData.switchId || ''}
-                  onChange={(e) => setFormData({ ...formData, switchId: e.target.value as number })}
-                  label="Switch"
-                >
-                  {switches.map((switchItem) => (
-                    <MenuItem key={switchItem.id} value={switchItem.id}>
-                      {switchItem.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            )}
-
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={formData.isActive}
-                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                />
-              }
-              label="Active"
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeDialog}>Cancel</Button>
-          <Button
-            onClick={saveConnection}
-            variant="contained"
-            disabled={
-              saving || 
-              !formData.fromSectionId || 
-              !formData.toSectionId || 
-              formData.fromSectionId === formData.toSectionId ||
-              (formData.connectionType === 'switch' && !formData.switchId)
-            }
-          >
-            {saving ? 'Saving...' : editingId ? 'Save Changes' : 'Create'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        open={deleteModalOpen}
+        onClose={closeDeleteConfirmation}
+        onConfirm={deleteConnection}
+        entityName={deletingConnection?.name || ''}
+        entityType="Connection"
+        loading={saving}
+      />
     </Box>
   );
 }
