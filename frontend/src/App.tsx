@@ -1,3 +1,5 @@
+import React from "react";
+import EntityForm, { EntityField } from "./components/EntityForm";
 import { useEffect, useMemo, useState } from "react";
 import {
   Container,
@@ -310,117 +312,89 @@ export default function App() {
                   </Button>
                 ))}
 
-              {/* New Category */}
-              <Typography variant="h6" sx={{ mt: 3, mb: 2 }}>
-                New Category
-              </Typography>
-              <Box component="form" onSubmit={createCategory} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <TextField
-                  value={cName}
-                  onChange={(e) => setCName(e.target.value)}
-                  label="Name"
-                  size="small"
-                  fullWidth
-                />
-                <TextField
-                  value={cDesc}
-                  onChange={(e) => setCDesc(e.target.value)}
-                  label="Description (optional)"
-                  size="small"
-                  fullWidth
-                />
-                <TextField
-                  type="number"
-                  value={cSort}
-                  onChange={(e) => setCSort(e.target.value === "" ? "" : Number(e.target.value))}
-                  label="Sort order"
-                  size="small"
-                  fullWidth
-                />
-                <Button
-                  type="submit"
-                  disabled={creatingCat}
-                  variant="contained"
-                  fullWidth
-                >
-                  {creatingCat ? "Creating…" : "Create"}
-                </Button>
-              </Box>
+              <EntityForm
+                title="New Category"
+                onSubmit={createCategory}
+                loading={creatingCat}
+                fields={[
+                  {
+                    name: "cName",
+                    label: "Name",
+                    value: cName,
+                    onChange: (e: React.ChangeEvent<HTMLInputElement>) => setCName(e.target.value),
+                  },
+                  {
+                    name: "cDesc",
+                    label: "Description (optional)",
+                    value: cDesc,
+                    onChange: (e: React.ChangeEvent<HTMLInputElement>) => setCDesc(e.target.value),
+                  },
+                  {
+                    name: "cSort",
+                    label: "Sort order",
+                    type: "number",
+                    value: cSort,
+                    onChange: (e: React.ChangeEvent<HTMLInputElement>) => setCSort(e.target.value === "" ? "" : Number(e.target.value)),
+                  },
+                ]}
+              />
 
-              {/* New Accessory */}
-              <Typography variant="h6" sx={{ mt: 3, mb: 2 }}>
-                New Accessory
-              </Typography>
-              <Box component="form" onSubmit={createAccessory} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <TextField
-                  value={fName}
-                  onChange={(e) => setFName(e.target.value)}
-                  label="Name"
-                  size="small"
-                  fullWidth
-                />
-                <FormControl size="small" fullWidth>
-                  <InputLabel>Category</InputLabel>
-                  <Select
-                    value={fCat}
-                    onChange={(e) => setFCat(e.target.value ? Number(e.target.value) : "")}
-                    label="Category"
-                  >
-                    <MenuItem value="">
-                      <em>Select Category...</em>
-                    </MenuItem>
-                    {cats.map((c) => (
-                      <MenuItem key={c.id} value={c.id}>
-                        {c.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl size="small" fullWidth>
-                  <InputLabel>Type</InputLabel>
-                  <Select
-                    value={fType}
-                    onChange={(e) => setFType(e.target.value as any)}
-                    label="Type"
-                  >
-                    <MenuItem value="onOff">onOff</MenuItem>
-                    <MenuItem value="toggle">toggle</MenuItem>
-                    <MenuItem value="timed">timed</MenuItem>
-                  </Select>
-                </FormControl>
-                <TextField
-                  value={fAddr}
-                  onChange={(e) => setFAddr(e.target.value)}
-                  label="Address"
-                  size="small"
-                  fullWidth
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={fActive}
-                      onChange={(e) => setFActive(e.target.checked)}
-                    />
-                  }
-                  label="Active"
-                />
-                <TextField
-                  type="number"
-                  value={fTimedMs}
-                  onChange={(e) => setFTimedMs(e.target.value === "" ? "" : Number(e.target.value))}
-                  label="Timed ms (optional)"
-                  size="small"
-                  fullWidth
-                />
-                <Button
-                  type="submit"
-                  disabled={creatingAcc}
-                  variant="contained"
-                  fullWidth
-                >
-                  {creatingAcc ? "Creating…" : "Create"}
-                </Button>
-              </Box>
+              <EntityForm
+                title="New Accessory"
+                onSubmit={createAccessory}
+                loading={creatingAcc}
+                fields={[
+                  {
+                    name: "fName",
+                    label: "Name",
+                    value: fName,
+                    onChange: (e: React.ChangeEvent<HTMLInputElement>) => setFName(e.target.value),
+                  },
+                  {
+                    name: "fCat",
+                    label: "Category",
+                    type: "select",
+                    value: fCat,
+                    onChange: (e: React.ChangeEvent<{ value: unknown }>) => setFCat(e.target.value ? Number(e.target.value) : ""),
+                    options: [
+                      { value: "", label: "Select Category..." },
+                      ...cats.map((c) => ({ value: c.id, label: c.name })),
+                    ],
+                  },
+                  {
+                    name: "fType",
+                    label: "Type",
+                    type: "select",
+                    value: fType,
+                    onChange: (e: React.ChangeEvent<{ value: unknown }>) => setFType(e.target.value as any),
+                    options: [
+                      { value: "onOff", label: "onOff" },
+                      { value: "toggle", label: "toggle" },
+                      { value: "timed", label: "timed" },
+                    ],
+                  },
+                  {
+                    name: "fAddr",
+                    label: "Address",
+                    value: fAddr,
+                    onChange: (e: React.ChangeEvent<HTMLInputElement>) => setFAddr(e.target.value),
+                  },
+                  {
+                    name: "fActive",
+                    label: "Active",
+                    type: "checkbox",
+                    value: fActive,
+                    onChange: (e: React.ChangeEvent<HTMLInputElement>) => setFActive(e.target.checked),
+                  },
+                  {
+                    name: "fTimedMs",
+                    label: "Timed ms (optional)",
+                    type: "number",
+                    value: fTimedMs,
+                    onChange: (e: React.ChangeEvent<HTMLInputElement>) => setFTimedMs(e.target.value === "" ? "" : Number(e.target.value)),
+                  },
+                ]}
+              />
             </Paper>
           </Box>
 

@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, CallSplit as SwitchIcon } from '@mui/icons-material';
+import EntityForm from './components/EntityForm';
 import {
   Box,
   Paper,
@@ -19,14 +21,7 @@ import {
   MenuItem,
   Chip,
 } from '@mui/material';
-import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  CallSplit as SwitchIcon,
-} from '@mui/icons-material';
-import { EntityModal, DeleteConfirmationModal } from './components/modal';
-import { createSwitchModalConfig } from './components/configs/modalConfigs';
+import { DeleteConfirmationModal } from './components/modal';
 
 // Types
 type Accessory = {
@@ -81,7 +76,6 @@ export default function SwitchesManager() {
   const API = import.meta.env.VITE_API_BASE ?? "http://localhost:8080";
 
   // Create modal configuration
-  const modalConfig = useMemo(() => createSwitchModalConfig(accessories, sections), [accessories, sections]);
 
   // API helper
   async function apiCall<T>(res: Response): Promise<T> {
@@ -383,22 +377,78 @@ export default function SwitchesManager() {
       )}
 
       {/* Create/Edit Modal */}
-      <EntityModal<SwitchCreate>
-        open={dialogOpen}
-        onClose={closeDialog}
-        onSave={saveSwitch}
-        config={modalConfig}
-        initialData={editingSwitch ? {
-          name: editingSwitch.name,
-          accessoryId: editingSwitch.accessoryId,
-          sectionId: editingSwitch.sectionId,
-          position: editingSwitch.position,
-          isActive: editingSwitch.isActive,
-        } : undefined}
-        isEditing={!!editingSwitch}
-        loading={saving}
-        error={error}
-      />
+      {dialogOpen && (
+        <Paper sx={{ p: 3, maxWidth: 400, margin: '32px auto', position: 'relative', zIndex: 1300 }}>
+          <EntityForm
+            title={editingSwitch ? 'Edit Switch' : 'New Switch'}
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (editingSwitch) {
+                saveSwitch({
+                  name: editingSwitch.name,
+                  accessoryId: editingSwitch.accessoryId,
+                  sectionId: editingSwitch.sectionId,
+                  position: editingSwitch.position,
+                  isActive: editingSwitch.isActive,
+                });
+              } else {
+                saveSwitch({
+                  name: '',
+                  accessoryId: accessories[0]?.id || 0,
+                  sectionId: sections[0]?.id || 0,
+                  position: 'unknown',
+                  isActive: true,
+                });
+              }
+            }}
+            loading={saving}
+            fields={[
+              {
+                name: 'name',
+                label: 'Name',
+                value: editingSwitch?.name ?? '',
+                onChange: (e: React.ChangeEvent<HTMLInputElement>) => setEditingSwitch({ ...editingSwitch, name: e.target.value } as SwitchWithRelations),
+              },
+              {
+                name: 'accessoryId',
+                label: 'Accessory',
+                type: 'select',
+                value: editingSwitch?.accessoryId ?? accessories[0]?.id ?? '',
+                onChange: (e: React.ChangeEvent<{ value: unknown }>) => setEditingSwitch({ ...editingSwitch, accessoryId: Number(e.target.value) } as SwitchWithRelations),
+                options: accessories.map((a) => ({ value: a.id, label: a.name })),
+              },
+              {
+                name: 'sectionId',
+                label: 'Section',
+                type: 'select',
+                value: editingSwitch?.sectionId ?? sections[0]?.id ?? '',
+                onChange: (e: React.ChangeEvent<{ value: unknown }>) => setEditingSwitch({ ...editingSwitch, sectionId: Number(e.target.value) } as SwitchWithRelations),
+                options: sections.map((s) => ({ value: s.id, label: s.name })),
+              },
+              {
+                name: 'position',
+                label: 'Position',
+                type: 'select',
+                value: editingSwitch?.position ?? 'unknown',
+                onChange: (e: React.ChangeEvent<{ value: unknown }>) => setEditingSwitch({ ...editingSwitch, position: e.target.value as 'straight' | 'divergent' | 'unknown' } as SwitchWithRelations),
+                options: [
+                  { value: 'straight', label: 'Straight' },
+                  { value: 'divergent', label: 'Divergent' },
+                  { value: 'unknown', label: 'Unknown' },
+                ],
+              },
+              {
+                name: 'isActive',
+                label: 'Active',
+                type: 'checkbox',
+                value: editingSwitch?.isActive ?? true,
+                onChange: (e: React.ChangeEvent<HTMLInputElement>) => setEditingSwitch({ ...editingSwitch, isActive: e.target.checked } as SwitchWithRelations),
+              },
+            ]}
+          />
+          <Button onClick={closeDialog} sx={{ mt: 2 }} fullWidth>Cancel</Button>
+        </Paper>
+      )}
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal

@@ -1,34 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
-import {
-  Box,
-  Paper,
-  Typography,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  IconButton,
-  Alert,
-  CircularProgress,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Chip,
-  FormControlLabel,
-  Checkbox,
-} from '@mui/material';
-import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  LinearScale as SectionIcon,
-} from '@mui/icons-material';
-import { EntityModal, DeleteConfirmationModal } from './components/modal';
-import { createSectionModalConfig } from './components/configs/modalConfigs';
+import EntityForm from './components/EntityForm';
+// ...existing code...
+// ...existing code...
+import { DeleteConfirmationModal } from './components/modal';
 
 // Types
 type TrackLine = {
@@ -59,7 +33,6 @@ type SectionCreate = Omit<Section, 'id'>;
 export default function SectionsManager() {
   const [sections, setSections] = useState<SectionWithTrackLine[]>([]);
   const [trackLines, setTrackLines] = useState<TrackLine[]>([]);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -74,44 +47,44 @@ export default function SectionsManager() {
   const API = import.meta.env.VITE_API_BASE ?? "http://localhost:8080";
 
   // Create modal configuration
-  const modalConfig = useMemo(() => createSectionModalConfig(trackLines), [trackLines]);
+// ...existing code...
 
   // API helper
   async function apiCall<T>(res: Response): Promise<T> {
     if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
     return res.json();
   }
-
-  // Load data
-  const loadSections = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams({
-        includeTrackLine: 'true',
-        ...(selectedTrackLine !== 'all' && { trackLineId: String(selectedTrackLine) }),
-        ...(showOccupiedOnly && { occupied: 'true' }),
-      });
-      
-      const response = await fetch(`${API}/sections?${params}`);
-      const data = await apiCall<SectionWithTrackLine[]>(response);
-      setSections(data);
-    } catch (e: any) {
-      setError(e.message || 'Failed to load sections');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadTrackLines = async () => {
-    try {
-      const response = await fetch(`${API}/trackLines?active=true`);
-      const data = await apiCall<TrackLine[]>(response);
-      setTrackLines(data);
-    } catch (e: any) {
-      setError(e.message || 'Failed to load track lines');
-    }
-  };
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  Box,
+  Paper,
+  Typography,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  Alert,
+  CircularProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Chip,
+  FormControlLabel,
+  Checkbox,
+} from '@mui/material';
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  LinearScale as SectionIcon,
+} from '@mui/icons-material';
+import { EntityModal, DeleteConfirmationModal } from './components/modal';
+import { createSectionModalConfig } from './components/configs/modalConfigs';
 
   useEffect(() => {
     loadTrackLines();
@@ -358,24 +331,93 @@ export default function SectionsManager() {
       )}
 
       {/* Create/Edit Modal */}
-      <EntityModal<SectionCreate>
-        open={dialogOpen}
-        onClose={closeDialog}
-        onSave={saveSection}
-        config={modalConfig}
-        initialData={editingSection ? {
-          name: editingSection.name,
-          trackLineId: editingSection.trackLineId,
-          startPosition: editingSection.startPosition,
-          endPosition: editingSection.endPosition,
-          length: editingSection.length,
-          isOccupied: editingSection.isOccupied,
-          isActive: editingSection.isActive,
-        } : undefined}
-        isEditing={!!editingSection}
-        loading={saving}
-        error={error}
-      />
+      {dialogOpen && (
+        <Paper sx={{ p: 3, maxWidth: 400, margin: '32px auto', position: 'relative', zIndex: 1300 }}>
+          <EntityForm
+            title={editingSection ? 'Edit Section' : 'New Section'}
+            onSubmit={(e) => {
+              e.preventDefault();
+              // Gather form data from state and call saveSection
+              // You may need to refactor state to support this
+              // For now, call saveSection with editingSection or default values
+              if (editingSection) {
+                saveSection({
+                  name: editingSection.name,
+                  trackLineId: editingSection.trackLineId,
+                  startPosition: editingSection.startPosition,
+                  endPosition: editingSection.endPosition,
+                  length: editingSection.length,
+                  isOccupied: editingSection.isOccupied,
+                  isActive: editingSection.isActive,
+                });
+              } else {
+                saveSection({
+                  name: '',
+                  trackLineId: trackLines[0]?.id || 0,
+                  startPosition: 0,
+                  endPosition: 0,
+                  length: 0,
+                  isOccupied: false,
+                  isActive: true,
+                });
+              }
+            }}
+            loading={saving}
+            fields={[
+              {
+                name: 'name',
+                label: 'Name',
+                value: editingSection?.name ?? '',
+                onChange: (e: React.ChangeEvent<HTMLInputElement>) => setEditingSection({ ...editingSection, name: e.target.value } as SectionWithTrackLine),
+              },
+              {
+                name: 'trackLineId',
+                label: 'Track Line',
+                type: 'select',
+                value: editingSection?.trackLineId ?? trackLines[0]?.id ?? '',
+                onChange: (e: React.ChangeEvent<{ value: unknown }>) => setEditingSection({ ...editingSection, trackLineId: Number(e.target.value) } as SectionWithTrackLine),
+                options: trackLines.map((tl) => ({ value: tl.id, label: tl.name })),
+              },
+              {
+                name: 'startPosition',
+                label: 'Start Position',
+                type: 'number',
+                value: editingSection?.startPosition ?? 0,
+                onChange: (e: React.ChangeEvent<HTMLInputElement>) => setEditingSection({ ...editingSection, startPosition: Number(e.target.value) } as SectionWithTrackLine),
+              },
+              {
+                name: 'endPosition',
+                label: 'End Position',
+                type: 'number',
+                value: editingSection?.endPosition ?? 0,
+                onChange: (e: React.ChangeEvent<HTMLInputElement>) => setEditingSection({ ...editingSection, endPosition: Number(e.target.value) } as SectionWithTrackLine),
+              },
+              {
+                name: 'length',
+                label: 'Length',
+                type: 'number',
+                value: editingSection?.length ?? 0,
+                onChange: (e: React.ChangeEvent<HTMLInputElement>) => setEditingSection({ ...editingSection, length: Number(e.target.value) } as SectionWithTrackLine),
+              },
+              {
+                name: 'isOccupied',
+                label: 'Occupied',
+                type: 'checkbox',
+                value: editingSection?.isOccupied ?? false,
+                onChange: (e: React.ChangeEvent<HTMLInputElement>) => setEditingSection({ ...editingSection, isOccupied: e.target.checked } as SectionWithTrackLine),
+              },
+              {
+                name: 'isActive',
+                label: 'Active',
+                type: 'checkbox',
+                value: editingSection?.isActive ?? true,
+                onChange: (e: React.ChangeEvent<HTMLInputElement>) => setEditingSection({ ...editingSection, isActive: e.target.checked } as SectionWithTrackLine),
+              },
+            ]}
+          />
+          <Button onClick={closeDialog} sx={{ mt: 2 }} fullWidth>Cancel</Button>
+        </Paper>
+      )}
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal

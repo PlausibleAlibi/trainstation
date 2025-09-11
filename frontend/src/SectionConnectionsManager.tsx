@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Hub as ConnectionIcon, ArrowRightAlt as ArrowIcon } from '@mui/icons-material';
+import EntityForm from './components/EntityForm';
 import {
   Box,
   Paper,
@@ -19,15 +21,7 @@ import {
   MenuItem,
   Chip,
 } from '@mui/material';
-import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Hub as ConnectionIcon,
-  ArrowRightAlt as ArrowIcon,
-} from '@mui/icons-material';
-import { EntityModal, DeleteConfirmationModal } from './components/modal';
-import { createConnectionModalConfig } from './components/configs/modalConfigs';
+import { DeleteConfirmationModal } from './components/modal';
 
 // Types
 type Section = {
@@ -83,7 +77,6 @@ export default function SectionConnectionsManager() {
   const API = import.meta.env.VITE_API_BASE ?? "http://localhost:8080";
 
   // Create modal configuration
-  const modalConfig = useMemo(() => createConnectionModalConfig(sections, switches), [sections, switches]);
 
   // API helper
   async function apiCall<T>(res: Response): Promise<T> {
@@ -396,22 +389,80 @@ export default function SectionConnectionsManager() {
       )}
 
       {/* Create/Edit Modal */}
-      <EntityModal<SectionConnectionCreate>
-        open={dialogOpen}
-        onClose={closeDialog}
-        onSave={saveConnection}
-        config={modalConfig}
-        initialData={editingConnection ? {
-          fromSectionId: editingConnection.fromSectionId,
-          toSectionId: editingConnection.toSectionId,
-          connectionType: editingConnection.connectionType,
-          switchId: editingConnection.switchId,
-          isActive: editingConnection.isActive,
-        } : undefined}
-        isEditing={!!editingConnection}
-        loading={saving}
-        error={error}
-      />
+      {dialogOpen && (
+        <Paper sx={{ p: 3, maxWidth: 400, margin: '32px auto', position: 'relative', zIndex: 1300 }}>
+          <EntityForm
+            title={editingConnection ? 'Edit Connection' : 'New Connection'}
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (editingConnection) {
+                saveConnection({
+                  fromSectionId: editingConnection.fromSectionId,
+                  toSectionId: editingConnection.toSectionId,
+                  connectionType: editingConnection.connectionType,
+                  switchId: editingConnection.switchId,
+                  isActive: editingConnection.isActive,
+                });
+              } else {
+                saveConnection({
+                  fromSectionId: sections[0]?.id || 0,
+                  toSectionId: sections[1]?.id || 0,
+                  connectionType: 'direct',
+                  switchId: undefined,
+                  isActive: true,
+                });
+              }
+            }}
+            loading={saving}
+            fields={[
+              {
+                name: 'fromSectionId',
+                label: 'From Section',
+                type: 'select',
+                value: editingConnection?.fromSectionId ?? sections[0]?.id ?? '',
+                onChange: (e: React.ChangeEvent<{ value: unknown }>) => setEditingConnection({ ...editingConnection, fromSectionId: Number(e.target.value) } as SectionConnectionWithRelations),
+                options: sections.map((s) => ({ value: s.id, label: s.name })),
+              },
+              {
+                name: 'toSectionId',
+                label: 'To Section',
+                type: 'select',
+                value: editingConnection?.toSectionId ?? sections[1]?.id ?? '',
+                onChange: (e: React.ChangeEvent<{ value: unknown }>) => setEditingConnection({ ...editingConnection, toSectionId: Number(e.target.value) } as SectionConnectionWithRelations),
+                options: sections.map((s) => ({ value: s.id, label: s.name })),
+              },
+              {
+                name: 'connectionType',
+                label: 'Connection Type',
+                type: 'select',
+                value: editingConnection?.connectionType ?? 'direct',
+                onChange: (e: React.ChangeEvent<{ value: unknown }>) => setEditingConnection({ ...editingConnection, connectionType: e.target.value as 'direct' | 'switch' | 'junction' } as SectionConnectionWithRelations),
+                options: [
+                  { value: 'direct', label: 'Direct' },
+                  { value: 'switch', label: 'Switch' },
+                  { value: 'junction', label: 'Junction' },
+                ],
+              },
+              {
+                name: 'switchId',
+                label: 'Switch (optional)',
+                type: 'select',
+                value: editingConnection?.switchId ?? '',
+                onChange: (e: React.ChangeEvent<{ value: unknown }>) => setEditingConnection({ ...editingConnection, switchId: Number(e.target.value) } as SectionConnectionWithRelations),
+                options: [{ value: '', label: 'None' }, ...switches.map((sw) => ({ value: sw.id, label: sw.name }))],
+              },
+              {
+                name: 'isActive',
+                label: 'Active',
+                type: 'checkbox',
+                value: editingConnection?.isActive ?? true,
+                onChange: (e: React.ChangeEvent<HTMLInputElement>) => setEditingConnection({ ...editingConnection, isActive: e.target.checked } as SectionConnectionWithRelations),
+              },
+            ]}
+          />
+          <Button onClick={closeDialog} sx={{ mt: 2 }} fullWidth>Cancel</Button>
+        </Paper>
+      )}
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal
