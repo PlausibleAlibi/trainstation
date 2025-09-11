@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Box,
   Paper,
@@ -10,13 +10,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  FormControlLabel,
-  Checkbox,
   IconButton,
   Alert,
   CircularProgress,
@@ -32,6 +25,8 @@ import {
   Delete as DeleteIcon,
   CallSplit as SwitchIcon,
 } from '@mui/icons-material';
+import { EntityModal, DeleteConfirmationModal } from './components/modal';
+import { createSwitchModalConfig } from './components/configs/modalConfigs';
 
 // Types
 type Accessory = {
@@ -74,23 +69,19 @@ export default function SwitchesManager() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [editingSwitch, setEditingSwitch] = useState<SwitchWithRelations | null>(null);
+  const [deletingSwitch, setDeletingSwitch] = useState<{ id: number; name: string } | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Filters
   const [selectedSection, setSelectedSection] = useState<number | 'all'>('all');
   const [selectedPosition, setSelectedPosition] = useState<string | 'all'>('all');
 
-  // Form state
-  const [formData, setFormData] = useState<SwitchCreate>({
-    name: '',
-    accessoryId: 0,
-    sectionId: 0,
-    position: 'unknown',
-    isActive: true,
-  });
-
   const API = import.meta.env.VITE_API_BASE ?? "http://localhost:8080";
+
+  // Create modal configuration
+  const modalConfig = useMemo(() => createSwitchModalConfig(accessories, sections), [accessories, sections]);
 
   // API helper
   async function apiCall<T>(res: Response): Promise<T> {
@@ -150,47 +141,25 @@ export default function SwitchesManager() {
 
   // Open dialog for create/edit
   const openDialog = (switchItem?: SwitchWithRelations) => {
-    if (switchItem) {
-      setEditingId(switchItem.id);
-      setFormData({
-        name: switchItem.name,
-        accessoryId: switchItem.accessoryId,
-        sectionId: switchItem.sectionId,
-        position: switchItem.position,
-        isActive: switchItem.isActive,
-      });
-    } else {
-      setEditingId(null);
-      setFormData({
-        name: '',
-        accessoryId: accessories.length > 0 ? accessories[0].id : 0,
-        sectionId: sections.length > 0 ? sections[0].id : 0,
-        position: 'unknown',
-        isActive: true,
-      });
-    }
+    setEditingSwitch(switchItem || null);
     setDialogOpen(true);
+    setError(null);
   };
 
   // Close dialog
   const closeDialog = () => {
     setDialogOpen(false);
-    setEditingId(null);
+    setEditingSwitch(null);
     setError(null);
   };
 
   // Save switch
-  const saveSwitch = async () => {
-    if (!formData.name.trim() || !formData.accessoryId || !formData.sectionId) {
-      setError('Switch name, accessory, and section are required');
-      return;
-    }
-
+  const saveSwitch = async (formData: SwitchCreate) => {
     setSaving(true);
     setError(null);
     try {
-      const url = editingId ? `${API}/switches/${editingId}` : `${API}/switches`;
-      const method = editingId ? 'PUT' : 'POST';
+      const url = editingSwitch ? `${API}/switches/${editingSwitch.id}` : `${API}/switches`;
+      const method = editingSwitch ? 'PUT' : 'POST';
       
       const response = await fetch(url, {
         method,
@@ -207,26 +176,40 @@ export default function SwitchesManager() {
       await apiCall(response);
       await loadSwitches();
       closeDialog();
-    } catch (e: any) {
-      setError(e.message || 'Failed to save switch');
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : 'Failed to save switch';
+      setError(errorMessage);
+      throw e;
     } finally {
       setSaving(false);
     }
   };
 
+  // Open delete confirmation
+  const openDeleteConfirmation = (switchItem: SwitchWithRelations) => {
+    setDeletingSwitch({ id: switchItem.id, name: switchItem.name });
+    setDeleteModalOpen(true);
+  };
+
+  // Close delete confirmation
+  const closeDeleteConfirmation = () => {
+    setDeleteModalOpen(false);
+    setDeletingSwitch(null);
+  };
+
   // Delete switch
-  const deleteSwitch = async (id: number, name: string) => {
-    if (!confirm(`Delete switch "${name}"? This may affect section connections.`)) {
-      return;
-    }
+  const deleteSwitch = async () => {
+    if (!deletingSwitch) return;
 
     setError(null);
     try {
-      const response = await fetch(`${API}/switches/${id}`, { method: 'DELETE' });
+      const response = await fetch(`${API}/switches/${deletingSwitch.id}`, { method: 'DELETE' });
       await apiCall(response);
       await loadSwitches();
-    } catch (e: any) {
-      setError(e.message || 'Failed to delete switch');
+      closeDeleteConfirmation();
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : 'Failed to delete switch';
+      setError(errorMessage);
     }
   };
 
@@ -371,13 +354,15 @@ export default function SwitchesManager() {
                         size="small"
                         onClick={() => openDialog(switchItem)}
                         color="primary"
+                        aria-label={`Edit switch ${switchItem.name}`}
                       >
                         <EditIcon />
                       </IconButton>
                       <IconButton
                         size="small"
-                        onClick={() => deleteSwitch(switchItem.id, switchItem.name)}
+                        onClick={() => openDeleteConfirmation(switchItem)}
                         color="error"
+                        aria-label={`Delete switch ${switchItem.name}`}
                       >
                         <DeleteIcon />
                       </IconButton>
@@ -397,86 +382,34 @@ export default function SwitchesManager() {
         </Paper>
       )}
 
-      {/* Create/Edit Dialog */}
-      <Dialog open={dialogOpen} onClose={closeDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          {editingId ? 'Edit Switch' : 'Create Switch'}
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <TextField
-              label="Name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
-              fullWidth
-            />
-            
-            <FormControl required fullWidth>
-              <InputLabel>Accessory</InputLabel>
-              <Select
-                value={formData.accessoryId}
-                onChange={(e) => setFormData({ ...formData, accessoryId: e.target.value as number })}
-                label="Accessory"
-              >
-                {accessories.map((acc) => (
-                  <MenuItem key={acc.id} value={acc.id}>
-                    {acc.name} ({acc.address})
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+      {/* Create/Edit Modal */}
+      <EntityModal<SwitchCreate>
+        open={dialogOpen}
+        onClose={closeDialog}
+        onSave={saveSwitch}
+        config={modalConfig}
+        initialData={editingSwitch ? {
+          name: editingSwitch.name,
+          accessoryId: editingSwitch.accessoryId,
+          sectionId: editingSwitch.sectionId,
+          position: editingSwitch.position,
+          isActive: editingSwitch.isActive,
+        } : undefined}
+        isEditing={!!editingSwitch}
+        loading={saving}
+        error={error}
+      />
 
-            <FormControl required fullWidth>
-              <InputLabel>Section</InputLabel>
-              <Select
-                value={formData.sectionId}
-                onChange={(e) => setFormData({ ...formData, sectionId: e.target.value as number })}
-                label="Section"
-              >
-                {sections.map((section) => (
-                  <MenuItem key={section.id} value={section.id}>
-                    {section.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth>
-              <InputLabel>Position</InputLabel>
-              <Select
-                value={formData.position}
-                onChange={(e) => setFormData({ ...formData, position: e.target.value as any })}
-                label="Position"
-              >
-                <MenuItem value="straight">Straight</MenuItem>
-                <MenuItem value="divergent">Divergent</MenuItem>
-                <MenuItem value="unknown">Unknown</MenuItem>
-              </Select>
-            </FormControl>
-
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={formData.isActive}
-                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                />
-              }
-              label="Active"
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeDialog}>Cancel</Button>
-          <Button
-            onClick={saveSwitch}
-            variant="contained"
-            disabled={saving || !formData.name.trim() || !formData.accessoryId || !formData.sectionId}
-          >
-            {saving ? 'Saving...' : editingId ? 'Save Changes' : 'Create'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        open={deleteModalOpen}
+        onClose={closeDeleteConfirmation}
+        onConfirm={deleteSwitch}
+        entityName={deletingSwitch?.name || ''}
+        entityType="Switch"
+        warning="This may affect section connections."
+        loading={saving}
+      />
     </Box>
   );
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Box,
   Paper,
@@ -10,13 +10,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  FormControlLabel,
-  Checkbox,
   IconButton,
   Alert,
   CircularProgress,
@@ -25,6 +18,8 @@ import {
   Select,
   MenuItem,
   Chip,
+  FormControlLabel,
+  Checkbox,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -32,6 +27,8 @@ import {
   Delete as DeleteIcon,
   LinearScale as SectionIcon,
 } from '@mui/icons-material';
+import { EntityModal, DeleteConfirmationModal } from './components/modal';
+import { createSectionModalConfig } from './components/configs/modalConfigs';
 
 // Types
 type TrackLine = {
@@ -65,25 +62,19 @@ export default function SectionsManager() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [editingSection, setEditingSection] = useState<SectionWithTrackLine | null>(null);
+  const [deletingSection, setDeletingSection] = useState<{ id: number; name: string } | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Filters
   const [selectedTrackLine, setSelectedTrackLine] = useState<number | 'all'>('all');
   const [showOccupiedOnly, setShowOccupiedOnly] = useState(false);
 
-  // Form state
-  const [formData, setFormData] = useState<SectionCreate>({
-    name: '',
-    trackLineId: 0,
-    startPosition: undefined,
-    endPosition: undefined,
-    length: undefined,
-    isOccupied: false,
-    isActive: true,
-  });
-
   const API = import.meta.env.VITE_API_BASE ?? "http://localhost:8080";
+
+  // Create modal configuration
+  const modalConfig = useMemo(() => createSectionModalConfig(trackLines), [trackLines]);
 
   // API helper
   async function apiCall<T>(res: Response): Promise<T> {
@@ -132,51 +123,25 @@ export default function SectionsManager() {
 
   // Open dialog for create/edit
   const openDialog = (section?: SectionWithTrackLine) => {
-    if (section) {
-      setEditingId(section.id);
-      setFormData({
-        name: section.name,
-        trackLineId: section.trackLineId,
-        startPosition: section.startPosition,
-        endPosition: section.endPosition,
-        length: section.length,
-        isOccupied: section.isOccupied,
-        isActive: section.isActive,
-      });
-    } else {
-      setEditingId(null);
-      setFormData({
-        name: '',
-        trackLineId: trackLines.length > 0 ? trackLines[0].id : 0,
-        startPosition: undefined,
-        endPosition: undefined,
-        length: undefined,
-        isOccupied: false,
-        isActive: true,
-      });
-    }
+    setEditingSection(section || null);
     setDialogOpen(true);
+    setError(null);
   };
 
   // Close dialog
   const closeDialog = () => {
     setDialogOpen(false);
-    setEditingId(null);
+    setEditingSection(null);
     setError(null);
   };
 
   // Save section
-  const saveSection = async () => {
-    if (!formData.name.trim() || !formData.trackLineId) {
-      setError('Section name and track line are required');
-      return;
-    }
-
+  const saveSection = async (formData: SectionCreate) => {
     setSaving(true);
     setError(null);
     try {
-      const url = editingId ? `${API}/sections/${editingId}` : `${API}/sections`;
-      const method = editingId ? 'PUT' : 'POST';
+      const url = editingSection ? `${API}/sections/${editingSection.id}` : `${API}/sections`;
+      const method = editingSection ? 'PUT' : 'POST';
       
       const response = await fetch(url, {
         method,
@@ -195,26 +160,40 @@ export default function SectionsManager() {
       await apiCall(response);
       await loadSections();
       closeDialog();
-    } catch (e: any) {
-      setError(e.message || 'Failed to save section');
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : 'Failed to save section';
+      setError(errorMessage);
+      throw e; // Re-throw to let the modal handle the error state
     } finally {
       setSaving(false);
     }
   };
 
+  // Open delete confirmation
+  const openDeleteConfirmation = (section: SectionWithTrackLine) => {
+    setDeletingSection({ id: section.id, name: section.name });
+    setDeleteModalOpen(true);
+  };
+
+  // Close delete confirmation
+  const closeDeleteConfirmation = () => {
+    setDeleteModalOpen(false);
+    setDeletingSection(null);
+  };
+
   // Delete section
-  const deleteSection = async (id: number, name: string) => {
-    if (!confirm(`Delete section "${name}"? This will also remove all associated switches and connections.`)) {
-      return;
-    }
+  const deleteSection = async () => {
+    if (!deletingSection) return;
 
     setError(null);
     try {
-      const response = await fetch(`${API}/sections/${id}`, { method: 'DELETE' });
+      const response = await fetch(`${API}/sections/${deletingSection.id}`, { method: 'DELETE' });
       await apiCall(response);
       await loadSections();
-    } catch (e: any) {
-      setError(e.message || 'Failed to delete section');
+      closeDeleteConfirmation();
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : 'Failed to delete section';
+      setError(errorMessage);
     }
   };
 
@@ -347,13 +326,15 @@ export default function SectionsManager() {
                             size="small"
                             onClick={() => openDialog(section)}
                             color="primary"
+                            aria-label={`Edit section ${section.name}`}
                           >
                             <EditIcon />
                           </IconButton>
                           <IconButton
                             size="small"
-                            onClick={() => deleteSection(section.id, section.name)}
+                            onClick={() => openDeleteConfirmation(section)}
                             color="error"
+                            aria-label={`Delete section ${section.name}`}
                           >
                             <DeleteIcon />
                           </IconButton>
@@ -376,103 +357,36 @@ export default function SectionsManager() {
         </Box>
       )}
 
-      {/* Create/Edit Dialog */}
-      <Dialog open={dialogOpen} onClose={closeDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          {editingId ? 'Edit Section' : 'Create Section'}
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <TextField
-              label="Name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
-              fullWidth
-            />
-            
-            <FormControl required fullWidth>
-              <InputLabel>Track Line</InputLabel>
-              <Select
-                value={formData.trackLineId}
-                onChange={(e) => setFormData({ ...formData, trackLineId: e.target.value as number })}
-                label="Track Line"
-              >
-                {trackLines.map((tl) => (
-                  <MenuItem key={tl.id} value={tl.id}>
-                    {tl.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+      {/* Create/Edit Modal */}
+      <EntityModal<SectionCreate>
+        open={dialogOpen}
+        onClose={closeDialog}
+        onSave={saveSection}
+        config={modalConfig}
+        initialData={editingSection ? {
+          name: editingSection.name,
+          trackLineId: editingSection.trackLineId,
+          startPosition: editingSection.startPosition,
+          endPosition: editingSection.endPosition,
+          length: editingSection.length,
+          isOccupied: editingSection.isOccupied,
+          isActive: editingSection.isActive,
+        } : undefined}
+        isEditing={!!editingSection}
+        loading={saving}
+        error={error}
+      />
 
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField
-                label="Start Position"
-                type="number"
-                value={formData.startPosition || ''}
-                onChange={(e) => setFormData({ 
-                  ...formData, 
-                  startPosition: e.target.value ? parseFloat(e.target.value) : undefined 
-                })}
-                fullWidth
-              />
-              <TextField
-                label="End Position"
-                type="number"
-                value={formData.endPosition || ''}
-                onChange={(e) => setFormData({ 
-                  ...formData, 
-                  endPosition: e.target.value ? parseFloat(e.target.value) : undefined 
-                })}
-                fullWidth
-              />
-            </Box>
-
-            <TextField
-              label="Length (feet)"
-              type="number"
-              value={formData.length || ''}
-              onChange={(e) => setFormData({ 
-                ...formData, 
-                length: e.target.value ? parseFloat(e.target.value) : undefined 
-              })}
-              fullWidth
-            />
-
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={formData.isOccupied}
-                    onChange={(e) => setFormData({ ...formData, isOccupied: e.target.checked })}
-                  />
-                }
-                label="Occupied"
-              />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={formData.isActive}
-                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                  />
-                }
-                label="Active"
-              />
-            </Box>
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeDialog}>Cancel</Button>
-          <Button
-            onClick={saveSection}
-            variant="contained"
-            disabled={saving || !formData.name.trim() || !formData.trackLineId}
-          >
-            {saving ? 'Saving...' : editingId ? 'Save Changes' : 'Create'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        open={deleteModalOpen}
+        onClose={closeDeleteConfirmation}
+        onConfirm={deleteSection}
+        entityName={deletingSection?.name || ''}
+        entityType="Section"
+        warning="This will also remove all associated switches and connections."
+        loading={saving}
+      />
     </Box>
   );
 }
