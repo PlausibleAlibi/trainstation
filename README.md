@@ -256,6 +256,77 @@ const deployed = import.meta.env.VITE_APP_DEPLOYED || null
 
 This system ensures every build includes accurate version metadata without manual intervention.
 
+## 🧪 Testing
+
+TrainStation includes comprehensive testing setup for both backend and frontend components.
+
+### Backend Testing (Python/FastAPI)
+
+The backend uses pytest for unit testing with coverage reporting.
+
+```bash
+# Install test dependencies (if not already installed)
+cd /home/runner/work/trainstation/trainstation
+pip install -r requirements.txt
+
+# Run all tests
+cd app
+python -m pytest
+
+# Run tests with coverage
+python -m pytest --cov=. --cov-report=html --cov-report=term
+
+# Run specific test files
+python -m pytest tests/test_models.py
+python -m pytest tests/test_api_endpoints.py
+```
+
+#### Backend Test Structure
+- `app/tests/` - Test directory
+- `app/tests/test_models.py` - Tests for SQLAlchemy models
+- `app/tests/test_api_endpoints.py` - Tests for FastAPI endpoints  
+- `.coveragerc` - Coverage configuration
+
+Coverage reports are generated in `htmlcov/` directory.
+
+### Frontend Testing (React/TypeScript)
+
+The frontend uses Vitest with React Testing Library for component testing.
+
+```bash
+# Install test dependencies
+cd frontend
+npm install
+
+# Run tests in watch mode
+npm run test
+
+# Run tests once
+npm run test:run
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run tests with UI (browser-based test runner)
+npm run test:ui
+```
+
+#### Frontend Test Structure
+- `frontend/tests/` - Test directory
+- `frontend/tests/App.test.tsx` - Sample App component tests
+- `frontend/tests/Dashboard.test.tsx` - Sample Dashboard component tests
+- `frontend/tests/setup.ts` - Test setup configuration
+- `frontend/vitest.config.ts` - Vitest configuration
+
+Coverage reports are generated in `coverage/` directory.
+
+### Testing Best Practices
+
+- **Backend**: Tests use in-memory SQLite databases for isolation
+- **Frontend**: Tests use jsdom for DOM simulation and Material-UI theme providers
+- **Coverage**: Both backend and frontend are configured for comprehensive coverage reporting
+- **CI/CD Ready**: All test commands work in automated environments
+
 ## 🔧 Contributing
 
 ### Development Workflow
