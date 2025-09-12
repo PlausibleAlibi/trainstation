@@ -22,6 +22,7 @@ import {
   Snackbar,
   Typography,
 } from '@mui/material'
+import { spacing, buttonVariants } from '../shared/theme'
 
 /* ================= Types ================= */
 type Category = {
@@ -276,11 +277,11 @@ export default function App() {
   /* ---- UI ---- */
   return (
     <>
-      <Container maxWidth="xl" sx={{ py: 2 }}>
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
+      <Container maxWidth="xl" sx={{ py: spacing.md }}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: spacing.md }}>
           {/* Sidebar */}
           <Box sx={{ width: { xs: '100%', md: 320 }, flexShrink: 0 }}>
-            <Paper sx={{ p: 2, height: 'fit-content' }}>
+            <Paper sx={{ p: spacing.md, height: 'fit-content' }}>
               <Typography variant="h6" gutterBottom>
                 Categories
               </Typography>
@@ -289,7 +290,7 @@ export default function App() {
                 onClick={() => setSelCat("all")}
                 variant={selCat === "all" ? "contained" : "outlined"}
                 fullWidth
-                sx={{ mb: 1, justifyContent: 'space-between' }}
+                sx={{ mb: spacing.sm, justifyContent: 'space-between' }}
               >
                 <span>All</span>
                 <span style={{ opacity: 0.7 }}>{totalAll}</span>
@@ -304,17 +305,17 @@ export default function App() {
                     onClick={() => setSelCat(c.id)}
                     variant={selCat === c.id ? "contained" : "outlined"}
                     fullWidth
-                    sx={{ mb: 1 }}
+                    sx={{ mb: spacing.sm }}
                   >
                     {c.name}
                   </Button>
                 ))}
 
               {/* New Category */}
-              <Typography variant="h6" sx={{ mt: 3, mb: 2 }}>
+              <Typography variant="h6" sx={{ mt: spacing.lg, mb: spacing.md }}>
                 New Category
               </Typography>
-              <Box component="form" onSubmit={createCategory} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box component="form" onSubmit={createCategory} sx={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
                 <TextField
                   value={cName}
                   onChange={(e) => setCName(e.target.value)}
@@ -340,7 +341,7 @@ export default function App() {
                 <Button
                   type="submit"
                   disabled={creatingCat}
-                  variant="contained"
+                  {...buttonVariants.primary}
                   fullWidth
                 >
                   {creatingCat ? "Creating…" : "Create"}
@@ -348,10 +349,10 @@ export default function App() {
               </Box>
 
               {/* New Accessory */}
-              <Typography variant="h6" sx={{ mt: 3, mb: 2 }}>
+              <Typography variant="h6" sx={{ mt: spacing.lg, mb: spacing.md }}>
                 New Accessory
               </Typography>
-              <Box component="form" onSubmit={createAccessory} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box component="form" onSubmit={createAccessory} sx={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
                 <TextField
                   value={fName}
                   onChange={(e) => setFName(e.target.value)}
@@ -415,7 +416,7 @@ export default function App() {
                 <Button
                   type="submit"
                   disabled={creatingAcc}
-                  variant="contained"
+                  {...buttonVariants.primary}
                   fullWidth
                 >
                   {creatingAcc ? "Creating…" : "Create"}
@@ -426,8 +427,8 @@ export default function App() {
 
           {/* Content */}
           <Box sx={{ flex: 1 }}>
-            <Paper sx={{ p: 2 }}>
-              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2, flexWrap: 'wrap' }}>
+            <Paper sx={{ p: spacing.md }}>
+              <Box sx={{ display: 'flex', gap: spacing.md, alignItems: 'center', mb: spacing.md, flexWrap: 'wrap' }}>
                 <TextField
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
@@ -461,7 +462,7 @@ export default function App() {
                 <Button
                   disabled={offset === 0}
                   onClick={() => setOffset(Math.max(0, offset - limit))}
-                  variant="outlined"
+                  {...buttonVariants.outline}
                   size="small"
                 >
                   ‹ Prev
@@ -469,7 +470,7 @@ export default function App() {
                 <Button
                   disabled={accs.length < limit}
                   onClick={() => setOffset(offset + limit)}
-                  variant="outlined"
+                  {...buttonVariants.outline}
                   size="small"
                 >
                   Next ›
@@ -477,13 +478,13 @@ export default function App() {
               </Box>
 
               {loading && (
-                <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', my: spacing.lg }}>
                   <CircularProgress />
                 </Box>
               )}
               
               {err && (
-                <Alert severity="error" sx={{ mb: 2 }}>
+                <Alert severity="error" sx={{ mb: spacing.md }}>
                   {err}
                 </Alert>
               )}
@@ -593,20 +594,20 @@ export default function App() {
                             )}
                           </TableCell>
                           <TableCell>
-                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                            <Box sx={{ display: 'flex', gap: spacing.sm, flexWrap: 'wrap' }}>
                               {editing ? (
                                 <>
                                   <Button
                                     onClick={(e) => saveAccessory(e, a.id)}
                                     disabled={savingAcc}
-                                    variant="contained"
+                                    {...buttonVariants.primary}
                                     size="small"
                                   >
                                     {savingAcc ? "Saving…" : "Save"}
                                   </Button>
                                   <Button
                                     onClick={cancelEdit}
-                                    variant="outlined"
+                                    {...buttonVariants.outline}
                                     size="small"
                                   >
                                     Cancel
@@ -617,8 +618,7 @@ export default function App() {
                                   <Button
                                     onClick={() => act(a.id, "on", undefined, "ON")}
                                     disabled={!a.isActive}
-                                    variant="contained"
-                                    color="success"
+                                    {...buttonVariants.success}
                                     size="small"
                                   >
                                     On
@@ -626,8 +626,7 @@ export default function App() {
                                   <Button
                                     onClick={() => act(a.id, "off", undefined, "OFF")}
                                     disabled={!a.isActive}
-                                    variant="contained"
-                                    color="secondary"
+                                    {...buttonVariants.secondary}
                                     size="small"
                                   >
                                     Off
@@ -635,7 +634,7 @@ export default function App() {
                                   <Button
                                     onClick={() => act(a.id, "apply", undefined, "Applied")}
                                     disabled={!a.isActive}
-                                    variant="outlined"
+                                    {...buttonVariants.outline}
                                     size="small"
                                   >
                                     Apply
@@ -643,22 +642,21 @@ export default function App() {
                                   <Button
                                     onClick={() => act(a.id, "apply", { milliseconds: 2000 }, "2s Applied")}
                                     disabled={!a.isActive}
-                                    variant="outlined"
+                                    {...buttonVariants.outline}
                                     size="small"
                                   >
                                     Apply 2s
                                   </Button>
                                   <Button
                                     onClick={() => beginEdit(a)}
-                                    variant="outlined"
+                                    {...buttonVariants.outline}
                                     size="small"
                                   >
                                     Edit
                                   </Button>
                                   <Button
                                     onClick={() => deleteAccessory(a.id)}
-                                    variant="contained"
-                                    color="error"
+                                    {...buttonVariants.error}
                                     size="small"
                                   >
                                     Delete
@@ -672,7 +670,7 @@ export default function App() {
                     })}
                     {accs.length === 0 && !loading && (
                       <TableRow>
-                        <TableCell colSpan={7} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                        <TableCell colSpan={7} align="center" sx={{ py: spacing.lg, color: 'text.secondary' }}>
                           No accessories
                         </TableCell>
                       </TableRow>

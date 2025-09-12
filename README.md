@@ -348,3 +348,118 @@ All Docker Compose operations now use the root-level compose files with override
 - `docker-compose.prod.yml` - Production overrides
 
 The `deploy/` directory is deprecated and scheduled for removal.
+
+## 🎨 UI Consistency Guidelines
+
+TrainStation follows a centralized design system using Material-UI (MUI) v7 to ensure consistent user experience across all components.
+
+### Theme Structure
+
+The centralized theme is located at `frontend/shared/theme/index.ts` and provides:
+
+#### Spacing Scale
+```typescript
+// Use these standardized spacing values instead of hardcoded numbers
+spacing = {
+  xs: 4px,   // theme.spacing(0.5)
+  sm: 8px,   // theme.spacing(1)  
+  md: 16px,  // theme.spacing(2)
+  lg: 24px,  // theme.spacing(3)
+  xl: 32px,  // theme.spacing(4)
+  xxl: 48px, // theme.spacing(6)
+}
+```
+
+#### Icon Sizes
+```typescript
+// Standardized icon sizes for consistency
+iconSizes = {
+  small: 20px,   // For buttons and inline usage
+  medium: 24px,  // Default size
+  large: 32px,   // For cards and emphasis
+  xlarge: 40px,  // For statistics and headers
+}
+```
+
+#### Button Variants
+```typescript
+// Use these predefined button combinations
+buttonVariants = {
+  primary: { variant: 'contained', color: 'primary' },
+  secondary: { variant: 'contained', color: 'secondary' },
+  success: { variant: 'contained', color: 'success' },
+  warning: { variant: 'contained', color: 'warning' },
+  error: { variant: 'contained', color: 'error' },
+  outline: { variant: 'outlined' },
+  text: { variant: 'text' },
+}
+```
+
+### Usage Guidelines
+
+#### ✅ Do
+- **Import theme utilities**: `import { spacing, iconSizes, buttonVariants } from '../shared/theme'`
+- **Use spacing constants**: `sx={{ p: spacing.md, mb: spacing.lg }}`
+- **Use standardized icons**: `<Icon sx={{ fontSize: iconSizes.medium }} />`
+- **Use button variants**: `<Button {...buttonVariants.primary}>Save</Button>`
+- **Use theme colors**: `color: 'primary.main'`, `bgcolor: 'background.default'`
+
+#### ❌ Don't
+- **Hardcode spacing**: `sx={{ p: 2, mb: 3 }}` → Use `sx={{ p: spacing.md, mb: spacing.lg }}`
+- **Hardcode icon sizes**: `fontSize: 40` → Use `fontSize: iconSizes.xlarge`
+- **Hardcode colors**: `'rgba(255,255,255,0.2)'` → Use theme colors
+- **Repeat button props**: `variant="contained" color="primary"` → Use `{...buttonVariants.primary}`
+
+### Component Patterns
+
+#### Cards and Papers
+```typescript
+// Consistent card styling
+<Card sx={{ p: spacing.lg }}>
+  <CardContent>
+    <Typography variant="h5" gutterBottom>Title</Typography>
+    <Typography color="text.secondary">Content</Typography>
+  </CardContent>
+</Card>
+```
+
+#### Lists with Dividers
+```typescript
+// Consistent list styling
+<List sx={{ p: 0 }}>
+  {items.map((item, index) => (
+    <React.Fragment key={item.id}>
+      <ListItem sx={{ px: 0 }}>
+        <ListItemIcon>
+          <Icon sx={{ fontSize: iconSizes.medium }} />
+        </ListItemIcon>
+        <ListItemText primary={item.name} />
+      </ListItem>
+      {index < items.length - 1 && <Divider />}
+    </React.Fragment>
+  ))}
+</List>
+```
+
+#### Responsive Grids
+```typescript
+// Use theme spacing for consistent gaps
+<Box sx={{ 
+  display: 'grid', 
+  gap: spacing.lg, 
+  gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' } 
+}}>
+  {/* Grid items */}
+</Box>
+```
+
+### Future Contributors
+
+When creating new components:
+1. Always import and use theme utilities
+2. Follow the established spacing and sizing patterns
+3. Use semantic color names from the theme palette
+4. Ensure responsive design using theme breakpoints
+5. Test components across different screen sizes
+
+For questions about UI patterns, refer to existing components like `Dashboard.tsx` and `CommandCenterDashboard.tsx` as reference implementations.
