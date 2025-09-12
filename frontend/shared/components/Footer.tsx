@@ -1,4 +1,5 @@
 import { Box, Typography } from '@mui/material'
+import { spacing } from '../theme'
 
 /**
  * Footer component that displays version information using Vite environment variables.
@@ -32,9 +33,9 @@ export default function Footer() {
     <Box 
       component="footer" 
       sx={{ 
-        py: 1, 
-        px: 2, 
-        bgcolor: 'grey.100', 
+        py: spacing.sm, 
+        px: spacing.md, 
+        bgcolor: 'background.default', 
         borderTop: 1, 
         borderColor: 'divider',
         mt: 'auto' // Push footer to bottom when used in flex container

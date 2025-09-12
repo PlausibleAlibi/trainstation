@@ -252,7 +252,7 @@ export default function SectionConnectionsManager() {
             <InputLabel>Connection Type</InputLabel>
             <Select
               value={selectedConnectionType}
-              onChange={(e: React.ChangeEvent<{ value: unknown }>) => setSelectedConnectionType(e.target.value as string)}
+              onChange={(e) => setSelectedConnectionType(e.target.value as string)}
               label="Connection Type"
             >
               <MenuItem value="all">All Types</MenuItem>
@@ -266,7 +266,7 @@ export default function SectionConnectionsManager() {
             <InputLabel>From Section</InputLabel>
             <Select
               value={selectedSection}
-              onChange={(e: React.ChangeEvent<{ value: unknown }>) => setSelectedSection(e.target.value as number | 'all')}
+              onChange={(e) => setSelectedSection(e.target.value as number | 'all')}
               label="From Section"
             >
               <MenuItem value="all">All Sections</MenuItem>

@@ -29,6 +29,7 @@ import {
 } from '@mui/icons-material';
 import { EntityModal, DeleteConfirmationModal } from './components/modal';
 import { createSectionModalConfig } from './components/configs/modalConfigs';
+import { spacing, iconSizes, buttonVariants } from '../shared/theme';
 
 // Types
 type TrackLine = {
@@ -206,28 +207,28 @@ export default function SectionsManager() {
   }, {} as Record<string, SectionWithTrackLine[]>);
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-        <SectionIcon sx={{ mr: 2, color: 'primary.main' }} />
+    <Box sx={{ p: spacing.md }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: spacing.lg }}>
+        <SectionIcon sx={{ mr: spacing.md, color: 'primary.main', fontSize: iconSizes.large }} />
         <Typography variant="h4" component="h1">
           Track Sections
         </Typography>
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity="error" sx={{ mb: spacing.md }}>
           {error}
         </Alert>
       )}
 
       {/* Filters */}
-      <Paper sx={{ p: 2, mb: 2 }}>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+      <Paper sx={{ p: spacing.md, mb: spacing.md }}>
+        <Box sx={{ display: 'flex', gap: spacing.md, alignItems: 'center', flexWrap: 'wrap' }}>
           <FormControl size="small" sx={{ minWidth: 200 }}>
             <InputLabel>Track Line</InputLabel>
             <Select
               value={selectedTrackLine}
-              onChange={(e: React.ChangeEvent<{ value: unknown }>) => setSelectedTrackLine(e.target.value as number | 'all')}
+              onChange={(e) => setSelectedTrackLine(e.target.value as number | 'all')}
               label="Track Line"
             >
               <MenuItem value="all">All Track Lines</MenuItem>
@@ -251,8 +252,8 @@ export default function SectionsManager() {
 
           <Box sx={{ ml: 'auto' }}>
             <Button
-              variant="contained"
-              startIcon={<AddIcon />}
+              {...buttonVariants.primary}
+              startIcon={<AddIcon sx={{ fontSize: iconSizes.small }} />}
               onClick={() => openDialog()}
               disabled={trackLines.length === 0}
             >
@@ -261,21 +262,21 @@ export default function SectionsManager() {
           </Box>
         </Box>
         {trackLines.length === 0 && (
-          <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+          <Typography variant="body2" color="error" sx={{ mt: spacing.sm }}>
             You must create at least one track line before you can add a section. Go to the "Track Lines" tab and create a track line.
           </Typography>
         )}
       </Paper>
 
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', p: spacing.xl }}>
           <CircularProgress />
         </Box>
       ) : (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
           {Object.entries(groupedSections).map(([trackLineName, trackLineSections]) => (
             <Paper key={trackLineName}>
-              <Box sx={{ p: 2, bgcolor: 'primary.main', color: 'primary.contrastText' }}>
+              <Box sx={{ p: spacing.md, bgcolor: 'primary.main', color: 'primary.contrastText' }}>
                 <Typography variant="h6">
                   {trackLineName} ({trackLineSections.length} sections)
                 </Typography>
@@ -328,7 +329,7 @@ export default function SectionsManager() {
                             color="primary"
                             aria-label={`Edit section ${section.name}`}
                           >
-                            <EditIcon />
+                            <EditIcon sx={{ fontSize: iconSizes.small }} />
                           </IconButton>
                           <IconButton
                             size="small"
@@ -336,7 +337,7 @@ export default function SectionsManager() {
                             color="error"
                             aria-label={`Delete section ${section.name}`}
                           >
-                            <DeleteIcon />
+                            <DeleteIcon sx={{ fontSize: iconSizes.small }} />
                           </IconButton>
                         </TableCell>
                       </TableRow>
@@ -348,7 +349,7 @@ export default function SectionsManager() {
           ))}
           
           {sections.length === 0 && (
-            <Paper sx={{ p: 4, textAlign: 'center' }}>
+            <Paper sx={{ p: spacing.xl, textAlign: 'center' }}>
               <Typography color="text.secondary">
                 No sections found. Create your first section to get started.
               </Typography>

@@ -13,6 +13,7 @@ import {
   Warning as WarningIcon,
   Speed as SpeedIcon,
 } from '@mui/icons-material'
+import { spacing, iconSizes, buttonVariants } from '../shared/theme'
 
 export default function CommandCenterDashboard() {
   // Placeholder data - in the future this would come from the backend
@@ -39,7 +40,7 @@ export default function CommandCenterDashboard() {
         Control Dashboard
       </Typography>
       
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: spacing.xl }}>
         Monitor and control your model railway system from this central dashboard.
       </Typography>
 
@@ -47,11 +48,11 @@ export default function CommandCenterDashboard() {
       <Box sx={{ 
         display: 'flex',
         flexWrap: 'wrap',
-        gap: 3,
-        mb: 4 
+        gap: spacing.lg,
+        mb: spacing.xl 
       }}>
         <Card sx={{ minWidth: 200, flex: 1 }}>
-          <CardContent>
+          <CardContent sx={{ p: spacing.lg }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <Box>
                 <Typography color="text.secondary" gutterBottom variant="h6">
@@ -63,13 +64,16 @@ export default function CommandCenterDashboard() {
                   size="small"
                 />
               </Box>
-              <PowerIcon sx={{ fontSize: 40, color: systemStatus.powerOn ? 'success.main' : 'text.disabled' }} />
+              <PowerIcon sx={{ 
+                fontSize: iconSizes.xlarge, 
+                color: systemStatus.powerOn ? 'success.main' : 'text.disabled' 
+              }} />
             </Box>
           </CardContent>
         </Card>
 
         <Card sx={{ minWidth: 200, flex: 1 }}>
-          <CardContent>
+          <CardContent sx={{ p: spacing.lg }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <Box>
                 <Typography color="text.secondary" gutterBottom variant="h6">
@@ -79,13 +83,13 @@ export default function CommandCenterDashboard() {
                   {systemStatus.activeTrains}
                 </Typography>
               </Box>
-              <TrainIcon sx={{ fontSize: 40, color: 'primary.main' }} />
+              <TrainIcon sx={{ fontSize: iconSizes.xlarge, color: 'primary.main' }} />
             </Box>
           </CardContent>
         </Card>
 
         <Card sx={{ minWidth: 200, flex: 1 }}>
-          <CardContent>
+          <CardContent sx={{ p: spacing.lg }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <Box>
                 <Typography color="text.secondary" gutterBottom variant="h6">
@@ -95,13 +99,16 @@ export default function CommandCenterDashboard() {
                   {systemStatus.warnings}
                 </Typography>
               </Box>
-              <WarningIcon sx={{ fontSize: 40, color: systemStatus.warnings > 0 ? 'warning.main' : 'text.disabled' }} />
+              <WarningIcon sx={{ 
+                fontSize: iconSizes.xlarge, 
+                color: systemStatus.warnings > 0 ? 'warning.main' : 'text.disabled' 
+              }} />
             </Box>
           </CardContent>
         </Card>
 
         <Card sx={{ minWidth: 200, flex: 1 }}>
-          <CardContent>
+          <CardContent sx={{ p: spacing.lg }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <Box>
                 <Typography color="text.secondary" gutterBottom variant="h6">
@@ -111,32 +118,30 @@ export default function CommandCenterDashboard() {
                   {systemStatus.connectedSections}
                 </Typography>
               </Box>
-              <SpeedIcon sx={{ fontSize: 40, color: 'info.main' }} />
+              <SpeedIcon sx={{ fontSize: iconSizes.xlarge, color: 'info.main' }} />
             </Box>
           </CardContent>
         </Card>
       </Box>
 
       {/* Control Panel */}
-      <Paper sx={{ p: 3, mb: 3 }}>
+      <Paper sx={{ p: spacing.lg, mb: spacing.lg }}>
         <Typography variant="h5" component="h2" gutterBottom>
           System Controls
         </Typography>
         
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', gap: spacing.md, flexWrap: 'wrap' }}>
           <Button
-            variant="contained"
-            startIcon={<PowerIcon />}
+            {...(systemStatus.powerOn ? buttonVariants.error : buttonVariants.success)}
+            startIcon={<PowerIcon sx={{ fontSize: iconSizes.small }} />}
             onClick={handlePowerToggle}
-            color={systemStatus.powerOn ? 'error' : 'success'}
             size="large"
           >
             {systemStatus.powerOn ? 'Turn Off Power' : 'Turn On Power'}
           </Button>
           
           <Button
-            variant="contained"
-            color="error"
+            {...buttonVariants.error}
             onClick={handleEmergencyStop}
             size="large"
           >
@@ -146,7 +151,7 @@ export default function CommandCenterDashboard() {
       </Paper>
 
       {/* Placeholder for future features */}
-      <Paper sx={{ p: 3 }}>
+      <Paper sx={{ p: spacing.lg }}>
         <Typography variant="h5" component="h2" gutterBottom>
           Coming Soon
         </Typography>
