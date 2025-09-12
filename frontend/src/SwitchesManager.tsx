@@ -244,7 +244,7 @@ export default function SwitchesManager() {
             <InputLabel>Section</InputLabel>
             <Select
               value={selectedSection}
-              onChange={(e: React.ChangeEvent<{ value: unknown }>) => setSelectedSection(e.target.value as number | 'all')}
+              onChange={(e) => setSelectedSection(e.target.value as number | 'all')}
               label="Section"
             >
               <MenuItem value="all">All Sections</MenuItem>
@@ -260,7 +260,7 @@ export default function SwitchesManager() {
             <InputLabel>Position</InputLabel>
             <Select
               value={selectedPosition}
-              onChange={(e: React.ChangeEvent<{ value: unknown }>) => setSelectedPosition(e.target.value as string)}
+              onChange={(e) => setSelectedPosition(e.target.value as string)}
               label="Position"
             >
               <MenuItem value="all">All Positions</MenuItem>
