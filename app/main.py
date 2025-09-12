@@ -1,14 +1,17 @@
 # app/main.py
-import logging
 import os
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from routers import categories, accessories, actions, track_lines, sections, switches, section_connections, train_assets, asset_location_events
-from dev_seed import seed_dev_layout    
+from dev_seed import seed_dev_layout
+from logging_config import setup_logging, get_logger
+from middleware import LoggingMiddleware
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+# Configure structured logging
+setup_logging()
+logger = get_logger("main")
 
 # ---- create the app FIRST (only once) ----
 app = FastAPI(title="Lionel Control API", version="0.1.0")
@@ -16,7 +19,13 @@ app = FastAPI(title="Lionel Control API", version="0.1.0")
 # ---- global exception handler (now app exists) ----
 @app.exception_handler(Exception)
 async def unhandled_exception(request: Request, exc: Exception):
-    logging.exception("Unhandled error on %s %s", request.method, request.url)
+    logger.error(
+        "Unhandled exception occurred", 
+        method=request.method, 
+        url=str(request.url), 
+        error=str(exc),
+        exc_info=True
+    )
     return JSONResponse(status_code=500, content={"detail": "Internal Server Error"})
 
 # ---- CORS ----
@@ -39,10 +48,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Add structured logging middleware
+app.add_middleware(LoggingMiddleware)
+
 @app.on_event("startup")
 async def startup_event():
     # You may want to wrap this in a try/except and/or use test_mode as needed
+    logger.info("Application starting up")
     seed_dev_layout()
+    logger.info("Development seed data loaded")
 
 # ---- health/version ----
 @app.get("/health")

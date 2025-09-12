@@ -289,6 +289,49 @@ python -m pytest tests/test_api_endpoints.py
 
 Coverage reports are generated in `htmlcov/` directory.
 
+#### Backend Logging
+
+TrainStation backend uses structured logging with `structlog` for comprehensive request monitoring and debugging.
+
+**Logging Features:**
+- **Structured JSON Output**: All logs are formatted as JSON for easy parsing and monitoring
+- **Request Logging**: Every HTTP request is automatically logged with detailed context
+- **Error Tracking**: Unhandled exceptions are logged with full context and stack traces
+
+**Log Data Captured:**
+- `event_type`: Type of event ("request" for HTTP requests)
+- `method`: HTTP method (GET, POST, PUT, DELETE)
+- `path`: Request path (e.g., "/trainAssets", "/categories")
+- `query`: Query parameters as string
+- `client_ip`: Client IP address (supports proxy headers)
+- `status_code`: HTTP response status code
+- `processing_time_ms`: Request processing time in milliseconds
+- `timestamp`: ISO formatted timestamp
+- `level`: Log level (info, error, etc.)
+- `logger`: Logger name for identifying log source
+
+**Example Log Output:**
+```json
+{
+  "event_type": "request",
+  "method": "GET", 
+  "path": "/trainAssets",
+  "query": "status=active",
+  "client_ip": "127.0.0.1",
+  "status_code": 200,
+  "processing_time_ms": 23.45,
+  "event": "HTTP request processed",
+  "level": "info",
+  "logger": "request",
+  "timestamp": "2025-09-12T04:10:28.552713Z"
+}
+```
+
+**Configuration:**
+- Logging setup: `app/logging_config.py`
+- Request middleware: `app/middleware.py`
+- All endpoints automatically instrumented via middleware
+
 ### Frontend Testing (React/TypeScript)
 
 The frontend uses Vitest with React Testing Library for component testing.
