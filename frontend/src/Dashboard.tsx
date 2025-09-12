@@ -20,6 +20,7 @@ import {
   Speed as SpeedIcon,
   Schedule as ScheduleIcon,
 } from '@mui/icons-material'
+import { spacing, iconSizes, buttonVariants } from '../shared/theme'
 
 // This is a demonstration component showcasing Material UI best practices
 // It would typically receive props or use hooks to fetch real data
@@ -45,10 +46,10 @@ export default function Dashboard() {
   ]
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h3" component="h1" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <TrainIcon fontSize="large" />
+    <Container maxWidth="lg" sx={{ py: spacing.xl }}>
+      <Box sx={{ mb: spacing.xl }}>
+        <Typography variant="h3" component="h1" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: spacing.md }}>
+          <TrainIcon sx={{ fontSize: iconSizes.xlarge }} />
           Dashboard
         </Typography>
         <Typography variant="body1" color="text.secondary">
@@ -57,9 +58,14 @@ export default function Dashboard() {
       </Box>
 
       {/* Statistics Cards */}
-      <Box sx={{ display: 'grid', gap: 3, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }, mb: 4 }}>
+      <Box sx={{ 
+        display: 'grid', 
+        gap: spacing.lg, 
+        gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }, 
+        mb: spacing.xl 
+      }}>
         <Card>
-          <CardContent>
+          <CardContent sx={{ p: spacing.lg }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <Box>
                 <Typography color="text.secondary" gutterBottom variant="h6">
@@ -69,13 +75,13 @@ export default function Dashboard() {
                   {stats.totalAccessories}
                 </Typography>
               </Box>
-              <SettingsIcon sx={{ fontSize: 40, color: 'primary.main' }} />
+              <SettingsIcon sx={{ fontSize: iconSizes.xlarge, color: 'primary.main' }} />
             </Box>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent>
+          <CardContent sx={{ p: spacing.lg }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <Box>
                 <Typography color="text.secondary" gutterBottom variant="h6">
@@ -85,13 +91,13 @@ export default function Dashboard() {
                   {stats.activeAccessories}
                 </Typography>
               </Box>
-              <PowerIcon sx={{ fontSize: 40, color: 'success.main' }} />
+              <PowerIcon sx={{ fontSize: iconSizes.xlarge, color: 'success.main' }} />
             </Box>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent>
+          <CardContent sx={{ p: spacing.lg }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <Box>
                 <Typography color="text.secondary" gutterBottom variant="h6">
@@ -101,13 +107,13 @@ export default function Dashboard() {
                   {stats.totalCategories}
                 </Typography>
               </Box>
-              <SpeedIcon sx={{ fontSize: 40, color: 'info.main' }} />
+              <SpeedIcon sx={{ fontSize: iconSizes.xlarge, color: 'info.main' }} />
             </Box>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent>
+          <CardContent sx={{ p: spacing.lg }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <Box>
                 <Typography color="text.secondary" gutterBottom variant="h6">
@@ -117,25 +123,25 @@ export default function Dashboard() {
                   {stats.recentActions}
                 </Typography>
               </Box>
-              <ScheduleIcon sx={{ fontSize: 40, color: 'warning.main' }} />
+              <ScheduleIcon sx={{ fontSize: iconSizes.xlarge, color: 'warning.main' }} />
             </Box>
           </CardContent>
         </Card>
       </Box>
 
-      <Box sx={{ display: 'grid', gap: 3, gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' } }}>
+      <Box sx={{ display: 'grid', gap: spacing.lg, gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' } }}>
         {/* Categories Overview */}
         <Card>
-          <CardContent>
+          <CardContent sx={{ p: spacing.lg }}>
             <Typography variant="h5" gutterBottom>
               Categories Overview
             </Typography>
-            <List>
+            <List sx={{ p: 0 }}>
               {categories.map((category, index) => (
                 <React.Fragment key={category.name}>
-                  <ListItem>
+                  <ListItem sx={{ px: 0 }}>
                     <ListItemIcon>
-                      <TrainIcon />
+                      <TrainIcon sx={{ fontSize: iconSizes.medium }} />
                     </ListItemIcon>
                     <ListItemText
                       primary={category.name}
@@ -151,8 +157,8 @@ export default function Dashboard() {
                 </React.Fragment>
               ))}
             </List>
-            <Box sx={{ mt: 2 }}>
-              <Button variant="outlined" fullWidth>
+            <Box sx={{ mt: spacing.md }}>
+              <Button {...buttonVariants.outline} fullWidth>
                 View All Categories
               </Button>
             </Box>
@@ -161,14 +167,14 @@ export default function Dashboard() {
 
         {/* Recent Activity */}
         <Card>
-          <CardContent>
+          <CardContent sx={{ p: spacing.lg }}>
             <Typography variant="h5" gutterBottom>
               Recent Activity
             </Typography>
-            <List>
+            <List sx={{ p: 0 }}>
               {recentActivities.map((activity, index) => (
                 <React.Fragment key={activity.id}>
-                  <ListItem>
+                  <ListItem sx={{ px: 0 }}>
                     <ListItemText
                       primary={activity.action}
                       secondary={activity.time}
@@ -183,8 +189,8 @@ export default function Dashboard() {
                 </React.Fragment>
               ))}
             </List>
-            <Box sx={{ mt: 2 }}>
-              <Button variant="outlined" fullWidth>
+            <Box sx={{ mt: spacing.md }}>
+              <Button {...buttonVariants.outline} fullWidth>
                 View All Activities
               </Button>
             </Box>
@@ -193,21 +199,21 @@ export default function Dashboard() {
       </Box>
 
       {/* Quick Actions */}
-      <Box sx={{ mt: 4 }}>
+      <Box sx={{ mt: spacing.xl }}>
         <Typography variant="h5" gutterBottom>
           Quick Actions
         </Typography>
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-          <Button variant="contained" startIcon={<PowerIcon />}>
+        <Box sx={{ display: 'flex', gap: spacing.md, flexWrap: 'wrap' }}>
+          <Button {...buttonVariants.primary} startIcon={<PowerIcon sx={{ fontSize: iconSizes.small }} />}>
             Turn All On
           </Button>
-          <Button variant="contained" color="secondary" startIcon={<PowerIcon />}>
+          <Button {...buttonVariants.secondary} startIcon={<PowerIcon sx={{ fontSize: iconSizes.small }} />}>
             Turn All Off
           </Button>
-          <Button variant="outlined" startIcon={<SettingsIcon />}>
+          <Button {...buttonVariants.outline} startIcon={<SettingsIcon sx={{ fontSize: iconSizes.small }} />}>
             System Settings
           </Button>
-          <Button variant="outlined" startIcon={<TrainIcon />}>
+          <Button {...buttonVariants.outline} startIcon={<TrainIcon sx={{ fontSize: iconSizes.small }} />}>
             Add New Accessory
           </Button>
         </Box>
