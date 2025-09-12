@@ -83,10 +83,9 @@ def list_sections(
                 id=r.Id,
                 name=r.Name,
                 trackLineId=r.TrackLineId,
-                startPosition=r.start_position,
-                endPosition=r.end_position,
-                length=r.length,
-                isOccupied=r.is_occupied,
+                positionX=r.PositionX,
+                positionY=r.PositionY,
+                positionZ=r.PositionZ,
                 isActive=r.IsActive,
             ) for r in rows
         ]
@@ -96,18 +95,17 @@ def list_sections(
             id=r.Id,
             name=r.Name,
             trackLineId=r.TrackLineId,
-            startPosition=r.start_position,
-            endPosition=r.end_position,
-            length=r.length,
-            isOccupied=r.is_occupied,
+            positionX=r.PositionX,
+            positionY=r.PositionY,
+            positionZ=r.PositionZ,
             isActive=r.IsActive,
             trackLine=TrackLineRead(
                 id=r.TrackLine.Id,
                 name=r.TrackLine.Name,
-                description=r.TrackLine.description,
-                length=r.TrackLine.length,
+                description=getattr(r.TrackLine, 'Description', None),
+                length=getattr(r.TrackLine, 'Length', None),
                 isActive=r.TrackLine.IsActive,
-            ) if r.track_line else None,
+            ) if getattr(r, 'TrackLine', None) else None,
         ) for r in rows
     ]
 

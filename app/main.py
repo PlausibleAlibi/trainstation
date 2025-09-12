@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from routers import categories, accessories, actions, track_lines, sections, switches, section_connections, train_assets, asset_location_events
+from dev_seed import seed_dev_layout    
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
@@ -37,6 +38,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.on_event("startup")
+async def startup_event():
+    # You may want to wrap this in a try/except and/or use test_mode as needed
+    seed_dev_layout()
 
 # ---- health/version ----
 @app.get("/health")
