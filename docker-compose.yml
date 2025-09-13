@@ -55,8 +55,6 @@ services:
       POSTGRES_DB: trains
       POSTGRES_USER: trainsAdmin
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-brokentrack}
-    ports:
-      - "5432:5432"
     volumes:
       - dbdata:/var/lib/postgresql/data
     restart: unless-stopped
