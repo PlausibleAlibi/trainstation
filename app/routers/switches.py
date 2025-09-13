@@ -38,6 +38,12 @@ def create_switch(payload: SwitchCreate, db: Session = Depends(get_db)):
         Name=payload.name,
         AccessoryId=payload.accessoryId,
         SectionId=payload.sectionId,
+        Kind=payload.kind,
+        DefaultRoute=payload.defaultRoute,
+        Orientation=payload.orientation,
+        PositionX=payload.positionX,
+        PositionY=payload.positionY,
+        PositionZ=payload.positionZ,
         position=payload.position,
         IsActive=payload.isActive,
     )
@@ -49,6 +55,12 @@ def create_switch(payload: SwitchCreate, db: Session = Depends(get_db)):
         name=item.Name,
         accessoryId=item.AccessoryId,
         sectionId=item.SectionId,
+        kind=item.Kind,
+        defaultRoute=item.DefaultRoute,
+        orientation=item.Orientation,
+        positionX=item.PositionX,
+        positionY=item.PositionY,
+        positionZ=item.PositionZ,
         position=item.position,
         isActive=item.IsActive,
     )
@@ -88,6 +100,12 @@ def list_switches(
                 name=r.Name,
                 accessoryId=r.AccessoryId,
                 sectionId=r.SectionId,
+                kind=r.Kind,
+                defaultRoute=r.DefaultRoute,
+                orientation=r.Orientation,
+                positionX=r.PositionX,
+                positionY=r.PositionY,
+                positionZ=r.PositionZ,
                 position=r.position,
                 isActive=r.IsActive,
             ) for r in rows
@@ -99,6 +117,12 @@ def list_switches(
             name=r.Name,
             accessoryId=r.AccessoryId,
             sectionId=r.SectionId,
+            kind=r.Kind,
+            defaultRoute=r.DefaultRoute,
+            orientation=r.Orientation,
+            positionX=r.PositionX,
+            positionY=r.PositionY,
+            positionZ=r.PositionZ,
             position=r.position,
             isActive=r.IsActive,
             accessory=AccessoryRead(
@@ -131,6 +155,12 @@ def get_switch(id: int, db: Session = Depends(get_db)):
         name=r.Name,
         accessoryId=r.AccessoryId,
         sectionId=r.SectionId,
+        kind=r.Kind,
+        defaultRoute=r.DefaultRoute,
+        orientation=r.Orientation,
+        positionX=r.PositionX,
+        positionY=r.PositionY,
+        positionZ=r.PositionZ,
         position=r.position,
         isActive=r.IsActive,
         accessory=AccessoryRead(
@@ -174,6 +204,12 @@ def update_switch(
     r.Name = payload.name
     r.AccessoryId = payload.accessoryId
     r.SectionId = payload.sectionId
+    r.Kind = payload.kind
+    r.DefaultRoute = payload.defaultRoute
+    r.Orientation = payload.orientation
+    r.PositionX = payload.positionX
+    r.PositionY = payload.positionY
+    r.PositionZ = payload.positionZ
     r.position = payload.position
     r.IsActive = payload.isActive
     db.commit()
@@ -183,6 +219,12 @@ def update_switch(
         name=r.Name,
         accessoryId=r.AccessoryId,
         sectionId=r.SectionId,
+        kind=r.Kind,
+        defaultRoute=r.DefaultRoute,
+        orientation=r.Orientation,
+        positionX=r.PositionX,
+        positionY=r.PositionY,
+        positionZ=r.PositionZ,
         position=r.position,
         isActive=r.IsActive,
     )
@@ -196,7 +238,7 @@ def delete_switch(id: int, db: Session = Depends(get_db)):
     
     # Check if there are section connections using this switch
     from models import SectionConnection
-    if db.query(SectionConnection).filter(SectionConnection.switch_id == id).first():
+    if db.query(SectionConnection).filter(SectionConnection.SwitchId == id).first():
         raise HTTPException(400, "Switch is used in section connections; remove them first")
     
     db.delete(r)

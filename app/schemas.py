@@ -99,6 +99,12 @@ class SwitchCreate(BaseModel):
     name: Optional[str] = None
     accessoryId: int
     sectionId: int
+    kind: str  # Required field: turnout, crossover, etc.
+    defaultRoute: Optional[str] = None
+    orientation: Optional[float] = None
+    positionX: Optional[float] = None
+    positionY: Optional[float] = None
+    positionZ: Optional[float] = None
     position: Literal["straight", "divergent", "unknown"] = "unknown"
     isActive: bool = True
 

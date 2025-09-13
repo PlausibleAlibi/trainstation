@@ -50,6 +50,12 @@ type Switch = {
   name: string;
   accessoryId: number;
   sectionId: number;
+  kind: string;
+  defaultRoute?: string;
+  orientation?: number;
+  positionX?: number;
+  positionY?: number;
+  positionZ?: number;
   position: 'straight' | 'divergent' | 'unknown';
   isActive: boolean;
 };

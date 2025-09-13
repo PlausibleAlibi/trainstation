@@ -5,7 +5,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from routers import categories, accessories, actions, track_lines, sections, switches, section_connections, train_assets, asset_location_events, logging
-from dev_seed import seed_dev_layout
 from logging_config import setup_logging, get_logger
 from middleware import LoggingMiddleware
 
@@ -53,6 +52,9 @@ app.add_middleware(LoggingMiddleware)
 
 @app.on_event("startup")
 async def startup_event():
+    # Import dev_seed here to avoid circular imports
+    from dev_seed import seed_dev_layout
+    
     # You may want to wrap this in a try/except and/or use test_mode as needed
     logger.info("Application starting up")
     seed_dev_layout()

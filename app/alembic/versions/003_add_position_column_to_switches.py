@@ -9,7 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-revision = '003_add_position_column_to_switches'
+revision = '003_add_position'
 down_revision = '002_add_connection_type_column'
 branch_labels = None
 depends_on = None
