@@ -21,6 +21,7 @@ asyncpg==0.29.0
 
 # Structured logging
 structlog==24.4.0
+seqlog==0.3.26
 
 # Testing dependencies
 pytest==8.2.2
