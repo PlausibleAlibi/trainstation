@@ -30,13 +30,9 @@ def create_section(payload: SectionCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="trackLineId does not exist")
 
     item = Section(
-        name=payload.Name,
-        track_line_id=payload.trackLineId,
-        start_position=payload.startPosition,
-        end_position=payload.endPosition,
-        length=payload.length,
-        is_occupied=payload.isOccupied,
-        is_active=payload.isActive,
+        Name=payload.name,
+        TrackLineId=payload.trackLineId,
+        IsActive=payload.isActive,
     )
     db.add(item)
     db.commit()
