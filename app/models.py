@@ -67,6 +67,7 @@ class Switch(Base):
     PositionX = Column(Float, nullable=True)
     PositionY = Column(Float, nullable=True)
     PositionZ = Column(Float, nullable=True)
+    position = Column(String(50), nullable=False, default="unknown")  # Switch position: straight, divergent, unknown
     IsActive = Column(Boolean, default=True, nullable=False)
 
     Accessory = relationship("Accessory", lazy="joined")
