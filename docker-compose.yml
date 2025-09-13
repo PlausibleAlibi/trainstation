@@ -71,7 +71,7 @@ services:
     image: datalust/seq:latest
     environment:
       - ACCEPT_EULA=Y
-      - SEQ_FIRSTRUN_ADMINPASSWORD=${SEQ_ADMIN_PASSWORD:-YourStrongPassword123}
+      - SEQ_FIRSTRUN_ADMINPASSWORD=${SEQ_ADMIN_PASSWORD:-Txxtmj9191!}
     ports:
       - "${SEQ_UI_PORT:-5341}:80"
       - "${SEQ_INGESTION_PORT:-5342}:5341"
