@@ -55,20 +55,19 @@ SEQ_UI_PORT=5341
 SEQ_INGESTION_PORT=5342
 SEQ_URL=http://seq:5341
 SEQ_API_KEY=your_production_api_key_here
-SEQ_ADMIN_PASSWORD_HASH=your_bcrypt_password_hash_here
+SEQ_ADMIN_PASSWORD=your_secure_password_here
 ```
 
-### Generate Production Password Hash
+### Set Production Password
 
-For production, generate a secure password hash:
+For production, set a secure password in your environment file:
 
 ```bash
-# Using Python (recommended)
-python3 -c "import bcrypt; print(bcrypt.hashpw(b'your_secure_password', bcrypt.gensalt()).decode())"
-
-# Using htpasswd (if available)
-htpasswd -bnBC 10 "" your_secure_password | tr -d ':\n'
+# In .env.prod
+SEQ_ADMIN_PASSWORD=your_very_secure_password_here
 ```
+
+**Security Note**: Always use strong passwords in production environments.
 
 ### SEQ Service Configuration
 
@@ -79,7 +78,7 @@ seq:
   image: datalust/seq:latest
   environment:
     - ACCEPT_EULA=Y
-    - SEQ_FIRSTRUN_ADMINPASSWORDHASH=${SEQ_ADMIN_PASSWORD_HASH:-}
+    - SEQ_FIRSTRUN_ADMINPASSWORD=${SEQ_ADMIN_PASSWORD:-YourStrongPassword123}
   ports:
     - "${SEQ_UI_PORT:-5341}:80"
     - "${SEQ_INGESTION_PORT:-5342}:5341"
@@ -245,6 +244,20 @@ import('./shared/logging').then(({ log }) => {
    ```bash
    docker compose config
    ```
+
+4. **Clean up SEQ volume if initialization failed**:
+   ```bash
+   # Stop all services
+   docker compose down
+   
+   # Remove SEQ data volume (this will delete all log data)
+   docker volume rm trainstation_seqdata
+   
+   # Restart services - SEQ will initialize with fresh volume
+   docker compose up -d
+   ```
+
+   **Warning**: This will permanently delete all stored logs in SEQ.
 
 ### Logs Not Appearing in SEQ
 

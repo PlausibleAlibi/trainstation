@@ -7,6 +7,6 @@ services:
   
   seq:
     environment:
-      # In development, use a simple password hash for admin account
+      # In development, use a simple password for admin account
       # Password: "admin123" (change in production)
-      - SEQ_FIRSTRUN_ADMINPASSWORDHASH=00323xa1
+      - SEQ_FIRSTRUN_ADMINPASSWORD=admin123
