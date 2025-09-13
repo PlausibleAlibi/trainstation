@@ -67,9 +67,24 @@ services:
     networks:
       - trainstation
 
+  seq:
+    image: datalust/seq:latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SEQ_FIRSTRUN_ADMINPASSWORDHASH=${SEQ_ADMIN_PASSWORD_HASH:-}
+    ports:
+      - "${SEQ_UI_PORT:-5341}:80"
+      - "${SEQ_INGESTION_PORT:-5342}:5341"
+    volumes:
+      - seqdata:/data
+    restart: unless-stopped
+    networks:
+      - trainstation
+
 networks:
   trainstation:
     driver: bridge
 
 volumes:
   dbdata:
+  seqdata:
