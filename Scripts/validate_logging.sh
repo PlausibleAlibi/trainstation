@@ -56,7 +56,7 @@ check_content "docker-compose.yml" "datalust/seq:latest"
 check_content "docker-compose.yml" "seqdata:/data"
 
 check_file "docker-compose.dev.yml"
-check_content "docker-compose.dev.yml" "SEQ_FIRSTRUN_ADMINPASSWORDHASH"
+check_content "docker-compose.dev.yml" "SEQ_FIRSTRUN_ADMINPASSWORD"
 
 echo
 echo "2. Checking Environment Configuration"
@@ -69,7 +69,7 @@ check_content ".env.dev" "SEQ_INGESTION_PORT"
 
 check_file ".env.prod"
 check_content ".env.prod" "SEQ_URL"
-check_content ".env.prod" "SEQ_ADMIN_PASSWORD_HASH"
+check_content ".env.prod" "SEQ_ADMIN_PASSWORD"
 
 echo
 echo "3. Checking Backend Integration"
@@ -176,7 +176,7 @@ echo "  - SEQ_URL: SEQ server URL for backend connection"
 echo "  - SEQ_UI_PORT: Port for SEQ web interface (default: 5341)"
 echo "  - SEQ_INGESTION_PORT: Port for log ingestion (default: 5342)"
 echo "  - SEQ_API_KEY: (Optional) API key for authentication"
-echo "  - SEQ_ADMIN_PASSWORD_HASH: (Production) Bcrypt hash of admin password"
+echo "  - SEQ_ADMIN_PASSWORD: (Production) Plain text admin password"
 
 echo
 echo "10. Integration Test Commands"
