@@ -119,7 +119,7 @@ def list_section_connections(
                 length=r.FromSection.length,
                 isOccupied=r.FromSection.is_occupied,
                 isActive=r.FromSection.IsActive,
-            ) if r.from_section else None,
+            ) if r.FromSection else None,
             toSection=SectionRead(
                 id=r.ToSection.Id,
                 name=r.ToSection.Name,
@@ -129,7 +129,7 @@ def list_section_connections(
                 length=r.ToSection.length,
                 isOccupied=r.ToSection.is_occupied,
                 isActive=r.ToSection.IsActive,
-            ) if r.to_section else None,
+            ) if r.ToSection else None,
             switch=SwitchRead(
                 id=r.Switch.Id,
                 name=r.Switch.Name,
@@ -137,7 +137,7 @@ def list_section_connections(
                 sectionId=r.Switch.SectionId,
                 position=r.Switch.position,
                 isActive=r.Switch.IsActive,
-            ) if r.switch else None,
+            ) if r.Switch else None,
         ) for r in rows
     ]
 
@@ -164,7 +164,7 @@ def get_section_connection(id: int, db: Session = Depends(get_db)):
             length=r.FromSection.length,
             isOccupied=r.FromSection.is_occupied,
             isActive=r.FromSection.IsActive,
-        ) if r.from_section else None,
+        ) if r.FromSection else None,
         toSection=SectionRead(
             id=r.ToSection.Id,
             name=r.ToSection.Name,
@@ -174,7 +174,7 @@ def get_section_connection(id: int, db: Session = Depends(get_db)):
             length=r.ToSection.length,
             isOccupied=r.ToSection.is_occupied,
             isActive=r.ToSection.IsActive,
-        ) if r.to_section else None,
+        ) if r.ToSection else None,
         switch=SwitchRead(
             id=r.Switch.Id,
             name=r.Switch.Name,
@@ -182,7 +182,7 @@ def get_section_connection(id: int, db: Session = Depends(get_db)):
             sectionId=r.Switch.SectionId,
             position=r.Switch.position,
             isActive=r.Switch.IsActive,
-        ) if r.switch else None,
+        ) if r.Switch else None,
     )
 
 # -------- Update --------
