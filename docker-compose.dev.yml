@@ -9,4 +9,4 @@ services:
     environment:
       # In development, use a simple password hash for admin account
       # Password: "admin123" (change in production)
-      - SEQ_FIRSTRUN_ADMINPASSWORDHASH=$2a$10$Wnk9xP5hx2xF7dxqZyqP8eH8lGHGHxJFaJt2QGXqz3z8p4vJ5YJoO
+      - SEQ_FIRSTRUN_ADMINPASSWORDHASH=00323xa1
