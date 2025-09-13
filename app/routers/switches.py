@@ -35,11 +35,11 @@ def create_switch(payload: SwitchCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="sectionId does not exist")
 
     item = Switch(
-        name=payload.Name,
-        accessory_id=payload.accessoryId,
-        section_id=payload.sectionId,
+        Name=payload.name,
+        AccessoryId=payload.accessoryId,
+        SectionId=payload.sectionId,
         position=payload.position,
-        is_active=payload.isActive,
+        IsActive=payload.isActive,
     )
     db.add(item)
     db.commit()
@@ -106,20 +106,16 @@ def list_switches(
                 name=r.Accessory.Name,
                 categoryId=r.Accessory.CategoryId,
                 controlType=r.Accessory.ControlType,
-                address=r.Accessory.address,
+                address=r.Accessory.Address,
                 isActive=r.Accessory.IsActive,
                 timedMs=r.Accessory.TimedMs,
-            ) if r.accessory else None,
+            ) if r.Accessory else None,
             section=SectionRead(
                 id=r.Section.Id,
                 name=r.Section.Name,
-                trackLineId=r.Section.track_line_id,
-                startPosition=r.Section.start_position,
-                endPosition=r.Section.end_position,
-                length=r.Section.length,
-                isOccupied=r.Section.is_occupied,
+                trackLineId=r.Section.TrackLineId,
                 isActive=r.Section.IsActive,
-            ) if r.section else None,
+            ) if r.Section else None,
         ) for r in rows
     ]
 
@@ -142,20 +138,16 @@ def get_switch(id: int, db: Session = Depends(get_db)):
             name=r.Accessory.Name,
             categoryId=r.Accessory.CategoryId,
             controlType=r.Accessory.ControlType,
-            address=r.Accessory.address,
+            address=r.Accessory.Address,
             isActive=r.Accessory.IsActive,
             timedMs=r.Accessory.TimedMs,
-        ) if r.accessory else None,
+        ) if r.Accessory else None,
         section=SectionRead(
             id=r.Section.Id,
             name=r.Section.Name,
-            trackLineId=r.Section.track_line_id,
-            startPosition=r.Section.start_position,
-            endPosition=r.Section.end_position,
-            length=r.Section.length,
-            isOccupied=r.Section.is_occupied,
+            trackLineId=r.Section.TrackLineId,
             isActive=r.Section.IsActive,
-        ) if r.section else None,
+        ) if r.Section else None,
     )
 
 # -------- Update --------
@@ -179,7 +171,7 @@ def update_switch(
     if not section:
         raise HTTPException(400, "sectionId does not exist")
 
-    r.Name = payload.Name
+    r.Name = payload.name
     r.AccessoryId = payload.accessoryId
     r.SectionId = payload.sectionId
     r.position = payload.position
@@ -204,7 +196,7 @@ def delete_switch(id: int, db: Session = Depends(get_db)):
     
     # Check if there are section connections using this switch
     from models import SectionConnection
-    if db.query(SectionConnection).filter(SectionConnection.switch_id == id).first():
+    if db.query(SectionConnection).filter(SectionConnection.SwitchId == id).first():
         raise HTTPException(400, "Switch is used in section connections; remove them first")
     
     db.delete(r)
