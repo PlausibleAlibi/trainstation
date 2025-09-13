@@ -125,15 +125,14 @@ def get_section(id: int, db: Session = Depends(get_db)):
         trackLine=TrackLineRead(
             id=r.TrackLine.Id,
             name=r.TrackLine.Name,
-            description=r.TrackLine.description,
-            length=r.TrackLine.length,
+            description=r.TrackLine.Description,
             isActive=r.TrackLine.IsActive,
-        ) if r.track_line else None,
+        ) if r.TrackLine else None,
         switches=[
             SwitchRead(
                 id=s.Id,
                 name=s.Name,
-                accessoryId=s.accessory_id,
+                accessoryId=s.AccessoryId,
                 sectionId=s.SectionId,
                 position=s.position,
                 isActive=s.IsActive,
