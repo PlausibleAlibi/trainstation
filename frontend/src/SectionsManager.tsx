@@ -18,8 +18,6 @@ import {
   Select,
   MenuItem,
   Chip,
-  FormControlLabel,
-  Checkbox,
 } from '@mui/material';
 import {
   Add as AddIcon,
