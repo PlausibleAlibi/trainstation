@@ -26,27 +26,28 @@ export const createSectionModalConfig = (trackLines: Array<{id: number; name: st
       })),
     },
     {
-      name: 'startPosition',
-      label: 'Start Position',
-      type: 'number',
-      placeholder: 'Optional start position',
-    },
-    {
-      name: 'endPosition', 
-      label: 'End Position',
-      type: 'number',
-      placeholder: 'Optional end position',
-    },
-    {
       name: 'length',
       label: 'Length (feet)',
       type: 'number',
       placeholder: 'Optional length in feet',
     },
     {
-      name: 'isOccupied',
-      label: 'Occupied',
-      type: 'checkbox',
+      name: 'positionX',
+      label: 'Position X',
+      type: 'number',
+      placeholder: 'Optional X coordinate',
+    },
+    {
+      name: 'positionY',
+      label: 'Position Y',
+      type: 'number',
+      placeholder: 'Optional Y coordinate',
+    },
+    {
+      name: 'positionZ',
+      label: 'Position Z',
+      type: 'number',
+      placeholder: 'Optional Z coordinate',
     },
     {
       name: 'isActive',

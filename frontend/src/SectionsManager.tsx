@@ -43,10 +43,10 @@ type Section = {
   id: number;
   name: string;
   trackLineId: number;
-  startPosition?: number;
-  endPosition?: number;
   length?: number;
-  isOccupied: boolean;
+  positionX?: number;
+  positionY?: number;
+  positionZ?: number;
   isActive: boolean;
 };
 
@@ -70,7 +70,6 @@ export default function SectionsManager() {
 
   // Filters
   const [selectedTrackLine, setSelectedTrackLine] = useState<number | 'all'>('all');
-  const [showOccupiedOnly, setShowOccupiedOnly] = useState(false);
 
   const API = import.meta.env.VITE_API_BASE ?? "http://localhost:8080";
 
@@ -91,7 +90,6 @@ export default function SectionsManager() {
       const params = new URLSearchParams({
         includeTrackLine: 'true',
         ...(selectedTrackLine !== 'all' && { trackLineId: String(selectedTrackLine) }),
-        ...(showOccupiedOnly && { occupied: 'true' }),
       });
       
       const response = await fetch(`${API}/sections?${params}`);
@@ -120,7 +118,7 @@ export default function SectionsManager() {
 
   useEffect(() => {
     loadSections();
-  }, [selectedTrackLine, showOccupiedOnly]);
+  }, [selectedTrackLine]);
 
   // Open dialog for create/edit
   const openDialog = (section?: SectionWithTrackLine) => {
@@ -150,10 +148,10 @@ export default function SectionsManager() {
         body: JSON.stringify({
           name: formData.name.trim(),
           trackLineId: formData.trackLineId,
-          startPosition: formData.startPosition || null,
-          endPosition: formData.endPosition || null,
           length: formData.length || null,
-          isOccupied: formData.isOccupied,
+          positionX: formData.positionX || null,
+          positionY: formData.positionY || null,
+          positionZ: formData.positionZ || null,
           isActive: formData.isActive,
         }),
       });
@@ -239,16 +237,6 @@ export default function SectionsManager() {
               ))}
             </Select>
           </FormControl>
-          
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={showOccupiedOnly}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setShowOccupiedOnly(e.target.checked)}
-              />
-            }
-            label="Occupied only"
-          />
 
           <Box sx={{ ml: 'auto' }}>
             <Button
@@ -302,8 +290,8 @@ export default function SectionsManager() {
                         </TableCell>
                         <TableCell>
                           <Typography variant="body2" color="text.secondary">
-                            {section.startPosition !== undefined && section.endPosition !== undefined
-                              ? `${section.startPosition} - ${section.endPosition}`
+                            {(section.positionX !== undefined || section.positionY !== undefined || section.positionZ !== undefined)
+                              ? `X:${section.positionX ?? '—'}, Y:${section.positionY ?? '—'}, Z:${section.positionZ ?? '—'}`
                               : '—'}
                           </Typography>
                         </TableCell>
@@ -311,16 +299,11 @@ export default function SectionsManager() {
                           {section.length ? `${section.length}ft` : '—'}
                         </TableCell>
                         <TableCell>
-                          <Box sx={{ display: 'flex', gap: 1 }}>
-                            <Chip
-                              size="small"
-                              label={section.isActive ? 'Active' : 'Inactive'}
-                              color={section.isActive ? 'success' : 'default'}
-                            />
-                            {section.isOccupied && (
-                              <Chip size="small" label="Occupied" color="warning" />
-                            )}
-                          </Box>
+                          <Chip
+                            size="small"
+                            label={section.isActive ? 'Active' : 'Inactive'}
+                            color={section.isActive ? 'success' : 'default'}
+                          />
                         </TableCell>
                         <TableCell>
                           <IconButton
@@ -367,10 +350,10 @@ export default function SectionsManager() {
         initialData={editingSection ? {
           name: editingSection.name,
           trackLineId: editingSection.trackLineId,
-          startPosition: editingSection.startPosition,
-          endPosition: editingSection.endPosition,
           length: editingSection.length,
-          isOccupied: editingSection.isOccupied,
+          positionX: editingSection.positionX,
+          positionY: editingSection.positionY,
+          positionZ: editingSection.positionZ,
           isActive: editingSection.isActive,
         } : undefined}
         isEditing={!!editingSection}
