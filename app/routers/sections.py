@@ -30,13 +30,9 @@ def create_section(payload: SectionCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="trackLineId does not exist")
 
     item = Section(
-        name=payload.Name,
-        track_line_id=payload.trackLineId,
-        start_position=payload.startPosition,
-        end_position=payload.endPosition,
-        length=payload.length,
-        is_occupied=payload.isOccupied,
-        is_active=payload.isActive,
+        Name=payload.name,
+        TrackLineId=payload.trackLineId,
+        IsActive=payload.isActive,
     )
     db.add(item)
     db.commit()
@@ -129,15 +125,14 @@ def get_section(id: int, db: Session = Depends(get_db)):
         trackLine=TrackLineRead(
             id=r.TrackLine.Id,
             name=r.TrackLine.Name,
-            description=r.TrackLine.description,
-            length=r.TrackLine.length,
+            description=r.TrackLine.Description,
             isActive=r.TrackLine.IsActive,
-        ) if r.track_line else None,
+        ) if r.TrackLine else None,
         switches=[
             SwitchRead(
                 id=s.Id,
                 name=s.Name,
-                accessoryId=s.accessory_id,
+                accessoryId=s.AccessoryId,
                 sectionId=s.SectionId,
                 position=s.position,
                 isActive=s.IsActive,
