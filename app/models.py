@@ -43,6 +43,7 @@ class Section(Base):
     Id = Column(Integer, primary_key=True, index=True)
     Name = Column(String(100), nullable=False)
     TrackLineId = Column(Integer, ForeignKey("TrackLines.Id"), nullable=False, index=True)
+    Length = Column(Float, nullable=True)
     PositionX = Column(Float, nullable=True)
     PositionY = Column(Float, nullable=True)
     PositionZ = Column(Float, nullable=True)

@@ -83,6 +83,10 @@ class TrackLineWithSections(TrackLineRead):
 class SectionCreate(BaseModel):
     name: str
     trackLineId: int
+    length: Optional[float] = None
+    positionX: Optional[float] = None
+    positionY: Optional[float] = None
+    positionZ: Optional[float] = None
     isActive: bool = True
 
 class SectionRead(SectionCreate):

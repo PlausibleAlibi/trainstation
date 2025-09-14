@@ -32,6 +32,10 @@ def create_section(payload: SectionCreate, db: Session = Depends(get_db)):
     item = Section(
         Name=payload.name,
         TrackLineId=payload.trackLineId,
+        Length=payload.length,
+        PositionX=payload.positionX,
+        PositionY=payload.positionY,
+        PositionZ=payload.positionZ,
         IsActive=payload.isActive,
     )
     db.add(item)
@@ -41,10 +45,10 @@ def create_section(payload: SectionCreate, db: Session = Depends(get_db)):
         id=item.Id,
         name=item.Name,
         trackLineId=item.TrackLineId,
-        startPosition=item.start_position,
-        endPosition=item.end_position,
-        length=item.length,
-        isOccupied=item.is_occupied,
+        length=item.Length,
+        positionX=item.PositionX,
+        positionY=item.PositionY,
+        positionZ=item.PositionZ,
         isActive=item.IsActive,
     )
 
@@ -79,6 +83,7 @@ def list_sections(
                 id=r.Id,
                 name=r.Name,
                 trackLineId=r.TrackLineId,
+                length=r.Length,
                 positionX=r.PositionX,
                 positionY=r.PositionY,
                 positionZ=r.PositionZ,
@@ -91,6 +96,7 @@ def list_sections(
             id=r.Id,
             name=r.Name,
             trackLineId=r.TrackLineId,
+            length=r.Length,
             positionX=r.PositionX,
             positionY=r.PositionY,
             positionZ=r.PositionZ,
@@ -99,7 +105,6 @@ def list_sections(
                 id=r.TrackLine.Id,
                 name=r.TrackLine.Name,
                 description=getattr(r.TrackLine, 'Description', None),
-                length=getattr(r.TrackLine, 'Length', None),
                 isActive=r.TrackLine.IsActive,
             ) if getattr(r, 'TrackLine', None) else None,
         ) for r in rows
@@ -117,10 +122,10 @@ def get_section(id: int, db: Session = Depends(get_db)):
         id=r.Id,
         name=r.Name,
         trackLineId=r.TrackLineId,
-        startPosition=r.start_position,
-        endPosition=r.end_position,
-        length=r.length,
-        isOccupied=r.is_occupied,
+        length=r.Length,
+        positionX=r.PositionX,
+        positionY=r.PositionY,
+        positionZ=r.PositionZ,
         isActive=r.IsActive,
         trackLine=TrackLineRead(
             id=r.TrackLine.Id,
@@ -136,7 +141,7 @@ def get_section(id: int, db: Session = Depends(get_db)):
                 sectionId=s.SectionId,
                 position=s.position,
                 isActive=s.IsActive,
-            ) for s in r.switches
+            ) for s in r.Switches
         ]
     )
 
@@ -158,6 +163,10 @@ def update_section(
 
     r.Name = payload.name
     r.TrackLineId = payload.trackLineId
+    r.Length = payload.length
+    r.PositionX = payload.positionX
+    r.PositionY = payload.positionY
+    r.PositionZ = payload.positionZ
     r.IsActive = payload.isActive
     db.commit()
     db.refresh(r)
@@ -165,6 +174,10 @@ def update_section(
         id=r.Id,
         name=r.Name,
         trackLineId=r.TrackLineId,
+        length=r.Length,
+        positionX=r.PositionX,
+        positionY=r.PositionY,
+        positionZ=r.PositionZ,
         isActive=r.IsActive,
     )
 
