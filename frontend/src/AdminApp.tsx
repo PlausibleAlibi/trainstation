@@ -72,8 +72,14 @@ export default function AdminApp() {
             sx={{ minHeight: 48 }}
           />
           <Tab 
+            icon={<MaintenanceIcon />} 
+            label="Rail Yard" 
+            iconPosition="start"
+            sx={{ minHeight: 48 }}
+          />
+          <Tab 
             icon={<AccessoryIcon />} 
-            label="Accessories & Categories" 
+            label="Parts Depot" 
             iconPosition="start"
             sx={{ minHeight: 48 }}
           />
@@ -98,12 +104,6 @@ export default function AdminApp() {
           <Tab 
             icon={<ConnectionIcon />} 
             label="Connections" 
-            iconPosition="start"
-            sx={{ minHeight: 48 }}
-          />
-          <Tab 
-            icon={<MaintenanceIcon />} 
-            label="Maintenance" 
             iconPosition="start"
             sx={{ minHeight: 48 }}
           />
