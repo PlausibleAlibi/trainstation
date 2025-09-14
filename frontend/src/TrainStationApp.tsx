@@ -19,7 +19,7 @@ import {
 } from '@mui/icons-material';
 
 // Import the train collision image
-import trainCollisionImage from './assets/train-collision.svg';
+import trainCollisionImage from './assets/traincrash.jpg';
 
 // Import all the managers
 import TrackLinesManager from './TrackLinesManager';
@@ -135,24 +135,24 @@ export default function TrainStationApp() {
         <TabPanel value={currentTab} index={0}>
           <Box sx={{ 
             display: 'flex', 
-            flexDirection: 'column', 
+            flexDirection: 'row',
             alignItems: 'center', 
-            justifyContent: 'center', 
+            justifyContent: 'space-around', 
             minHeight: '60vh',
-            textAlign: 'center',
             gap: 4,
-            py: 4
+            py: 4,
+            px: 2,
+            flexWrap: 'wrap'
           }}>
+            {/* Image Container - Left side */}
             <Box sx={{
-              maxWidth: 500,
-              width: '100%',
-              height: 'auto',
+              flex: '0 0 400px',
+              maxWidth: 400,
               borderRadius: 3,
               overflow: 'hidden',
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
               background: 'linear-gradient(145deg, #f0f0f0, #ffffff)',
-              padding: 2,
-              mb: 2
+              padding: 2
             }}>
               <img 
                 src={trainCollisionImage} 
@@ -160,24 +160,35 @@ export default function TrainStationApp() {
                 style={{ 
                   width: '100%', 
                   height: 'auto',
-                  borderRadius: '8px'
+                  borderRadius: '8px',
+                  display: 'block'
                 }}
               />
             </Box>
-            <Typography variant="h3" component="h1" gutterBottom sx={{
-              fontWeight: 'bold',
-              color: 'primary.main',
-              textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
-            }}>
-              Welcome to TrainStation!
-            </Typography>
-            <Typography variant="h6" color="text.secondary" sx={{
+            
+            {/* Text Container - Right side */}
+            <Box sx={{
+              flex: '1 1 400px',
+              textAlign: 'left',
               maxWidth: 600,
-              lineHeight: 1.6,
-              fontStyle: 'italic'
+              minWidth: 300
             }}>
-              Your all-in-one solution for managing model railway accessories, track lines, sections, switches, and connections.
-            </Typography>
+              <Typography variant="h3" component="h1" gutterBottom sx={{
+                fontWeight: 'bold',
+                color: 'primary.main',
+                textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                fontSize: '3rem'
+              }}>
+                Welcome to TrainStation!
+              </Typography>
+              <Typography variant="h6" color="text.secondary" sx={{
+                lineHeight: 1.6,
+                fontStyle: 'italic',
+                fontSize: '1.25rem'
+              }}>
+                Your all-in-one solution for managing model railway accessories, track lines, sections, switches, and connections.
+              </Typography>
+            </Box>
           </Box>
         </TabPanel>
         <TabPanel value={currentTab} index={1}>
