@@ -156,12 +156,8 @@ def update_section(
     if not track_line:
         raise HTTPException(400, "trackLineId does not exist")
 
-    r.Name = payload.Name
+    r.Name = payload.name
     r.TrackLineId = payload.trackLineId
-    r.start_position = payload.startPosition
-    r.end_position = payload.endPosition
-    r.length = payload.length
-    r.is_occupied = payload.isOccupied
     r.IsActive = payload.isActive
     db.commit()
     db.refresh(r)
@@ -169,10 +165,6 @@ def update_section(
         id=r.Id,
         name=r.Name,
         trackLineId=r.TrackLineId,
-        startPosition=r.start_position,
-        endPosition=r.end_position,
-        length=r.length,
-        isOccupied=r.is_occupied,
         isActive=r.IsActive,
     )
 
