@@ -163,24 +163,25 @@ export default function AdminApp() {
             </Typography>
           </Box>
         </TabPanel>
-        <TabPanel value={currentTab} index={1}>
-          <App />
-        </TabPanel>
-        <TabPanel value={currentTab} index={2}>
-          <TrackLinesManager />
-        </TabPanel>
-        <TabPanel value={currentTab} index={3}>
-          <SectionsManager />
-        </TabPanel>
-        <TabPanel value={currentTab} index={4}>
-          <SwitchesManager />
-        </TabPanel>
-        <TabPanel value={currentTab} index={5}>
-          <SectionConnectionsManager />
-        </TabPanel>
-        <TabPanel value={currentTab} index={6}>
+         <TabPanel value={currentTab} index={1}>
           <MaintenanceManager />
         </TabPanel>
+        <TabPanel value={currentTab} index={2}>
+          <App />
+        </TabPanel>
+        <TabPanel value={currentTab} index={3}>
+          <TrackLinesManager />
+        </TabPanel>
+        <TabPanel value={currentTab} index={4}>
+          <SectionsManager />
+        </TabPanel>
+        <TabPanel value={currentTab} index={5}>
+          <SwitchesManager />
+        </TabPanel>
+        <TabPanel value={currentTab} index={6}>
+          <SectionConnectionsManager />
+        </TabPanel>
+       
         <TabPanel value={currentTab} index={7}>
           <Box sx={{ 
             display: 'flex', 
