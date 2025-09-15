@@ -21,6 +21,7 @@ import {
   Alert,
   Snackbar,
   Typography,
+  Chip,
 } from '@mui/material'
 import { spacing, buttonVariants } from '../shared/theme'
 
@@ -74,6 +75,11 @@ export default function App() {
 
   const [toast, setToast] = useState<string | null>(null);
 
+  // Polling for real-time updates
+  const [pollingEnabled, setPollingEnabled] = useState(true);
+  const [pollingInterval, setPollingInterval] = useState(5000); // 5 seconds
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
   // Create Accessory
   const [fName, setFName] = useState("");
   const [fCat, setFCat] = useState<number | "">("");
@@ -115,7 +121,7 @@ export default function App() {
   /* ---- Loaders ---- */
   const loadCats = async () => setCats(await j<Category[]>(await fetch(`${API}/categories`)));
 
-  const loadAccs = async () => {
+  const loadAccs = async (silent: boolean = false) => {
     const p = new URLSearchParams({
       includeCategory: "true",
       limit: String(limit),
@@ -125,14 +131,22 @@ export default function App() {
     if (onlyActive) p.set("active", "true");
     if (qDebounced.trim()) p.set("q", qDebounced.trim());
 
-    setLoading(true);
-    setErr(null);
+    if (!silent) {
+      setLoading(true);
+      setErr(null);
+    }
     try {
-      setAccs(await j<AccessoryWithCategory[]>(await fetch(`${API}/accessories?${p.toString()}`)));
+      const newAccs = await j<AccessoryWithCategory[]>(await fetch(`${API}/accessories?${p.toString()}`));
+      setAccs(newAccs);
+      setLastUpdated(new Date());
     } catch (e: any) {
-      setErr(e.message || "Load failed");
+      if (!silent) {
+        setErr(e.message || "Load failed");
+      }
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   };
 
@@ -148,6 +162,18 @@ export default function App() {
 
   // Reset pagination when filters change
   useEffect(() => { setOffset(0); }, [selCat, qDebounced, onlyActive]);
+
+  // Polling effect for real-time updates
+  useEffect(() => {
+    if (!pollingEnabled) return;
+
+    const intervalId = setInterval(() => {
+      loadAccs(true); // Silent update
+    }, pollingInterval);
+
+    return () => clearInterval(intervalId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pollingEnabled, pollingInterval, selCat, onlyActive, qDebounced, limit, offset]);
 
   /* ---- Derived ---- */
   const totalAll = useMemo(() => accs.length, [accs]); // quick display
@@ -475,6 +501,21 @@ export default function App() {
                 >
                   Next ›
                 </Button>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={pollingEnabled}
+                      onChange={(e) => setPollingEnabled(e.target.checked)}
+                      size="small"
+                    />
+                  }
+                  label="Auto-refresh"
+                />
+                {lastUpdated && (
+                  <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+                    Updated: {lastUpdated.toLocaleTimeString()}
+                  </Typography>
+                )}
               </Box>
 
               {loading && (
@@ -576,7 +617,12 @@ export default function App() {
                                 onChange={(e) => setEaActive(e.target.checked)}
                               />
                             ) : (
-                              a.isActive ? "Yes" : "No"
+                              <Chip
+                                label={a.isActive ? "Active" : "Inactive"}
+                                color={a.isActive ? "success" : "default"}
+                                size="small"
+                                variant={a.isActive ? "filled" : "outlined"}
+                              />
                             )}
                           </TableCell>
                           <TableCell>
