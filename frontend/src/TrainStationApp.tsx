@@ -28,6 +28,8 @@ import SwitchesManager from './SwitchesManager';
 import SectionConnectionsManager from './SectionConnectionsManager';
 import App from './App'; // Original accessories/categories manager
 import Footer from './components/Footer';
+import HomepagePanel from './components/HomepagePanel';
+import AboutPanel from './components/AboutPanel';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -56,6 +58,13 @@ export default function TrainStationApp() {
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setCurrentTab(newValue);
+  };
+
+  // About info configuration
+  const aboutInfo = {
+    title: "About TrainStation",
+    description: "Release notes and instructions will appear here soon.",
+    funFact: "Did you know? The longest train ever recorded was over 7.3 km long!"
   };
 
   return (
@@ -133,63 +142,10 @@ export default function TrainStationApp() {
 
       <Container maxWidth="xl" sx={{ flex: 1, py: 0 }}>
         <TabPanel value={currentTab} index={0}>
-          <Box sx={{ 
-            display: 'flex', 
-            flexDirection: 'row',
-            alignItems: 'center', 
-            justifyContent: 'space-around', 
-            minHeight: '60vh',
-            gap: 4,
-            py: 4,
-            px: 2,
-            flexWrap: 'wrap'
-          }}>
-            {/* Image Container - Left side */}
-            <Box sx={{
-              flex: '0 0 400px',
-              maxWidth: 400,
-              borderRadius: 3,
-              overflow: 'hidden',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-              background: 'linear-gradient(145deg, #f0f0f0, #ffffff)',
-              padding: 2
-            }}>
-              <img 
-                src={trainCollisionImage} 
-                alt="Train Collision"
-                style={{ 
-                  width: '100%', 
-                  height: 'auto',
-                  borderRadius: '8px',
-                  display: 'block'
-                }}
-              />
-            </Box>
-            
-            {/* Text Container - Right side */}
-            <Box sx={{
-              flex: '1 1 400px',
-              textAlign: 'left',
-              maxWidth: 600,
-              minWidth: 300
-            }}>
-              <Typography variant="h3" component="h1" gutterBottom sx={{
-                fontWeight: 'bold',
-                color: 'primary.main',
-                textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                fontSize: '3rem'
-              }}>
-                Welcome to TrainStation!
-              </Typography>
-              <Typography variant="h6" color="text.secondary" sx={{
-                lineHeight: 1.6,
-                fontStyle: 'italic',
-                fontSize: '1.25rem'
-              }}>
-                Your all-in-one solution for managing model railway accessories, track lines, sections, switches, and connections.
-              </Typography>
-            </Box>
-          </Box>
+          <HomepagePanel 
+            imageUrl={trainCollisionImage} 
+            imageAlt="Train Collision"
+          />
         </TabPanel>
         <TabPanel value={currentTab} index={1}>
           <App />
@@ -207,34 +163,7 @@ export default function TrainStationApp() {
           <SectionConnectionsManager />
         </TabPanel>
         <TabPanel value={currentTab} index={6}>
-          <Box sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center', 
-            gap: 3,
-            py: 4,
-            maxWidth: 800,
-            margin: '0 auto'
-          }}>
-            <Typography variant="h4" component="h1" gutterBottom>
-              About TrainStation
-            </Typography>
-            <Typography variant="body1" sx={{ textAlign: 'center', mb: 2 }}>
-              Release notes and instructions will appear here soon.
-            </Typography>
-            <Box sx={{ 
-              mt: 4, 
-              p: 3, 
-              bgcolor: 'grey.50', 
-              borderRadius: 2,
-              borderLeft: 4,
-              borderColor: 'primary.main'
-            }}>
-              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                <strong>Fun Fact:</strong> Did you know? The longest train ever recorded was over 7.3 km long!
-              </Typography>
-            </Box>
-          </Box>
+          <AboutPanel aboutInfo={aboutInfo} />
         </TabPanel>
       </Container>
 
