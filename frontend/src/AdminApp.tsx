@@ -15,8 +15,8 @@ import {
   Build as MaintenanceIcon,
 } from '@mui/icons-material';
 
-// Import the train collision image
-import trainCollisionImage from './assets/train-collision.svg';
+// Import the train crash image
+import trainCrashImage from './assets/traincrash.jpg';
 
 // Import all the managers
 import TrackLinesManager from './TrackLinesManager';
@@ -125,8 +125,8 @@ export default function AdminApp() {
       </Box>
         <TabPanel value={currentTab} index={0}>
           <HomepagePanel 
-            imageUrl={trainCollisionImage} 
-            imageAlt="Train Collision"
+            imageUrl={trainCrashImage} 
+            imageAlt="Train Crash"
           />
         </TabPanel>
          <TabPanel value={currentTab} index={1}>
