@@ -3,7 +3,6 @@ import {
   Box,
   Tabs,
   Tab,
-  Typography,
 } from '@mui/material';
 import {
   Home as HomeIcon,
@@ -26,6 +25,8 @@ import SwitchesManager from './SwitchesManager';
 import SectionConnectionsManager from './SectionConnectionsManager';
 import MaintenanceManager from './MaintenanceManager';
 import App from './App'; // Original accessories/categories manager
+import HomepagePanel from './components/HomepagePanel';
+import AboutPanel from './components/AboutPanel';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -54,6 +55,13 @@ export default function AdminApp() {
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setCurrentTab(newValue);
+  };
+
+  // About info configuration
+  const aboutInfo = {
+    title: "About TrainStation",
+    description: "Release notes and instructions will appear here soon.",
+    funFact: "Did you know? The longest train ever recorded was over 7.3 km long!"
   };
 
   return (
@@ -116,52 +124,10 @@ export default function AdminApp() {
         </Tabs>
       </Box>
         <TabPanel value={currentTab} index={0}>
-          <Box sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            minHeight: '60vh',
-            textAlign: 'center',
-            gap: 4,
-            py: 4
-          }}>
-            <Box sx={{
-              maxWidth: 500,
-              width: '100%',
-              height: 'auto',
-              borderRadius: 3,
-              overflow: 'hidden',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-              background: 'linear-gradient(145deg, #f0f0f0, #ffffff)',
-              padding: 2,
-              mb: 2
-            }}>
-              <img 
-                src={trainCollisionImage} 
-                alt="Train Collision"
-                style={{ 
-                  width: '100%', 
-                  height: 'auto',
-                  borderRadius: '8px'
-                }}
-              />
-            </Box>
-            <Typography variant="h3" component="h1" gutterBottom sx={{
-              fontWeight: 'bold',
-              color: 'primary.main',
-              textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
-            }}>
-              Welcome to TrainStation!
-            </Typography>
-            <Typography variant="h6" color="text.secondary" sx={{
-              maxWidth: 600,
-              lineHeight: 1.6,
-              fontStyle: 'italic'
-            }}>
-              Your all-in-one solution for managing model railway accessories, track lines, sections, switches, and connections.
-            </Typography>
-          </Box>
+          <HomepagePanel 
+            imageUrl={trainCollisionImage} 
+            imageAlt="Train Collision"
+          />
         </TabPanel>
          <TabPanel value={currentTab} index={1}>
           <MaintenanceManager />
@@ -183,34 +149,7 @@ export default function AdminApp() {
         </TabPanel>
        
         <TabPanel value={currentTab} index={7}>
-          <Box sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center', 
-            gap: 3,
-            py: 4,
-            maxWidth: 800,
-            margin: '0 auto'
-          }}>
-            <Typography variant="h4" component="h1" gutterBottom>
-              About TrainStation
-            </Typography>
-            <Typography variant="body1" sx={{ textAlign: 'center', mb: 2 }}>
-              Release notes and instructions will appear here soon.
-            </Typography>
-            <Box sx={{ 
-              mt: 4, 
-              p: 3, 
-              bgcolor: 'grey.50', 
-              borderRadius: 2,
-              borderLeft: 4,
-              borderColor: 'primary.main'
-            }}>
-              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                <strong>Fun Fact:</strong> Did you know? The longest train ever recorded was over 7.3 km long!
-              </Typography>
-            </Box>
-          </Box>
+          <AboutPanel aboutInfo={aboutInfo} />
         </TabPanel>
       </Box>
     );
