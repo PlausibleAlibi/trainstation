@@ -102,6 +102,8 @@ class TrainAsset(Base):
     Description = Column(String(255), nullable=True)  # optional info
     Active = Column(Boolean, nullable=False, default=True)
     DateAdded = Column(DateTime, nullable=False, default=datetime.utcnow)
+    LastServicedDate = Column(DateTime, nullable=True)  # last maintenance service date
+    MaintenanceStatus = Column(String(50), nullable=True, default='Good')  # Good, Needs Service, Out of Service
 
     LocationEvents = relationship("AssetLocationEvent", back_populates="Asset", lazy="selectin")
 

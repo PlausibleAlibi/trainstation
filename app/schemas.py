@@ -145,6 +145,8 @@ class TrainAssetCreate(BaseModel):
     roadNumber: str  # railroad asset number
     description: Optional[str] = None  # optional info
     active: bool = True
+    lastServicedDate: Optional[datetime] = None  # last maintenance service date
+    maintenanceStatus: Optional[Literal["Good", "Needs Service", "Out of Service"]] = "Good"
 
 class TrainAssetRead(TrainAssetCreate):
     id: int

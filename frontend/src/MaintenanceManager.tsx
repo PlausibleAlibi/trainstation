@@ -43,16 +43,16 @@ interface TrainAsset {
   description?: string;
   active: boolean;
   dateAdded: string;
-  lastServicedDate?: string; // Placeholder field for future backend integration
-  maintenanceStatus?: 'Good' | 'Needs Service' | 'Out of Service'; // Placeholder field
+  lastServicedDate?: string;
+  maintenanceStatus?: 'Good' | 'Needs Service' | 'Out of Service';
 }
 
 type TrainAssetType = 'Engine' | 'Car' | 'Caboose' | 'Locomotive' | 'FreightCar' | 'PassengerCar';
 
 type TrainAssetCreate = Omit<TrainAsset, 'id' | 'dateAdded'>;
 
-// Mock API configuration (placeholder for future backend integration)
-// const API = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+// API configuration
+const API = import.meta.env.VITE_API_BASE ?? 'http://localhost:8080';
 
 // Component
 export default function MaintenanceManager() {
@@ -76,62 +76,20 @@ export default function MaintenanceManager() {
     maintenanceStatus: 'Good',
   });
 
-  // API helper (placeholder - will be wired to actual backend later)
-  // async function apiCall<T>(res: Response): Promise<T> {
-  //   if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
-  //   return res.json();
-  // }
+  // API helper
+  async function apiCall<T>(res: Response): Promise<T> {
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+    return res.json();
+  }
 
-  // Load train assets (placeholder implementation)
+  // Load train assets from API
   const loadTrainAssets = async () => {
     setLoading(true);
     setError(null);
     try {
-      // Placeholder: Mock data for now, will be replaced with actual API call
-      // const response = await fetch(`${API}/trainAssets`);
-      // const data = await apiCall<TrainAsset[]>(response);
-      
-      // Mock data for UI development
-      const mockData: TrainAsset[] = [
-        {
-          id: 1,
-          assetId: 'LOC001',
-          rfidTagId: 'RFID123456',
-          type: 'Locomotive',
-          roadNumber: 'UP-1234',
-          description: 'Union Pacific SD70ACe Locomotive',
-          active: true,
-          dateAdded: '2024-01-15T10:00:00Z',
-          lastServicedDate: '2024-08-15T10:00:00Z',
-          maintenanceStatus: 'Good',
-        },
-        {
-          id: 2,
-          assetId: 'CAR001',
-          rfidTagId: 'RFID789012',
-          type: 'FreightCar',
-          roadNumber: 'BNSF-5678',
-          description: 'BNSF Grain Hopper Car',
-          active: true,
-          dateAdded: '2024-02-20T14:30:00Z',
-          lastServicedDate: '2024-07-10T09:00:00Z',
-          maintenanceStatus: 'Needs Service',
-        },
-        {
-          id: 3,
-          assetId: 'CAB001',
-          rfidTagId: 'RFID345678',
-          type: 'Caboose',
-          roadNumber: 'SP-9999',
-          description: 'Southern Pacific Caboose',
-          active: false,
-          dateAdded: '2024-03-05T16:45:00Z',
-          lastServicedDate: '2024-05-20T11:00:00Z',
-          maintenanceStatus: 'Out of Service',
-        },
-      ];
-      
-      setTrainAssets(mockData);
+      const response = await fetch(`${API}/trainAssets`);
+      const data = await apiCall<TrainAsset[]>(response);
+      setTrainAssets(data);
     } catch (e: any) {
       setError(e.message || 'Failed to load train assets');
     } finally {
@@ -154,7 +112,8 @@ export default function MaintenanceManager() {
         roadNumber: asset.roadNumber,
         description: asset.description || '',
         active: asset.active,
-        lastServicedDate: asset.lastServicedDate || '',
+        // Convert ISO datetime to date string for input field
+        lastServicedDate: asset.lastServicedDate ? asset.lastServicedDate.split('T')[0] : '',
         maintenanceStatus: asset.maintenanceStatus || 'Good',
       });
     } else {
@@ -178,45 +137,38 @@ export default function MaintenanceManager() {
     setEditingId(null);
   };
 
-  // Save train asset (placeholder implementation)
+  // Save train asset to API
   const saveTrainAsset = async () => {
     setSaving(true);
     setError(null);
     try {
-      // Placeholder: Will be replaced with actual API calls
       if (editingId) {
         // Update existing asset
-        // const response = await fetch(`${API}/trainAssets/${editingId}`, {
-        //   method: 'PUT',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify(formData),
-        // });
-        // await apiCall<TrainAsset>(response);
-        
-        // Mock update
-        setTrainAssets(prev => prev.map(asset => 
-          asset.id === editingId 
-            ? { ...asset, ...formData, id: editingId, dateAdded: asset.dateAdded }
-            : asset
-        ));
+        const response = await fetch(`${API}/trainAssets/${editingId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...formData,
+            // Convert date string to ISO datetime if provided
+            lastServicedDate: formData.lastServicedDate ? new Date(formData.lastServicedDate).toISOString() : null,
+          }),
+        });
+        await apiCall<TrainAsset>(response);
       } else {
         // Create new asset
-        // const response = await fetch(`${API}/trainAssets`, {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify(formData),
-        // });
-        // const newAsset = await apiCall<TrainAsset>(response);
-        
-        // Mock create
-        const newAsset: TrainAsset = {
-          ...formData,
-          id: Date.now(), // Mock ID
-          dateAdded: new Date().toISOString(),
-        };
-        setTrainAssets(prev => [...prev, newAsset]);
+        const response = await fetch(`${API}/trainAssets`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...formData,
+            // Convert date string to ISO datetime if provided
+            lastServicedDate: formData.lastServicedDate ? new Date(formData.lastServicedDate).toISOString() : null,
+          }),
+        });
+        await apiCall<TrainAsset>(response);
       }
       closeDialog();
+      await loadTrainAssets(); // Reload to get fresh data from server
     } catch (e: any) {
       setError(e.message || 'Failed to save train asset');
     } finally {
@@ -224,21 +176,18 @@ export default function MaintenanceManager() {
     }
   };
 
-  // Delete train asset (placeholder implementation)
+  // Delete train asset from API
   const deleteTrainAsset = async (id: number, description: string) => {
     if (!window.confirm(`Are you sure you want to delete "${description}"?`)) {
       return;
     }
 
     try {
-      // Placeholder: Will be replaced with actual API call
-      // const response = await fetch(`${API}/trainAssets/${id}`, {
-      //   method: 'DELETE',
-      // });
-      // await apiCall<void>(response);
-      
-      // Mock delete
-      setTrainAssets(prev => prev.filter(asset => asset.id !== id));
+      const response = await fetch(`${API}/trainAssets/${id}`, {
+        method: 'DELETE',
+      });
+      await apiCall<void>(response);
+      await loadTrainAssets(); // Reload to get fresh data from server
     } catch (e: any) {
       setError(e.message || 'Failed to delete train asset');
     }

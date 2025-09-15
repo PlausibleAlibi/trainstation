@@ -727,10 +727,96 @@ if __name__ == "__main__":
                 to_name = next(name for name, section in sections.items() if section.Id == conn_data["ToSectionId"])
                 print(f"  ↪ Using existing connection: {from_name} → {to_name}")
         
+        # === Train Assets ===
+        print("\n🚂 Creating Train Assets...")
+        from datetime import datetime, timedelta
+        import random
+        
+        # Define train asset data with maintenance information
+        train_assets_data = [
+            {
+                "AssetId": "LOC001",
+                "RfidTagId": "RFID123456",
+                "Type": "Locomotive",
+                "RoadNumber": "UP-1234",
+                "Description": "Union Pacific SD70ACe Locomotive",
+                "Active": True,
+                "LastServicedDate": datetime.now() - timedelta(days=30),
+                "MaintenanceStatus": "Good"
+            },
+            {
+                "AssetId": "CAR001", 
+                "RfidTagId": "RFID789012",
+                "Type": "FreightCar",
+                "RoadNumber": "BNSF-5678",
+                "Description": "BNSF Grain Hopper Car",
+                "Active": True,
+                "LastServicedDate": datetime.now() - timedelta(days=120),
+                "MaintenanceStatus": "Needs Service"
+            },
+            {
+                "AssetId": "CAB001",
+                "RfidTagId": "RFID345678", 
+                "Type": "Caboose",
+                "RoadNumber": "SP-9999",
+                "Description": "Southern Pacific Caboose",
+                "Active": False,
+                "LastServicedDate": datetime.now() - timedelta(days=200),
+                "MaintenanceStatus": "Out of Service"
+            },
+            {
+                "AssetId": "LOC002",
+                "RfidTagId": "RFID456789",
+                "Type": "Engine", 
+                "RoadNumber": "CSX-7890",
+                "Description": "CSX ES44AH Locomotive",
+                "Active": True,
+                "LastServicedDate": datetime.now() - timedelta(days=15),
+                "MaintenanceStatus": "Good"
+            },
+            {
+                "AssetId": "CAR002",
+                "RfidTagId": "RFID567890",
+                "Type": "Car",
+                "RoadNumber": "NS-2468",
+                "Description": "Norfolk Southern Tank Car",
+                "Active": True,
+                "LastServicedDate": datetime.now() - timedelta(days=90),
+                "MaintenanceStatus": "Good"
+            },
+            {
+                "AssetId": "PC001",
+                "RfidTagId": "RFID678901",
+                "Type": "PassengerCar",
+                "RoadNumber": "AMTK-8421",
+                "Description": "Amtrak Superliner Coach",
+                "Active": True,
+                "LastServicedDate": datetime.now() - timedelta(days=45),
+                "MaintenanceStatus": "Good"
+            }
+        ]
+        
+        train_assets = {}
+        for asset_data in train_assets_data:
+            # Check if train asset already exists by RFID tag ID
+            existing = db.query(models.TrainAsset).filter(
+                models.TrainAsset.RfidTagId == asset_data["RfidTagId"]
+            ).first()
+            
+            if not existing:
+                asset = models.TrainAsset(**asset_data)
+                db.add(asset)
+                db.flush()  # Get the ID
+                train_assets[asset_data["AssetId"]] = asset
+                print(f"  ✓ Created train asset: {asset_data['RoadNumber']} ({asset_data['Type']}) - {asset_data['MaintenanceStatus']}")
+            else:
+                train_assets[asset_data["AssetId"]] = existing
+                print(f"  ↪ Using existing train asset: {asset_data['RoadNumber']}")
+        
         # Commit all changes
         db.commit()
         print("\n✅ Dev database seeding completed successfully!")
-        print(f"Created layout with {len(sections)} sections, {len(switches)} switches, and {len(accessories)} accessories")
+        print(f"Created layout with {len(sections)} sections, {len(switches)} switches, {len(accessories)} accessories, and {len(train_assets)} train assets")
         print("Track graph includes oval mainline, bypass section, and siding with proper connections.")
         
     except Exception as e:

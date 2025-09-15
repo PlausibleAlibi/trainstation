@@ -36,6 +36,8 @@ def create_train_asset(payload: TrainAssetCreate, db: Session = Depends(get_db))
         Description=payload.description,
         Active=payload.active,
         DateAdded=datetime.utcnow(),
+        LastServicedDate=payload.lastServicedDate,
+        MaintenanceStatus=payload.maintenanceStatus,
     )
     db.add(item)
     db.commit()
@@ -49,6 +51,8 @@ def create_train_asset(payload: TrainAssetCreate, db: Session = Depends(get_db))
         description=item.Description,
         active=item.Active,
         dateAdded=item.DateAdded,
+        lastServicedDate=item.LastServicedDate,
+        maintenanceStatus=item.MaintenanceStatus,
     )
 
 # -------- List --------
@@ -87,6 +91,8 @@ def list_train_assets(
                 description=r.Description,
                 active=r.Active,
                 dateAdded=r.DateAdded,
+                lastServicedDate=r.LastServicedDate,
+                maintenanceStatus=r.MaintenanceStatus,
             ) for r in rows
         ]
 
@@ -101,6 +107,8 @@ def list_train_assets(
             description=r.Description,
             active=r.Active,
             dateAdded=r.DateAdded,
+            lastServicedDate=r.LastServicedDate,
+            maintenanceStatus=r.MaintenanceStatus,
             locationEvents=[
                 AssetLocationEventRead(
                     eventId=e.EventId,
@@ -131,6 +139,8 @@ def get_train_asset(id: int, db: Session = Depends(get_db)):
         description=r.Description,
         active=r.Active,
         dateAdded=r.DateAdded,
+        lastServicedDate=r.LastServicedDate,
+        maintenanceStatus=r.MaintenanceStatus,
         locationEvents=[
             AssetLocationEventRead(
                 eventId=e.EventId,
@@ -165,6 +175,8 @@ def update_train_asset(
     r.RoadNumber = payload.roadNumber
     r.Description = payload.description
     r.Active = payload.active
+    r.LastServicedDate = payload.lastServicedDate
+    r.MaintenanceStatus = payload.maintenanceStatus
     db.commit()
     db.refresh(r)
     return TrainAssetRead(
@@ -176,6 +188,8 @@ def update_train_asset(
         description=r.Description,
         active=r.Active,
         dateAdded=r.DateAdded,
+        lastServicedDate=r.LastServicedDate,
+        maintenanceStatus=r.MaintenanceStatus,
     )
 
 # -------- Delete --------
