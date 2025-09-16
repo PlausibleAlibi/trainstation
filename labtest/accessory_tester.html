@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrainStation Accessory Tester</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        select, input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        select:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .btn-on {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .btn-on:hover:not(:disabled) {
+            background-color: #218838;
+        }
+        
+        .btn-off {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .btn-off:hover:not(:disabled) {
+            background-color: #c82333;
+        }
+        
+        .btn-toggle {
+            background-color: #6f42c1;
+            color: white;
+        }
+        
+        .btn-toggle:hover:not(:disabled) {
+            background-color: #5a36b4;
+        }
+        
+        .btn-timed {
+            background-color: #fd7e14;
+            color: white;
+        }
+        
+        .btn-timed:hover:not(:disabled) {
+            background-color: #e06506;
+        }
+        
+        .accessory-details {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .result {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #721c24;
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #007bff;
+        }
+        
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        .result-table th,
+        .result-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .result-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .control-type-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .badge-onoff {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .badge-toggle {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+        }
+        
+        .badge-timed {
+            background-color: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .accordion {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        
+        .accordion-header {
+            background-color: #f8f9fa;
+            padding: 15px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .accordion-content {
+            padding: 15px;
+            display: none;
+        }
+        
+        .accordion.open .accordion-content {
+            display: block;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        .table th,
+        .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚂 TrainStation Accessory Tester</h1>
+            <p>Test end-to-end communication between the FastAPI backend, ESP32 nodes, and accessory relays.</p>
+        </div>
+        
+        <div class="card">
+            <h2>Accessory Control</h2>
+            
+            <div class="form-group">
+                <label for="accessorySelect">Select Accessory:</label>
+                <select id="accessorySelect">
+                    <option value="">Loading accessories...</option>
+                </select>
+            </div>
+            
+            <div id="accessoryDetails" class="accessory-details" style="display: none;">
+                <!-- Accessory details will be populated here -->
+            </div>
+            
+            <div class="form-group">
+                <label for="customDuration">Duration (milliseconds):</label>
+                <input type="number" id="customDuration" value="5000" min="100" max="30000" step="100">
+            </div>
+            
+            <div id="errorMessage" class="error" style="display: none;"></div>
+            
+            <div class="button-group">
+                <div id="loadingIndicator" class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <span>Sending command...</span>
+                </div>
+                <div id="actionButtons">
+                    <!-- Action buttons will be populated here -->
+                </div>
+            </div>
+        </div>
+        
+        <div id="resultCard" class="card" style="display: none;">
+            <h2>✓ Command Result</h2>
+            <div id="resultContent">
+                <!-- Result content will be populated here -->
+            </div>
+        </div>
+        
+        <div class="accordion">
+            <div class="accordion-header" onclick="toggleAccordion('esp32Accordion')">
+                <span>ESP32 Nodes Configuration</span>
+                <span>▼</span>
+            </div>
+            <div id="esp32Accordion" class="accordion-content">
+                <table id="esp32Table" class="table">
+                    <thead>
+                        <tr>
+                            <th>Node ID</th>
+                            <th>IP Address</th>
+                            <th>Port</th>
+                            <th>Location</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- ESP32 nodes will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="accordion">
+            <div class="accordion-header" onclick="toggleAccordion('accessoriesAccordion')">
+                <span>Available Accessories</span>
+                <span>▼</span>
+            </div>
+            <div id="accessoriesAccordion" class="accordion-content">
+                <table id="accessoriesTable" class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>ESP32 Node</th>
+                            <th>Control Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Accessories will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let accessories = [];
+        let esp32Nodes = [];
+        let isLoading = false;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAccessories();
+            loadEsp32Nodes();
+            
+            document.getElementById('accessorySelect').addEventListener('change', onAccessoryChange);
+        });
+
+        async function loadAccessories() {
+            try {
+                const response = await fetch('/test/accessories');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                accessories = data.accessories || [];
+                
+                populateAccessorySelect();
+                populateAccessoriesTable();
+            } catch (error) {
+                showError(`Failed to load accessories: ${error.message}`);
+            }
+        }
+
+        async function loadEsp32Nodes() {
+            try {
+                const response = await fetch('/test/esp32-nodes');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                esp32Nodes = data.nodes || [];
+                
+                populateEsp32Table();
+            } catch (error) {
+                showError(`Failed to load ESP32 nodes: ${error.message}`);
+            }
+        }
+
+        function populateAccessorySelect() {
+            const select = document.getElementById('accessorySelect');
+            select.innerHTML = '<option value="">Select an accessory...</option>';
+            
+            accessories.forEach(accessory => {
+                const option = document.createElement('option');
+                option.value = accessory.name;
+                option.textContent = `${accessory.name} (${accessory.control_type})`;
+                select.appendChild(option);
+            });
+        }
+
+        function populateAccessoriesTable() {
+            const tbody = document.querySelector('#accessoriesTable tbody');
+            tbody.innerHTML = '';
+            
+            accessories.forEach(accessory => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${accessory.name}</td>
+                    <td>${accessory.esp32_node}</td>
+                    <td><span class="control-type-badge badge-${accessory.control_type}">${accessory.control_type}</span></td>
+                    <td>${accessory.description}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function populateEsp32Table() {
+            const tbody = document.querySelector('#esp32Table tbody');
+            tbody.innerHTML = '';
+            
+            esp32Nodes.forEach(node => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${node.node_id}</td>
+                    <td>${node.ip}:${node.port}</td>
+                    <td>${node.port}</td>
+                    <td>${node.location}</td>
+                    <td>${node.description}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function onAccessoryChange() {
+            const selectedName = document.getElementById('accessorySelect').value;
+            const accessory = accessories.find(acc => acc.name === selectedName);
+            
+            if (accessory) {
+                showAccessoryDetails(accessory);
+                updateActionButtons(accessory);
+            } else {
+                hideAccessoryDetails();
+                clearActionButtons();
+            }
+            
+            hideResult();
+            hideError();
+        }
+
+        function showAccessoryDetails(accessory) {
+            const detailsDiv = document.getElementById('accessoryDetails');
+            detailsDiv.innerHTML = `
+                <h3>${accessory.name}</h3>
+                <p>${accessory.description}</p>
+                <p><strong>ESP32 Node:</strong> ${accessory.esp32_node} | 
+                   <strong>Control Type:</strong> <span class="control-type-badge badge-${accessory.control_type}">${accessory.control_type}</span></p>
+            `;
+            detailsDiv.style.display = 'block';
+        }
+
+        function hideAccessoryDetails() {
+            document.getElementById('accessoryDetails').style.display = 'none';
+        }
+
+        function updateActionButtons(accessory) {
+            const buttonsDiv = document.getElementById('actionButtons');
+            const customDuration = document.getElementById('customDuration').value;
+            
+            let buttons = '';
+            
+            switch (accessory.control_type) {
+                case 'onOff':
+                    buttons = `
+                        <button class="btn-on" onclick="sendCommand('on')">▶ Turn On</button>
+                        <button class="btn-off" onclick="sendCommand('off')">⏹ Turn Off</button>
+                    `;
+                    break;
+                    
+                case 'toggle':
+                    buttons = `
+                        <button class="btn-toggle" onclick="sendCommand('toggle')">⇄ Toggle (${customDuration}ms)</button>
+                    `;
+                    break;
+                    
+                case 'timed':
+                    buttons = `
+                        <button class="btn-timed" onclick="sendCommand('timed')">⏱ Timed Pulse (${customDuration}ms)</button>
+                    `;
+                    break;
+            }
+            
+            buttonsDiv.innerHTML = buttons;
+        }
+
+        function clearActionButtons() {
+            document.getElementById('actionButtons').innerHTML = '';
+        }
+
+        async function sendCommand(action) {
+            const selectedAccessory = document.getElementById('accessorySelect').value;
+            if (!selectedAccessory) {
+                showError('Please select an accessory');
+                return;
+            }
+            
+            if (isLoading) return;
+            
+            isLoading = true;
+            showLoading();
+            hideError();
+            hideResult();
+            
+            try {
+                const requestBody = {
+                    accessory_name: selectedAccessory,
+                    action: action
+                };
+                
+                if (action === 'timed' || action === 'toggle') {
+                    requestBody.milliseconds = parseInt(document.getElementById('customDuration').value);
+                }
+                
+                const response = await fetch('/test/accessory', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || `HTTP ${response.status}`);
+                }
+                
+                const result = await response.json();
+                showResult(result);
+                
+            } catch (error) {
+                showError(`Command failed: ${error.message}`);
+            } finally {
+                isLoading = false;
+                hideLoading();
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('loadingIndicator').style.display = 'flex';
+            document.getElementById('actionButtons').style.display = 'none';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingIndicator').style.display = 'none';
+            document.getElementById('actionButtons').style.display = 'flex';
+        }
+
+        function showResult(result) {
+            const resultDiv = document.getElementById('resultContent');
+            resultDiv.innerHTML = `
+                <div class="result">
+                    <p><strong>✓ ${result.message}</strong></p>
+                    <p><em>Simulated Result:</em> ${result.simulated_result}</p>
+                </div>
+                
+                <table class="result-table">
+                    <tr><th>Accessory</th><td>${result.accessory_name}</td></tr>
+                    <tr><th>Action</th><td>${result.action}</td></tr>
+                    <tr><th>ESP32 Node</th><td>${result.esp32_node}</td></tr>
+                    <tr><th>Hardware Address</th><td>${result.hardware_address}</td></tr>
+                    <tr><th>Pin</th><td>${result.pin}</td></tr>
+                    <tr><th>Control Type</th><td>${result.control_type}</td></tr>
+                    ${result.milliseconds ? `<tr><th>Duration</th><td>${result.milliseconds}ms</td></tr>` : ''}
+                </table>
+            `;
+            
+            document.getElementById('resultCard').style.display = 'block';
+        }
+
+        function hideResult() {
+            document.getElementById('resultCard').style.display = 'none';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        function toggleAccordion(id) {
+            const accordion = document.getElementById(id).parentElement;
+            accordion.classList.toggle('open');
+        }
+
+        // Update action buttons when duration changes
+        document.getElementById('customDuration').addEventListener('input', function() {
+            const selectedName = document.getElementById('accessorySelect').value;
+            const accessory = accessories.find(acc => acc.name === selectedName);
+            if (accessory) {
+                updateActionButtons(accessory);
+            }
+        });
+    </script>
+</body>
+</html>
