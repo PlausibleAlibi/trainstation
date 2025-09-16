@@ -9,13 +9,14 @@ import {
   Train as TrainIcon,
   Settings as SettingsIcon,
   Dashboard as DashboardIcon,
+  Science as LabIcon,
 } from '@mui/icons-material'
 import { spacing, iconSizes } from '../theme'
 
 interface HeaderProps {
   title: string
-  currentMode: 'admin' | 'command-center'
-  onModeChange: (mode: 'admin' | 'command-center') => void
+  currentMode: 'admin' | 'command-center' | 'lab'
+  onModeChange: (mode: 'admin' | 'command-center' | 'lab') => void
 }
 
 export default function Header({ title, currentMode, onModeChange }: HeaderProps) {
@@ -55,6 +56,20 @@ export default function Header({ title, currentMode, onModeChange }: HeaderProps
             }}
           >
             Command Center
+          </Button>
+          <Button
+            color="inherit"
+            startIcon={<LabIcon sx={{ fontSize: iconSizes.small }} />}
+            variant={currentMode === 'lab' ? 'contained' : 'text'}
+            onClick={() => onModeChange('lab')}
+            sx={{ 
+              bgcolor: currentMode === 'lab' ? 'primary.dark' : 'transparent',
+              '&:hover': {
+                bgcolor: currentMode === 'lab' ? 'primary.dark' : 'rgba(255, 255, 255, 0.08)'
+              }
+            }}
+          >
+            Lab
           </Button>
         </Box>
       </Toolbar>
