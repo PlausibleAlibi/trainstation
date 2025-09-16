@@ -161,30 +161,57 @@ To rebuild all containers (useful after code changes):
 ./Scripts/rebuild.sh --clean   # Reset database
 ```
 
-## 🎛️ Command Center
+## 🎛️ Navigation Modes
 
-TrainStation now includes a Command Center frontend for real-time control and monitoring of model railway operations.
+TrainStation includes a multi-mode frontend with three distinct interfaces for different operational needs.
 
 ### Features
 
-- **Dual App Architecture**: Switch between Admin (CRUD operations) and Command Center (control operations) modes
+- **Triple App Architecture**: Switch between Admin (CRUD operations), Command Center (control operations), and Lab (testing utilities) modes
 - **Control Dashboard**: Monitor system status, power state, active trains, and warnings
 - **Virtual Track Layout**: Placeholder for future interactive track visualization
-- **Shared Components**: Header, footer, and styling shared between both apps
+- **Lab Testing Suite**: Access to testing and diagnostic tools
+- **Shared Components**: Header, footer, and styling shared between all apps
 - **Real-time Controls**: Power management and emergency stop functionality (placeholders)
+
+### Navigation Modes
+
+#### Admin Mode
+- **Purpose**: Administrative CRUD operations for system configuration
+- **Features**: Manage accessories, categories, track lines, sections, switches, and connections
+- **Access**: Click the "Admin" button in the header (default mode)
+
+#### Command Center Mode  
+- **Purpose**: Real-time control and monitoring of railway operations
+- **Features**: Control dashboard, track layout view, system power controls
+- **Access**: Click the "Command Center" button in the header
+
+#### Lab Mode
+- **Purpose**: Testing and diagnostic utilities for development and troubleshooting
+- **Features**: 
+  - **Accessory Tester**: Test end-to-end communication between FastAPI backend, ESP32 nodes, and accessory relays
+  - Extensible interface for additional lab tools
+- **Access**: Click the "Lab" button in the header
 
 ### Usage
 
-Access the Command Center by:
+Navigate between modes by:
 1. Navigate to the main application
-2. Click the "Command Center" button in the header 
-3. Switch back to "Admin" mode for CRUD operations
+2. Click the desired mode button in the header: "Admin", "Command Center", or "Lab"
+3. The mode is preserved in the URL with `?mode=admin`, `?mode=command-center`, or `?mode=lab`
 
-The mode is preserved in the URL with `?mode=command-center` or `?mode=admin`.
+### Lab Tools
+
+#### Accessory Tester
+- **Location**: Available in Lab mode → Accessory Tester tab
+- **Function**: Opens `/labtest/accessory_tester.html` in a new tab
+- **Purpose**: Test communication with ESP32 nodes and accessory relays
+- **Usage**: Demonstrates the mapping defined in `accessory_map.yaml`
 
 ### Future Enhancements
 
-The Command Center foundation supports future features:
+The navigation foundation supports future features:
+- Additional lab testing tools and diagnostics
 - Individual track section controls
 - Switch position controls  
 - Train speed and direction controls
@@ -195,11 +222,15 @@ The Command Center foundation supports future features:
 ## 📁 Project Structure
 
 - `app/` - FastAPI backend code
-- `frontend/` - React frontend code with dual app architecture:
+- `frontend/` - React frontend code with triple app architecture:
   - `src/AdminApp.tsx` - Admin CRUD interface (original functionality)
   - `src/CommandCenter*.tsx` - Command Center control interface
+  - `src/LabMain.tsx` - Lab testing and diagnostic interface
   - `src/AppRouter.tsx` - Main router handling app mode switching
   - `shared/` - Shared components, theme, and utilities
+- `labtest/` - Lab testing utilities and tools
+  - `accessory_tester.html` - Standalone HTML accessory testing interface
+  - `AccessoryTester.tsx` - React version of accessory tester
 - `nginx/` - Nginx reverse proxy configurations
 - `deploy/` - Docker Compose and deployment configuration
 - `Scripts/` - Utility scripts for development

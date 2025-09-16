@@ -26,3 +26,6 @@ dist-ssr
 # Test coverage
 coverage/
 htmlcov/
+
+# Copied labtest directory (use original in root)
+public/labtest/

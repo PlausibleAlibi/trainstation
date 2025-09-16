@@ -7,14 +7,18 @@ import Header from '../shared/components/Header'
 import Footer from '../shared/components/Footer'
 import { Box, Container } from '@mui/material'
 import CommandCenterMain from './CommandCenterMain'
+import LabMain from './LabMain'
 
 export default function AppRouter() {
-  const [currentMode, setCurrentMode] = React.useState<'admin' | 'command-center'>(() => {
+  const [currentMode, setCurrentMode] = React.useState<'admin' | 'command-center' | 'lab'>(() => {
     const urlParams = new URLSearchParams(window.location.search)
-    return urlParams.get('mode') === 'command-center' ? 'command-center' : 'admin'
+    const mode = urlParams.get('mode')
+    if (mode === 'command-center') return 'command-center'
+    if (mode === 'lab') return 'lab'
+    return 'admin'
   })
 
-  const handleModeChange = (mode: 'admin' | 'command-center') => {
+  const handleModeChange = (mode: 'admin' | 'command-center' | 'lab') => {
     setCurrentMode(mode)
     const url = new URL(window.location.href)
     url.searchParams.set('mode', mode)
@@ -22,9 +26,16 @@ export default function AppRouter() {
   }
 
   const getTitle = () => {
-    return currentMode === 'admin' 
-      ? 'Train Station Control Center' 
-      : 'Train Station Command Center'
+    switch (currentMode) {
+      case 'admin':
+        return 'Train Station Control Center'
+      case 'command-center':
+        return 'Train Station Command Center'
+      case 'lab':
+        return 'Train Station Lab'
+      default:
+        return 'Train Station Control Center'
+    }
   }
 
   return (
@@ -40,8 +51,10 @@ export default function AppRouter() {
         <Container maxWidth="xl" sx={{ flex: 1, py: currentMode === 'admin' ? 0 : 3 }}>
           {currentMode === 'admin' ? (
             <AdminApp />
-          ) : (
+          ) : currentMode === 'command-center' ? (
             <CommandCenterMain />
+          ) : (
+            <LabMain />
           )}
         </Container>
 
