@@ -1,4 +1,4 @@
-#!/home/parallels/lionel-control/.venv/bin/python3
+#!/home/runner/work/trainstation/trainstation/.venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys
