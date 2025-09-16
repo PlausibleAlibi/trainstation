@@ -27,7 +27,7 @@ import SectionsManager from './SectionsManager';
 import SwitchesManager from './SwitchesManager';
 import SectionConnectionsManager from './SectionConnectionsManager';
 import App from './App'; // Original accessories/categories manager
-import Footer from './components/Footer';
+import Footer from '../shared/components/Footer';
 import HomepagePanel from './components/HomepagePanel';
 import AboutPanel from './components/AboutPanel';
 
