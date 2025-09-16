@@ -1,8 +1,6 @@
 import type { TrackLayoutData, VirtualTrackLayoutData } from '../types/trackLayout';
 
-const API_BASE_URL = import.meta.env.PROD
-  ? 'http://trainstation.local' 
-  : 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE || '/api';
 
 export class TrackLayoutService {
   /**
