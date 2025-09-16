@@ -1,0 +1,125 @@
+# TrainStation Accessory Mapping Configuration
+# This file maps accessory names to their hardware addresses and ESP32 node configurations
+
+accessories:
+  # Turnouts and Switches
+  "Main Line Turnout 1":
+    esp32_node: "esp32-01"
+    address: "192.168.1.101:8080"
+    pin: 2
+    control_type: "toggle"
+    description: "Main line east junction turnout"
+    
+  "Main Line Turnout 2":
+    esp32_node: "esp32-01"
+    address: "192.168.1.101:8080"
+    pin: 3
+    control_type: "toggle"
+    description: "Main line west junction turnout"
+    
+  "Yard Switch A":
+    esp32_node: "esp32-02"
+    address: "192.168.1.102:8080"
+    pin: 4
+    control_type: "toggle"
+    description: "Yard entry switch A"
+    
+  "Yard Switch B":
+    esp32_node: "esp32-02"
+    address: "192.168.1.102:8080"
+    pin: 5
+    control_type: "toggle"
+    description: "Yard entry switch B"
+
+  # Signals
+  "Signal Block 1":
+    esp32_node: "esp32-03"
+    address: "192.168.1.103:8080"
+    pin: 6
+    control_type: "onOff"
+    description: "Main line signal block 1"
+    
+  "Signal Block 2":
+    esp32_node: "esp32-03"
+    address: "192.168.1.103:8080"
+    pin: 7
+    control_type: "onOff"
+    description: "Main line signal block 2"
+    
+  "Yard Signal":
+    esp32_node: "esp32-03"
+    address: "192.168.1.103:8080"
+    pin: 8
+    control_type: "onOff"
+    description: "Yard entrance signal"
+
+  # Crossing Gates
+  "Main Crossing Gate":
+    esp32_node: "esp32-04"
+    address: "192.168.1.104:8080"
+    pin: 9
+    control_type: "timed"
+    timed_duration_ms: 5000
+    description: "Main road crossing gate"
+    
+  "Side Crossing Gate":
+    esp32_node: "esp32-04"
+    address: "192.168.1.104:8080"
+    pin: 10
+    control_type: "timed"
+    timed_duration_ms: 3000
+    description: "Side road crossing gate"
+
+  # Lights and Accessories
+  "Station Platform Light":
+    esp32_node: "esp32-05"
+    address: "192.168.1.105:8080"
+    pin: 11
+    control_type: "onOff"
+    description: "Main station platform lighting"
+    
+  "Yard Light":
+    esp32_node: "esp32-05"
+    address: "192.168.1.105:8080"
+    pin: 12
+    control_type: "onOff"
+    description: "Yard area lighting"
+    
+  "Tunnel Light":
+    esp32_node: "esp32-05"
+    address: "192.168.1.105:8080"
+    pin: 13
+    control_type: "onOff"
+    description: "Tunnel interior lighting"
+
+# ESP32 Node Configuration
+esp32_nodes:
+  "esp32-01":
+    ip: "192.168.1.101"
+    port: 8080
+    description: "Main line turnouts controller"
+    location: "East Junction"
+    
+  "esp32-02":
+    ip: "192.168.1.102"
+    port: 8080
+    description: "Yard switches controller"
+    location: "Yard Entry"
+    
+  "esp32-03":
+    ip: "192.168.1.103"
+    port: 8080
+    description: "Signal system controller"
+    location: "Signal Tower"
+    
+  "esp32-04":
+    ip: "192.168.1.104"
+    port: 8080
+    description: "Crossing gates controller"
+    location: "Road Crossings"
+    
+  "esp32-05":
+    ip: "192.168.1.105"
+    port: 8080
+    description: "Lighting system controller"
+    location: "Station Complex"
