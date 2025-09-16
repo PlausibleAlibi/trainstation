@@ -1,8 +1,10 @@
-import React from 'react';
-import { Box, Typography, Paper } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Typography, Paper, CircularProgress, Alert } from '@mui/material';
+import { TrackLayoutService } from './services/trackLayoutService';
+import type { VirtualTrackLayoutData } from './types/trackLayout';
 
-// Hardcoded coordinates for the test track layout
-const TRACK_LAYOUT = {
+// Fallback hardcoded data (same as before) in case API fails
+const FALLBACK_TRACK_LAYOUT: VirtualTrackLayoutData = {
   sections: [
     { id: 'main1', name: 'Main 1', x: 150, y: 100, radius: 25 },
     { id: 'main2', name: 'Main 2', x: 450, y: 100, radius: 25 },
@@ -143,6 +145,61 @@ const Legend: React.FC = () => (
 );
 
 const VirtualTrackLayout: React.FC = () => {
+  const [trackLayout, setTrackLayout] = useState<VirtualTrackLayoutData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadTrackLayout = async () => {
+      try {
+        setLoading(true);
+        const data = await TrackLayoutService.fetchTrackLayout();
+        const transformedData = TrackLayoutService.transformToVirtualLayout(data);
+        setTrackLayout(transformedData);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to load track layout:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load track layout');
+        // Fallback to hardcoded data if API fails
+        setTrackLayout(FALLBACK_TRACK_LAYOUT);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTrackLayout();
+  }, []);
+
+  if (loading) {
+    return (
+      <Box>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Virtual Track Layout
+        </Typography>
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+          <CircularProgress />
+          <Typography variant="body1" sx={{ ml: 2 }}>
+            Loading track layout...
+          </Typography>
+        </Box>
+      </Box>
+    );
+  }
+
+  if (error && !trackLayout) {
+    return (
+      <Box>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Virtual Track Layout
+        </Typography>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      </Box>
+    );
+  }
+
+  const layoutData = trackLayout || FALLBACK_TRACK_LAYOUT;
   return (
     <Box>
       <Typography variant="h4" component="h1" gutterBottom>
@@ -151,6 +208,11 @@ const VirtualTrackLayout: React.FC = () => {
       
       <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
         Interactive track layout showing sections, switches, and accessories.
+        {error && (
+          <Typography component="span" color="warning.main" sx={{ ml: 1 }}>
+            (Using fallback data due to API error)
+          </Typography>
+        )}
       </Typography>
 
       <Paper sx={{ p: 3 }}>
@@ -170,7 +232,7 @@ const VirtualTrackLayout: React.FC = () => {
             <rect width="100%" height="100%" fill="url(#grid)" />
 
             {/* Track connections */}
-            {TRACK_LAYOUT.connections.map((conn, index) => (
+            {layoutData.connections.map((conn, index) => (
               <line
                 key={`connection-${index}`}
                 x1={conn.from.x}
@@ -184,7 +246,7 @@ const VirtualTrackLayout: React.FC = () => {
             ))}
 
             {/* Track sections */}
-            {TRACK_LAYOUT.sections.map((section) => (
+            {layoutData.sections.map((section) => (
               <g key={section.id}>
                 <circle
                   cx={section.x}
@@ -208,7 +270,7 @@ const VirtualTrackLayout: React.FC = () => {
             ))}
 
             {/* Switches */}
-            {TRACK_LAYOUT.switches.map((switchItem) => (
+            {layoutData.switches.map((switchItem) => (
               <g key={switchItem.id}>
                 <circle
                   cx={switchItem.x}
@@ -226,13 +288,13 @@ const VirtualTrackLayout: React.FC = () => {
                   fontSize="10"
                   fontWeight="bold"
                 >
-                  {switchItem.id}
+                  {switchItem.name}
                 </text>
               </g>
             ))}
 
             {/* Accessories rendered as SVG */}
-            {TRACK_LAYOUT.accessories.map((accessory) => (
+            {layoutData.accessories.map((accessory) => (
               <AccessorySVG
                 key={accessory.id}
                 type={accessory.type}
