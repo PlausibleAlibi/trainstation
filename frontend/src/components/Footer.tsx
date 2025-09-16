@@ -43,7 +43,7 @@ export default function Footer() {
       <Typography variant="body2" color="text.secondary" textAlign="center">
         Train Station Control Center - Model Railway Management System
         {' | '}
-        Version {version}
+        Version: {version}
         {deployedFormatted && ` (deployed ${deployedFormatted})`}
       </Typography>
     </Box>
