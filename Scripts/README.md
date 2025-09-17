@@ -4,9 +4,18 @@ This directory contains client scripts that automate pulling and deploying the l
 
 ## 🚀 Quick Start
 
+### For Non-Developers (Like PlausibleAlibi's Dad!)
+
+These scripts are designed to be **simple and foolproof**. You don't need to understand Docker or programming - just follow these steps:
+
+1. **Install Docker Desktop** from https://www.docker.com/products/docker-desktop/
+2. **Start Docker Desktop** (wait for it to fully load)
+3. **Download these scripts** to your computer
+4. **Run the script** - it will do everything automatically!
+
 ### Linux/macOS
 ```bash
-# Deploy latest version with default settings
+# Deploy latest version with default settings (most common use)
 ./Scripts/deploy-latest.sh
 
 # Deploy specific version  
@@ -18,7 +27,7 @@ This directory contains client scripts that automate pulling and deploying the l
 
 ### Windows (PowerShell)
 ```powershell
-# Deploy latest version with default settings
+# Deploy latest version with default settings (most common use)
 .\Scripts\Deploy-Latest.ps1
 
 # Deploy specific version
@@ -27,6 +36,8 @@ This directory contains client scripts that automate pulling and deploying the l
 # Deploy on custom port and keep existing data
 .\Scripts\Deploy-Latest.ps1 -Port 3000 -KeepData
 ```
+
+> **💡 Tip for Non-Developers**: Just use the first command in each section - it will get you up and running with sensible defaults!
 
 ## 📋 Requirements
 
@@ -82,6 +93,20 @@ After successful deployment, you can access:
 - **📊 SEQ Logging Dashboard**: http://localhost:5341
   - Username: `admin`
   - Password: `admin123`
+
+### What Success Looks Like
+
+When the script completes successfully, you'll see:
+```
+🚂 TrainStation Deployment Complete!
+=======================================
+
+📱 Web Interface:    http://localhost:8080
+📊 SEQ Logs:         http://localhost:5341
+    SEQ Login:       admin / admin123
+```
+
+Just click on the web interface link to start using TrainStation!
 
 ## 🔄 Common Operations
 
@@ -153,6 +178,28 @@ docker login ghcr.io
 ```
 
 ## 🐛 Troubleshooting
+
+### For Non-Developers: Common Issues
+
+**"Docker is not running"**
+- Solution: Open Docker Desktop application and wait for it to fully start
+
+**"Permission denied" (Mac/Linux)**
+- Solution: Right-click the script → Properties → Permissions → Check "Executable"
+- Or in terminal: `chmod +x ./Scripts/deploy-latest.sh`
+
+**"Port already in use"**
+- Solution: Try a different port: `./Scripts/deploy-latest.sh --port 3000`
+
+**"curl: command not found" (Linux)**
+- Solution: `sudo apt install curl` (Ubuntu/Debian) or ask your IT person
+
+**Still not working?**
+- Restart your computer and try again
+- Make sure Docker Desktop is fully loaded (whale icon in system tray)
+- Ask for help on GitHub: https://github.com/PlausibleAlibi/trainstation/issues
+
+### Detailed Troubleshooting
 
 ### Image Pull Fails
 ```
