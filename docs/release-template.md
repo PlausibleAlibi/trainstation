@@ -36,6 +36,23 @@
 - Update steps on target machine:
   ```bash
   cd ~/trainstation
-  docker compose pull
-  docker compose up -d
-  curl http://localhost:8080/health
+  
+  # For development mode:
+  make dev
+  # or: ./Scripts/dev.sh
+  
+  # For production mode:
+  make prod  
+  # or: ./Scripts/prod.sh
+  
+  # Verify deployment:
+  curl http://localhost:3000/health  # dev mode
+  curl http://localhost/health       # prod mode
+  ```
+
+- **Current deployment paths** (use these instead of legacy deploy/ directory):
+  - Development: `docker-compose.yml` + `docker-compose.dev.yml`
+  - Production: `docker-compose.yml` + `docker-compose.prod.yml`
+  - Environment configs: `.env.dev` and `.env.prod` (root level)
+
+- **Legacy deployment** in `deploy/` directory is deprecated and scheduled for removal
