@@ -37,6 +37,8 @@ Located in `shared/` directory:
 
 This project uses [Material UI (MUI)](https://mui.com/) as the primary UI component library, providing:
 
+**⚠️ IMPORTANT: Strict adherence to the UI consistency guidelines below is required for all components. Always use the centralized theme system and standardized patterns to maintain design consistency across the application.**
+
 - **Consistent Design System**: Pre-built components following Material Design principles
 - **Responsive Layout**: Built-in responsive breakpoints and grid system  
 - **Accessible Components**: ARIA-compliant components out of the box

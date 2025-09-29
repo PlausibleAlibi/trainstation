@@ -2,6 +2,24 @@
 
 A FastAPI backend with React frontend for managing model train operations.
 
+## ⚠️ Security Notice
+
+**Before any production deployment, you MUST:**
+
+1. **Replace all example passwords and API keys** in:
+   - `.env.dev` - Development environment configuration  
+   - `.env.prod` - Production environment configuration
+   - `deploy/sample.env` - Sample deployment configuration
+   
+2. **Use strong, unique passwords** for:
+   - Database passwords (`POSTGRES_PASSWORD`)
+   - SEQ logging API keys (`SEQ_API_KEY`, `SEQ_ADMIN_PASSWORD`)
+   - Any other authentication credentials
+
+3. **Never commit real credentials** to version control - use environment variables or secure secret management
+
+**Example credentials provided are for development/testing only and are NOT secure!**
+
 ## 🚀 Quick Start
 
 TrainStation supports both development and production deployment modes:
@@ -37,6 +55,8 @@ make prod
 ### Legacy Deployment (Deprecated)
 
 **⚠️ DEPRECATED:** The `deploy/` directory configuration is being phased out. Use the root-level compose files instead:
+
+**⚠️ WARNING: Legacy deployment in the `deploy/` directory is deprecated and scheduled for removal in future versions. Migrate to the current deployment methods shown above.**
 
 ```bash
 make up      # Start all services in background (now uses root compose files)
@@ -290,6 +310,29 @@ This system ensures every build includes accurate version metadata without manua
 ## 🧪 Testing
 
 TrainStation includes comprehensive testing setup for both backend and frontend components.
+
+### Testing Checklist
+
+**Backend Testing (Python/FastAPI):**
+- [x] Unit tests for SQLAlchemy models (`tests/test_models.py`)
+- [x] API endpoint tests for basic functionality (`tests/test_api_endpoints.py`)
+- [x] Accessory API tests (`tests/test_accessory_api.py`)
+- [x] Logging functionality tests (`tests/test_logging.py`)
+- [x] Section connections tests (`tests/test_section_connections*.py`)
+- [ ] Train assets API endpoint tests (placeholder needed)
+- [ ] Asset location events API tests (placeholder needed)
+- [ ] Track layout API tests (placeholder needed)
+- [ ] Integration tests for ESP32 communication
+
+**Frontend Testing (React/TypeScript):**
+- [x] Component tests setup with Vitest (`tests/App.test.tsx`)
+- [x] Dashboard component tests (`tests/Dashboard.test.tsx`)
+- [x] Virtual track layout tests (`tests/VirtualTrackLayout.test.tsx`)
+- [x] Logging component tests (`tests/logging.test.ts`)
+- [ ] Command center component tests (coverage needed)
+- [ ] Lab testing interface tests (coverage needed)
+- [ ] Admin app form validation tests (coverage needed)
+- [ ] Navigation/routing tests (coverage needed)
 
 ### Backend Testing (Python/FastAPI)
 
