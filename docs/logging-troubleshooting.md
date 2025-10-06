@@ -407,8 +407,8 @@ If issues persist after trying these solutions:
 
 1. **Collect Diagnostic Information:**
    ```bash
-   # Run diagnostic script
-   ./scripts/logging-diagnostic.sh > diagnostic-report.txt
+   # Run diagnostic script (recommended)
+   ./Scripts/logging-diagnostic.sh > diagnostic-report.txt
    
    # Or manually collect:
    docker compose ps > diagnostic.txt
