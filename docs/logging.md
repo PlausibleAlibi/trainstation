@@ -190,8 +190,24 @@ docker compose logs api | grep -E "(SEQ|logging)"
 ### 2. Test Logging Endpoints
 
 ```bash
-# Health check for logging system
-curl http://localhost:3000/api/logging/health
+# Health check for logging system (enhanced with connection status)
+curl http://localhost:3000/api/logging/health | jq
+
+# Expected response:
+# {
+#   "status": "healthy",
+#   "seq_configured": true,
+#   "seq_connected": true,
+#   "seq_url": "http://seq:5341",
+#   "seqlog_available": true,
+#   "last_check": "2025-01-15T10:30:45.123Z",
+#   "last_error": null,
+#   "retry_count": 0,
+#   "message": "SEQ connection active"
+# }
+
+# Get logging metrics
+curl http://localhost:3000/api/logging/metrics | jq
 
 # Test log submission (from backend perspective)
 curl -X POST http://localhost:3000/api/logging/submit \
@@ -228,73 +244,90 @@ import('./shared/logging').then(({ log }) => {
 
 ## 🚨 Troubleshooting
 
-### SEQ Container Won't Start
+### Enhanced Reliability Features
 
-1. Check port conflicts:
+The logging system now includes:
+- **Automatic Retry Logic**: SEQ connection attempts retry up to 3 times with exponential backoff
+- **Connection Monitoring**: Real-time tracking of SEQ connection status
+- **Frontend Resilience**: Failed log batches are queued and retried when connection recovers
+- **Metrics Tracking**: Comprehensive metrics for monitoring system health
+
+For detailed troubleshooting, see [Logging Troubleshooting Guide](./logging-troubleshooting.md).
+
+### Quick Diagnostics
+
+```bash
+# Check overall health with detailed status
+curl http://localhost:3000/api/logging/health | jq
+
+# Get comprehensive metrics
+curl http://localhost:3000/api/logging/metrics | jq
+
+# Frontend status (in browser console)
+import('./shared/logging').then(({ log }) => {
+  console.log('Logging Status:', log.getStatus());
+});
+```
+
+### Common Issues
+
+#### SEQ Connection Failed
+
+If health check shows `"status": "degraded"`:
+
+1. Check SEQ container is running:
    ```bash
-   netstat -tulpn | grep -E "(5341|5342)"
+   docker compose ps seq
+   docker compose logs seq --tail=50
    ```
 
-2. Check Docker logs:
-   ```bash
-   docker compose logs seq
-   ```
-
-3. Verify environment variables:
-   ```bash
-   docker compose config
-   ```
-
-4. **Clean up SEQ volume if initialization failed**:
-   ```bash
-   # Stop all services
-   docker compose down
-   
-   # Remove SEQ data volume (this will delete all log data)
-   docker volume rm trainstation_seqdata
-   
-   # Restart services - SEQ will initialize with fresh volume
-   docker compose up -d
-   ```
-
-   **Warning**: This will permanently delete all stored logs in SEQ.
-
-### Logs Not Appearing in SEQ
-
-1. Check backend SEQ configuration:
-   ```bash
-   curl http://localhost:3000/api/logging/health
-   ```
-
-2. Check backend logs for SEQ connection errors:
-   ```bash
-   docker compose logs api | grep -i seq
-   ```
-
-3. Verify network connectivity:
+2. Test network connectivity:
    ```bash
    docker compose exec api ping seq
+   docker compose exec api curl http://seq:5341/api/health
    ```
 
-### Frontend Logs Not Being Sent
-
-1. Check browser console for errors
-2. Verify API endpoint accessibility:
+3. Check retry count and last error:
    ```bash
-   curl http://localhost:3000/api/logging/health
+   curl http://localhost:3000/api/logging/health | jq '{retry_count, last_error, last_check}'
    ```
 
-3. Check network tab in browser dev tools for failed requests to `/api/logging/submit`
+4. Restart services if needed:
+   ```bash
+   docker compose restart seq api
+   sleep 5
+   curl http://localhost:3000/api/logging/health | jq
+   ```
 
-### Performance Issues
+#### Frontend Logs Not Being Sent
 
-1. Adjust frontend logging buffer settings:
-   - Increase `bufferSize` for less frequent network calls
-   - Decrease `flushInterval` for more real-time logging
+1. Check browser console for retry messages
+2. Verify connection status:
+   ```javascript
+   import('./shared/logging').then(({ log }) => {
+     const status = log.getStatus();
+     console.log(`Buffer: ${status.bufferSize}, Failed: ${status.failedBatches}, Online: ${status.isOnline}`);
+   });
+   ```
 
-2. Configure SEQ retention policies to manage disk usage
+3. Check metrics for failed batches:
+   ```bash
+   curl http://localhost:3000/api/logging/metrics | jq '.frontend_logs'
+   ```
 
-3. Use SEQ API keys to control ingestion rate
+#### Performance Issues
+
+Monitor metrics for issues:
+```bash
+# Check success rates and processing times
+curl http://localhost:3000/api/logging/metrics | jq '{
+  frontend_success: .frontend_logs.success_rate,
+  api_success: .request_metrics.success_rate,
+  avg_time: .request_metrics.avg_processing_time_ms
+}'
+```
+
+For comprehensive troubleshooting procedures, see [docs/logging-troubleshooting.md](./logging-troubleshooting.md).
 
 ## 🔐 Security Considerations
 
@@ -368,6 +401,52 @@ Configure SEQ retention in the admin panel:
 3. **Use Appropriate Levels**: Debug for development, Info for normal operations, Error for problems
 4. **Include Request IDs**: Use correlation IDs for tracking requests across services
 5. **Log User Actions**: Track important user interactions for analytics and debugging
+6. **Monitor Metrics**: Regularly check `/logging/metrics` for system health
+7. **Set Up Alerts**: Monitor success rates and connection status
+8. **Review Failed Batches**: Check for patterns in failed log submissions
+
+## 🎯 New Features
+
+### Automatic Retry Logic
+
+The system now automatically retries failed SEQ connections:
+- **Backend**: 3 retry attempts with exponential backoff (up to 10s)
+- **Frontend**: 3 retry attempts per batch with exponential backoff
+- **Automatic Recovery**: Frontend queues failed batches and retries when network recovers
+
+### Connection Monitoring
+
+Real-time connection status tracking:
+```bash
+curl http://localhost:3000/api/logging/health | jq
+```
+
+Returns:
+- Connection status (connected/disconnected)
+- Last successful check time
+- Last error encountered
+- Number of retries needed to connect
+- Configuration validation status
+
+### Metrics and Observability
+
+Comprehensive metrics endpoint:
+```bash
+curl http://localhost:3000/api/logging/metrics | jq
+```
+
+Provides:
+- Frontend log submission stats (total, success rate, by level)
+- API request metrics (total, failed, status codes, avg time)
+- SEQ connection status
+- Failed batch counts
+
+### Enhanced Error Handling
+
+- **Buffer Overflow Protection**: Frontend automatically manages buffer size
+- **Batch Size Limits**: Maximum 50 logs per batch to prevent oversized payloads
+- **Online/Offline Detection**: Frontend monitors network status and pauses sending when offline
+- **Error Context**: Detailed error information including error types and stack traces
 
 ## 🔄 Maintenance
 
