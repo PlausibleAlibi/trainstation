@@ -10,10 +10,18 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
 from fastapi import APIRouter, HTTPException, Request
-from logging_config import get_logger
+from logging_config import get_logger, get_seq_connection_status
 
 router = APIRouter(prefix="/logging", tags=["logging"])
 logger = get_logger("frontend_logs")
+
+# Track frontend log submission metrics
+_submission_metrics = {
+    "total_batches": 0,
+    "total_logs": 0,
+    "failed_batches": 0,
+    "logs_by_level": {"debug": 0, "info": 0, "warn": 0, "error": 0}
+}
 
 
 class LogEntry(BaseModel):
@@ -53,7 +61,16 @@ async def submit_logs(log_batch: LogBatch, request: Request):
         client_ip = request.client.host if request.client else "unknown"
         user_agent = request.headers.get("user-agent", "unknown")
         
+        # Update metrics
+        _submission_metrics["total_batches"] += 1
+        _submission_metrics["total_logs"] += len(log_batch.logs)
+        
         for log_entry in log_batch.logs:
+            # Track log level metrics
+            level = log_entry.level.lower()
+            if level in _submission_metrics["logs_by_level"]:
+                _submission_metrics["logs_by_level"][level] += 1
+            
             # Prepare structured log context
             log_context = {
                 "event_type": "frontend_log",
@@ -70,7 +87,6 @@ async def submit_logs(log_batch: LogBatch, request: Request):
                 log_context["error_stack"] = log_entry.error_stack
             
             # Log based on level
-            level = log_entry.level.lower()
             if level == "debug":
                 logger.debug(log_entry.message, **log_context)
             elif level == "info":
@@ -90,7 +106,8 @@ async def submit_logs(log_batch: LogBatch, request: Request):
         }
         
     except Exception as e:
-        logger.error("Failed to process frontend logs", error=str(e), exc_info=True)
+        _submission_metrics["failed_batches"] += 1
+        logger.error("Failed to process frontend logs", error=str(e), error_type=type(e).__name__, exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to process logs")
 
 
@@ -99,14 +116,56 @@ async def logging_health():
     """
     Health check endpoint for the logging system.
     
-    Returns basic information about the logging configuration and status.
+    Returns detailed information about the logging configuration, SEQ connection
+    status, and any errors encountered.
     """
     import os
+    from datetime import datetime
     
+    status = get_seq_connection_status()
     seq_configured = bool(os.getenv("SEQ_URL"))
     
+    # Convert timestamp to readable format
+    last_check_time = None
+    if status.get("last_check"):
+        last_check_time = datetime.fromtimestamp(status["last_check"]).isoformat()
+    
     return {
-        "status": "healthy",
+        "status": "healthy" if status.get("connected") or not seq_configured else "degraded",
         "seq_configured": seq_configured,
-        "seq_url": os.getenv("SEQ_URL") if seq_configured else None
+        "seq_connected": status.get("connected", False),
+        "seq_url": status.get("seq_url"),
+        "seqlog_available": status.get("seqlog_available", False),
+        "last_check": last_check_time,
+        "last_error": status.get("last_error"),
+        "retry_count": status.get("retry_count", 0),
+        "message": "SEQ connection active" if status.get("connected") 
+                   else "SEQ not configured" if not seq_configured
+                   else f"SEQ connection failed: {status.get('last_error', 'Unknown error')}"
+    }
+
+
+@router.get("/metrics", summary="Get logging metrics")
+async def logging_metrics():
+    """
+    Get logging system metrics and statistics.
+    
+    Returns metrics about log submissions, processing, and system performance.
+    """
+    from middleware import get_request_metrics
+    
+    request_metrics = get_request_metrics()
+    
+    return {
+        "frontend_logs": {
+            "total_batches": _submission_metrics["total_batches"],
+            "total_logs": _submission_metrics["total_logs"],
+            "failed_batches": _submission_metrics["failed_batches"],
+            "success_rate": ((_submission_metrics["total_batches"] - _submission_metrics["failed_batches"]) 
+                           / _submission_metrics["total_batches"] * 100 
+                           if _submission_metrics["total_batches"] > 0 else 100),
+            "logs_by_level": _submission_metrics["logs_by_level"]
+        },
+        "request_metrics": request_metrics,
+        "seq_status": get_seq_connection_status()
     }

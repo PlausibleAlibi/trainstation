@@ -49,6 +49,29 @@ These scripts are designed to be **simple and foolproof**. You don't need to und
 - **curl**: For health checks and API calls (usually pre-installed)
 - **jq**: For JSON parsing (`sudo apt install jq` or `brew install jq`)
 
+## 🔍 Diagnostic and Troubleshooting Scripts
+
+### Logging System Diagnostics
+
+If you're experiencing issues with the logging system or SEQ integration:
+
+```bash
+# Run comprehensive logging diagnostics
+./Scripts/logging-diagnostic.sh > diagnostic-report.txt
+
+# View the report
+cat diagnostic-report.txt
+```
+
+This script will:
+- Check Docker service status
+- Test SEQ connectivity
+- Retrieve logging health and metrics
+- Check for recent errors
+- Provide detailed diagnostic information
+
+For detailed troubleshooting steps, see [docs/logging-troubleshooting.md](../docs/logging-troubleshooting.md).
+
 ### Windows Additional Requirements
 - **PowerShell 5.1+**: Usually pre-installed on Windows 10+
 - **curl**: Included in Windows 10 version 1803+ (built-in)

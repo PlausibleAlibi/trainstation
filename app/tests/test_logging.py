@@ -29,8 +29,21 @@ class TestLoggingRouter:
         assert response.status_code == 200
         data = response.json()
         assert "status" in data
-        assert data["status"] == "healthy"
+        assert data["status"] in ["healthy", "degraded"]
         assert "seq_configured" in data
+        assert "seq_connected" in data
+        assert "message" in data
+
+    def test_logging_metrics_endpoint(self):
+        """Test the logging metrics endpoint."""
+        response = client.get("/logging/metrics")
+        assert response.status_code == 200
+        data = response.json()
+        assert "frontend_logs" in data
+        assert "request_metrics" in data
+        assert "seq_status" in data
+        assert "total_batches" in data["frontend_logs"]
+        assert "logs_by_level" in data["frontend_logs"]
 
     def test_submit_logs_endpoint_success(self):
         """Test successful log submission."""
@@ -152,6 +165,41 @@ class TestLoggingConfig:
         # Test unknown
         headers = {}
         assert extract_client_ip(headers) == "unknown"
+
+    def test_validate_seq_config(self):
+        """Test SEQ configuration validation."""
+        from logging_config import validate_seq_config
+        
+        # Valid URLs
+        is_valid, error = validate_seq_config("http://seq:5341")
+        assert is_valid is True
+        assert error is None
+        
+        is_valid, error = validate_seq_config("https://seq.example.com")
+        assert is_valid is True
+        assert error is None
+        
+        # Invalid URLs
+        is_valid, error = validate_seq_config("")
+        assert is_valid is False
+        assert "empty" in error.lower()
+        
+        is_valid, error = validate_seq_config("not-a-url")
+        assert is_valid is False
+        
+        is_valid, error = validate_seq_config("ftp://seq:5341")
+        assert is_valid is False
+        assert "http" in error.lower()
+
+    def test_get_seq_connection_status(self):
+        """Test getting SEQ connection status."""
+        from logging_config import get_seq_connection_status
+        
+        status = get_seq_connection_status()
+        assert "connected" in status
+        assert "last_check" in status
+        assert "seq_url" in status
+        assert "seqlog_available" in status
 
 
 if __name__ == "__main__":

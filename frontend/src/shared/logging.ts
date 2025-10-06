@@ -27,6 +27,10 @@ class Logger {
   private readonly flushInterval = 5000; // 5 seconds
   private flushTimer?: NodeJS.Timeout;
   private readonly apiBaseUrl: string;
+  private readonly maxBatchSize = 50; // Maximum logs per batch
+  private readonly maxRetries = 3;
+  private isOnline = true;
+  private failedBatches: LogBatch[] = [];
 
   constructor() {
     // Get API base URL from environment or default
@@ -38,6 +42,18 @@ class Logger {
     // Flush logs before page unload
     window.addEventListener('beforeunload', () => {
       this.flush(true); // Synchronous flush
+    });
+    
+    // Monitor online/offline status
+    window.addEventListener('online', () => {
+      this.isOnline = true;
+      this.info('Network connection restored');
+      this.retryFailedBatches();
+    });
+    
+    window.addEventListener('offline', () => {
+      this.isOnline = false;
+      this.warn('Network connection lost');
     });
   }
 
@@ -116,6 +132,12 @@ class Logger {
   }
 
   private addToBuffer(entry: LogEntry): void {
+    // Prevent buffer overflow
+    if (this.logBuffer.length >= this.maxBatchSize * 2) {
+      console.warn('Log buffer overflow, dropping oldest logs');
+      this.logBuffer = this.logBuffer.slice(-this.maxBatchSize);
+    }
+    
     this.logBuffer.push(entry);
     
     // Auto-flush if buffer is full
@@ -124,13 +146,80 @@ class Logger {
     }
   }
 
+  // Get connection status for debugging
+  getStatus(): { bufferSize: number; failedBatches: number; isOnline: boolean } {
+    return {
+      bufferSize: this.logBuffer.length,
+      failedBatches: this.failedBatches.length,
+      isOnline: this.isOnline
+    };
+  }
+
+  private async retryFailedBatches(): Promise<void> {
+    if (this.failedBatches.length === 0) {
+      return;
+    }
+
+    const batchesToRetry = [...this.failedBatches];
+    this.failedBatches = [];
+
+    for (const batch of batchesToRetry) {
+      try {
+        await this.sendBatch(batch);
+      } catch (error) {
+        // If still failing, keep in failed queue (with limit)
+        if (this.failedBatches.length < 10) {
+          this.failedBatches.push(batch);
+        }
+      }
+    }
+  }
+
+  private async sendBatch(batch: LogBatch, retryCount = 0): Promise<boolean> {
+    const url = `${this.apiBaseUrl}/logging/submit`;
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(batch),
+      });
+
+      if (!response.ok) {
+        if (response.status >= 500 && retryCount < this.maxRetries) {
+          // Retry on server errors with exponential backoff
+          const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return this.sendBatch(batch, retryCount + 1);
+        }
+        console.warn('Failed to send logs to backend:', response.statusText);
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      if (retryCount < this.maxRetries && this.isOnline) {
+        // Retry with exponential backoff
+        const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return this.sendBatch(batch, retryCount + 1);
+      }
+      
+      console.warn('Error sending logs to backend:', error);
+      return false;
+    }
+  }
+
   async flush(synchronous = false): Promise<void> {
     if (this.logBuffer.length === 0) {
       return;
     }
 
-    const logsToSend = [...this.logBuffer];
-    this.logBuffer = [];
+    // Limit batch size to prevent oversized payloads
+    const logsToSend = this.logBuffer.slice(0, this.maxBatchSize);
+    this.logBuffer = this.logBuffer.slice(this.maxBatchSize);
 
     const batch: LogBatch = { logs: logsToSend };
 
@@ -143,24 +232,21 @@ class Logger {
         const blob = new Blob([data], { type: 'application/json' });
         navigator.sendBeacon(url, blob);
       } else {
-        // Use fetch for normal async sending
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(batch),
-        });
-
-        if (!response.ok) {
-          console.warn('Failed to send logs to backend:', response.statusText);
+        // Use fetch with retry logic for normal async sending
+        const success = await this.sendBatch(batch);
+        
+        if (!success) {
+          // Store failed batch for later retry (with limit)
+          if (this.failedBatches.length < 10) {
+            this.failedBatches.push(batch);
+          }
         }
       }
     } catch (error) {
       console.warn('Error sending logs to backend:', error);
-      // Re-add logs to buffer for retry (but limit to prevent infinite growth)
-      if (this.logBuffer.length < this.bufferSize * 2) {
-        this.logBuffer.unshift(...logsToSend);
+      // Store failed batch for later retry (with limit)
+      if (this.failedBatches.length < 10) {
+        this.failedBatches.push(batch);
       }
     }
   }
@@ -199,4 +285,5 @@ export const log = {
   warn: (message: string, context?: Record<string, any>) => logger.warn(message, context),
   error: (message: string, error?: Error, context?: Record<string, any>) => logger.error(message, error, context),
   flush: () => logger.flushNow(),
+  getStatus: () => logger.getStatus(),
 };
