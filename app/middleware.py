@@ -8,11 +8,22 @@ capturing method, path, query parameters, and client IP address.
 import time
 from typing import Callable
 from urllib.parse import parse_qs
+from collections import defaultdict
+from threading import Lock
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from logging_config import get_logger, extract_client_ip
+
+# Request metrics tracking
+_request_metrics = {
+    "total_requests": 0,
+    "failed_requests": 0,
+    "status_codes": defaultdict(int),
+    "total_processing_time": 0.0,
+    "lock": Lock()
+}
 
 
 class LoggingMiddleware(BaseHTTPMiddleware):
@@ -34,7 +45,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
     
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """
-        Process each HTTP request and log details.
+        Process each HTTP request and log details with metrics tracking.
         
         Args:
             request: The incoming HTTP request
@@ -67,25 +78,64 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         # Process the request
         try:
             response = await call_next(request)
+            processing_time = round((time.time() - start_time) * 1000, 2)
+            
+            # Update metrics
+            with _request_metrics["lock"]:
+                _request_metrics["total_requests"] += 1
+                _request_metrics["status_codes"][response.status_code] += 1
+                _request_metrics["total_processing_time"] += processing_time
             
             # Add response details
             log_context.update({
                 "status_code": response.status_code,
-                "processing_time_ms": round((time.time() - start_time) * 1000, 2)
+                "processing_time_ms": processing_time
             })
             
             # Log successful request
             self.logger.info("HTTP request processed", **log_context)
             
         except Exception as exc:
-            # Log failed request
+            processing_time = round((time.time() - start_time) * 1000, 2)
+            
+            # Update metrics for failed request
+            with _request_metrics["lock"]:
+                _request_metrics["total_requests"] += 1
+                _request_metrics["failed_requests"] += 1
+                _request_metrics["status_codes"][500] += 1
+                _request_metrics["total_processing_time"] += processing_time
+            
+            # Log failed request with more context
             log_context.update({
                 "status_code": 500,
                 "error": str(exc),
-                "processing_time_ms": round((time.time() - start_time) * 1000, 2)
+                "error_type": type(exc).__name__,
+                "processing_time_ms": processing_time
             })
             
-            self.logger.error("HTTP request failed", **log_context)
+            self.logger.error("HTTP request failed", exc_info=True, **log_context)
             raise
         
         return response
+
+
+def get_request_metrics() -> dict:
+    """
+    Get current request metrics.
+    
+    Returns:
+        Dictionary with request statistics
+    """
+    with _request_metrics["lock"]:
+        avg_time = (_request_metrics["total_processing_time"] / _request_metrics["total_requests"] 
+                   if _request_metrics["total_requests"] > 0 else 0)
+        
+        return {
+            "total_requests": _request_metrics["total_requests"],
+            "failed_requests": _request_metrics["failed_requests"],
+            "success_rate": ((_request_metrics["total_requests"] - _request_metrics["failed_requests"]) 
+                           / _request_metrics["total_requests"] * 100 
+                           if _request_metrics["total_requests"] > 0 else 100),
+            "status_codes": dict(_request_metrics["status_codes"]),
+            "avg_processing_time_ms": round(avg_time, 2)
+        }
