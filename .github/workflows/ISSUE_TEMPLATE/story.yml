@@ -1,0 +1,22 @@
+name: "📘 Story"
+description: "User story / feature work item"
+labels: ["story", "backlog"]
+body:
+  - type: textarea
+    id: story
+    attributes:
+      label: Story
+      description: "As a <type of user>, I want <goal> so that <reason>."
+      placeholder: "As a…, I want…, so that…"
+    validations: { required: true }
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: "Gherkin or checklist"
+      placeholder: "- [ ] Given/When/Then…"
+    validations: { required: true }
+  - type: input
+    id: value
+    attributes:
+      label: Business value (1–5)
