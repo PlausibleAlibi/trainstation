@@ -172,6 +172,127 @@ TrainStation now includes comprehensive RFID-based asset tracking:
 
 See `app/alembic/README.md` for detailed migration documentation.
 
+## 🔌 ESP32 Relay Control Architecture
+
+TrainStation uses a network-based relay control architecture with ESP32 microcontrollers as distributed relay proxies. This provides a robust, scalable, and decoupled hardware control system.
+
+### Key Features
+
+- **Network-Based Control**: ESP32 nodes expose REST API for relay control
+- **Distributed Architecture**: Multiple ESP32 nodes control different sections
+- **Mock Mode**: Full testing without hardware via `ESP32_MOCK_MODE=true`
+- **Mock Server**: Python-based ESP32 simulator for integration testing
+- **Comprehensive Testing**: 31+ tests covering all relay operations
+
+### Architecture Overview
+
+```
+Backend API (FastAPI) → HTTP REST → ESP32 Nodes → GPIO Pins → Relay Modules → Accessories
+```
+
+Each ESP32 board:
+- Connects to your WiFi network
+- Exposes HTTP API on port 8080
+- Controls multiple relay channels (8-16 typical)
+- Tracks pin states and command history
+- Provides status monitoring
+
+### Quick Start
+
+**1. Backend Configuration:**
+```bash
+# Enable mock mode for testing (no hardware required)
+export ESP32_MOCK_MODE=true
+
+# Or use real ESP32 nodes
+export ESP32_MOCK_MODE=false
+```
+
+**2. ESP32 Setup:**
+```bash
+# Configure and flash ESP32 boards
+# See firmware/esp32_relay_control.ino
+# Update WiFi credentials and pin assignments
+```
+
+**3. Mock ESP32 Server (Testing):**
+```bash
+cd labtest
+pip install aiohttp aiohttp-cors
+python mock_esp32.py
+# Starts mock nodes on ports 8081-8085
+```
+
+**4. API Endpoints:**
+```bash
+# Control a relay
+POST /relay/control
+{
+  "node_address": "192.168.1.101:8080",
+  "pin": 2,
+  "action": "on"
+}
+
+# Get node status
+GET /relay/status?node_address=192.168.1.101:8080
+
+# Reset all pins
+POST /relay/reset
+{
+  "node_address": "192.168.1.101:8080"
+}
+
+# Health check
+GET /relay/health
+```
+
+### Documentation
+
+For complete setup instructions, hardware wiring, ESP32 firmware configuration, troubleshooting, and API reference, see:
+
+📖 **[HARDWARE_RELAY_SETUP.md](HARDWARE_RELAY_SETUP.md)**
+
+This comprehensive guide covers:
+- Hardware requirements and wiring diagrams
+- ESP32 firmware installation and configuration
+- Network setup and troubleshooting
+- API reference and examples
+- Production deployment best practices
+- Security considerations
+
+### Configuration
+
+Update `accessory_map.yaml` with your ESP32 node addresses:
+
+```yaml
+accessories:
+  "Main Line Turnout 1":
+    esp32_node: "esp32-01"
+    address: "192.168.1.101:8080"
+    pin: 2
+    control_type: "toggle"
+    description: "Main line east junction turnout"
+```
+
+### Testing
+
+All relay functionality includes comprehensive test coverage:
+
+```bash
+# Run relay integration tests
+cd /home/runner/work/trainstation/trainstation
+python -m pytest app/tests/test_relay_integration.py -v
+
+# Run relay router tests
+python -m pytest app/tests/test_relay_router.py -v
+```
+
+**Test Coverage:**
+- ✅ 17 integration tests (mock mode, HTTP communication, error handling)
+- ✅ 14 router tests (endpoints, validation, error responses)
+- ✅ All action types: on, off, toggle, timed
+- ✅ Mock ESP32 server for CI/CD integration
+
 ### Rebuilding
 
 To rebuild all containers (useful after code changes):

@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from routers import categories, accessories, actions, track_lines, sections, switches, section_connections, train_assets, asset_location_events, logging, track_layout, test_accessory
+from routers import categories, accessories, actions, track_lines, sections, switches, section_connections, train_assets, asset_location_events, logging, track_layout, test_accessory, relay
 from dev_seed import seed_dev_layout
 from logging_config import setup_logging, get_logger
 from middleware import LoggingMiddleware
@@ -83,3 +83,4 @@ app.include_router(asset_location_events.router)
 app.include_router(logging.router)
 app.include_router(track_layout.router)
 app.include_router(test_accessory.router)
+app.include_router(relay.router)
