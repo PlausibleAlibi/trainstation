@@ -1,0 +1,18 @@
+name: Auto-triage bugs
+on:
+  issues:
+    types: [opened]
+jobs:
+  route:
+    if: contains(github.event.issue.labels.*.name, 'bug')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/add-to-project@v1
+        with:
+          project-url: https://github.com/orgs/<your-org>/projects/<id>
+          github-token: ${{ secrets.GH_PROJECTS_TOKEN }}
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            // If you use Projects (beta) fields via GraphQL, set Status="Triage" here,
+            // or rely on project automation rules (recommended).
