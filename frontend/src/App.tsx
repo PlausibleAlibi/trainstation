@@ -5,10 +5,10 @@ import {
   Box,
   Button,
   TextField,
-  Select,
-  MenuItem,
   FormControl,
   InputLabel,
+  Select,
+  MenuItem,
   FormControlLabel,
   Checkbox,
   Table,
@@ -22,8 +22,16 @@ import {
   Snackbar,
   Typography,
   Chip,
+  IconButton,
 } from '@mui/material'
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+} from '@mui/icons-material';
 import { spacing, buttonVariants } from '../shared/theme'
+import { EntityModal, DeleteConfirmationModal } from './components/modal';
+import { createAccessoryModalConfig, categoryModalConfig } from './components/configs/modalConfigs';
 
 /* ================= Types ================= */
 type Category = {
@@ -50,11 +58,7 @@ type AccessoryWithCategory = AccessoryRead & { category?: Category | null };
 // After adding Nginx, switch the fallback to "/api".
 const API = import.meta.env.VITE_API_BASE ?? "http://localhost:8080";
 
-/* Small helper to throw on non-2xx */
-async function j<T>(res: Response): Promise<T> {
-  if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}: ${await res.text()}`);
-  return res.json();
-}
+
 
 /* ================= App ================= */
 export default function App() {
@@ -77,33 +81,31 @@ export default function App() {
 
   // Polling for real-time updates
   const [pollingEnabled, setPollingEnabled] = useState(true);
-  const [pollingInterval, setPollingInterval] = useState(5000); // 5 seconds
+  const pollingInterval = 5000; // 5 seconds
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  // Create Accessory
-  const [fName, setFName] = useState("");
-  const [fCat, setFCat] = useState<number | "">("");
-  const [fType, setFType] = useState<"onOff" | "toggle" | "timed">("onOff");
-  const [fAddr, setFAddr] = useState("");
-  const [fActive, setFActive] = useState(true);
-  const [fTimedMs, setFTimedMs] = useState<number | "">("");
-  const [creatingAcc, setCreatingAcc] = useState(false);
+  // Accessory modal state
+  const [accessoryDialogOpen, setAccessoryDialogOpen] = useState(false);
+  const [editingAccessory, setEditingAccessory] = useState<AccessoryWithCategory | null>(null);
+  const [savingAccessory, setSavingAccessory] = useState(false);
+  const [deleteAccessoryModalOpen, setDeleteAccessoryModalOpen] = useState(false);
+  const [deletingAccessory, setDeletingAccessory] = useState<{ id: number; name: string } | null>(null);
 
-  // Create Category
-  const [cName, setCName] = useState("");
-  const [cDesc, setCDesc] = useState("");
-  const [cSort, setCSort] = useState<number | "">("");
-  const [creatingCat, setCreatingCat] = useState(false);
+  // Category modal state
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [savingCategory, setSavingCategory] = useState(false);
+  const [deleteCategoryModalOpen, setDeleteCategoryModalOpen] = useState(false);
+  const [deletingCategory, setDeletingCategory] = useState<{ id: number; name: string } | null>(null);
 
-  // Edit Accessory
-  const [editId, setEditId] = useState<number | null>(null);
-  const [eaName, setEaName] = useState("");
-  const [eaCat, setEaCat] = useState<number | "">("");
-  const [eaType, setEaType] = useState<"onOff" | "toggle" | "timed">("onOff");
-  const [eaAddr, setEaAddr] = useState("");
-  const [eaActive, setEaActive] = useState(true);
-  const [eaTimedMs, setEaTimedMs] = useState<number | "">("");
-  const [savingAcc, setSavingAcc] = useState(false);
+  // Create modal configurations
+  const accessoryModalConfig = useMemo(() => createAccessoryModalConfig(cats), [cats]);
+
+  // API helper
+  async function apiCall<T>(res: Response): Promise<T> {
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+    return res.json();
+  }
 
   // Debounce search
   useEffect(() => {
@@ -111,15 +113,16 @@ export default function App() {
     return () => clearTimeout(t);
   }, [q]);
 
-  // Toast auto-hide
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 2200);
-    return () => clearTimeout(t);
-  }, [toast]);
-
   /* ---- Loaders ---- */
-  const loadCats = async () => setCats(await j<Category[]>(await fetch(`${API}/categories`)));
+  const loadCats = async () => {
+    try {
+      const response = await fetch(`${API}/categories`);
+      const data = await apiCall<Category[]>(response);
+      setCats(data);
+    } catch (e) {
+      setErr((e as Error).message || "Failed to load categories");
+    }
+  };
 
   const loadAccs = async (silent: boolean = false) => {
     const p = new URLSearchParams({
@@ -136,12 +139,13 @@ export default function App() {
       setErr(null);
     }
     try {
-      const newAccs = await j<AccessoryWithCategory[]>(await fetch(`${API}/accessories?${p.toString()}`));
-      setAccs(newAccs);
+      const response = await fetch(`${API}/accessories?${p.toString()}`);
+      const data = await apiCall<AccessoryWithCategory[]>(response);
+      setAccs(data);
       setLastUpdated(new Date());
-    } catch (e: any) {
+    } catch (e) {
       if (!silent) {
-        setErr(e.message || "Load failed");
+        setErr((e as Error).message || "Load failed");
       }
     } finally {
       if (!silent) {
@@ -153,6 +157,7 @@ export default function App() {
   /* ---- Effects ---- */
   useEffect(() => {
     loadCats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -178,125 +183,162 @@ export default function App() {
   /* ---- Derived ---- */
   const totalAll = useMemo(() => accs.length, [accs]); // quick display
 
-  /* ---- Actions ---- */
-  const beginEdit = (a: AccessoryWithCategory) => {
-    setEditId(a.id);
-    setEaName(a.name);
-    setEaCat(a.categoryId);
-    setEaType(a.controlType);
-    setEaAddr(a.address);
-    setEaActive(a.isActive);
-    setEaTimedMs(a.timedMs ?? "");
+  /* ---- Accessory Actions ---- */
+  const openAccessoryDialog = (accessory?: AccessoryWithCategory) => {
+    setEditingAccessory(accessory || null);
+    setAccessoryDialogOpen(true);
+    setErr(null);
   };
 
-  const cancelEdit = () => setEditId(null);
+  const closeAccessoryDialog = () => {
+    setAccessoryDialogOpen(false);
+    setEditingAccessory(null);
+    setErr(null);
+  };
 
-  const saveAccessory = async (e: React.FormEvent, id: number) => {
-    e.preventDefault();
-    if (!eaName || !eaCat || !eaAddr) { setErr("Fill Name, Category, and Address"); return; }
-    setSavingAcc(true);
+  const saveAccessory = async (formData: Omit<AccessoryRead, 'id'>) => {
+    setSavingAccessory(true);
     setErr(null);
     try {
-      await j(await fetch(`${API}/accessories/${id}`, {
-        method: "PUT",
-        headers: { "content-type": "application/json" },
+      const url = editingAccessory ? `${API}/accessories/${editingAccessory.id}` : `${API}/accessories`;
+      const method = editingAccessory ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: eaName,
-          categoryId: Number(eaCat),
-          controlType: eaType,
-          address: eaAddr,
-          isActive: eaActive,
-          timedMs: eaTimedMs === "" ? null : Number(eaTimedMs),
+          name: formData.name.trim(),
+          categoryId: formData.categoryId,
+          controlType: formData.controlType,
+          address: formData.address.trim(),
+          isActive: formData.isActive,
+          timedMs: formData.timedMs || null,
         }),
-      }));
-      setEditId(null);
+      });
+
+      await apiCall(response);
+      closeAccessoryDialog();
+      if (!editingAccessory) setOffset(0); // Reset to first page on create
       await loadAccs();
-      setToast("Accessory updated");
-    } catch (e: any) {
-      setErr(e.message || "Update failed");
+      setToast(editingAccessory ? 'Accessory updated' : 'Accessory created');
+    } catch (e) {
+      setErr((e as Error).message || 'Failed to save accessory');
+      throw e; // Re-throw to let modal handle it
     } finally {
-      setSavingAcc(false);
+      setSavingAccessory(false);
     }
   };
 
-  const act = async (id: number, kind: "on" | "off" | "apply", body?: any, msg?: string) => {
+  const openDeleteAccessoryModal = (accessory: AccessoryWithCategory) => {
+    setDeletingAccessory({ id: accessory.id, name: accessory.name });
+    setDeleteAccessoryModalOpen(true);
+  };
+
+  const closeDeleteAccessoryModal = () => {
+    setDeleteAccessoryModalOpen(false);
+    setDeletingAccessory(null);
+  };
+
+  const confirmDeleteAccessory = async () => {
+    if (!deletingAccessory) return;
+    setErr(null);
+    try {
+      const response = await fetch(`${API}/accessories/${deletingAccessory.id}`, { method: 'DELETE' });
+      await apiCall(response);
+      closeDeleteAccessoryModal();
+      await loadAccs();
+      setToast('Accessory deleted');
+    } catch (e) {
+      setErr((e as Error).message || 'Failed to delete accessory');
+      throw e;
+    }
+  };
+
+  /* ---- Category Actions ---- */
+  const openCategoryDialog = (category?: Category) => {
+    setEditingCategory(category || null);
+    setCategoryDialogOpen(true);
+    setErr(null);
+  };
+
+  const closeCategoryDialog = () => {
+    setCategoryDialogOpen(false);
+    setEditingCategory(null);
+    setErr(null);
+  };
+
+  const saveCategory = async (formData: Omit<Category, 'id'>) => {
+    setSavingCategory(true);
+    setErr(null);
+    try {
+      const url = editingCategory ? `${API}/categories/${editingCategory.id}` : `${API}/categories`;
+      const method = editingCategory ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          description: formData.description?.trim() || null,
+          sortOrder: formData.sortOrder || 0,
+        }),
+      });
+
+      await apiCall(response);
+      closeCategoryDialog();
+      await loadCats();
+      setToast(editingCategory ? 'Category updated' : 'Category created');
+    } catch (e) {
+      setErr((e as Error).message || 'Failed to save category');
+      throw e;
+    } finally {
+      setSavingCategory(false);
+    }
+  };
+
+  const openDeleteCategoryModal = (category: Category) => {
+    setDeletingCategory({ id: category.id, name: category.name });
+    setDeleteCategoryModalOpen(true);
+  };
+
+  const closeDeleteCategoryModal = () => {
+    setDeleteCategoryModalOpen(false);
+    setDeletingCategory(null);
+  };
+
+  const confirmDeleteCategory = async () => {
+    if (!deletingCategory) return;
+    setErr(null);
+    try {
+      const response = await fetch(`${API}/categories/${deletingCategory.id}`, { method: 'DELETE' });
+      await apiCall(response);
+      closeDeleteCategoryModal();
+      await loadCats();
+      setToast('Category deleted');
+      // Reset filter if deleted category was selected
+      if (selCat === deletingCategory.id) {
+        setSelCat('all');
+      }
+    } catch (e) {
+      setErr((e as Error).message || 'Failed to delete category');
+      throw e;
+    }
+  };
+
+  /* ---- Accessory Control Actions ---- */
+  const act = async (id: number, kind: "on" | "off" | "apply", body?: unknown, msg?: string) => {
     const url = kind === "apply" ? `${API}/actions/accessories/${id}/apply` : `${API}/actions/accessories/${id}/${kind}`;
     setErr(null);
     try {
-      await j(await fetch(url, {
+      const response = await fetch(url, {
         method: "POST",
         headers: body ? { "content-type": "application/json" } : undefined,
         body: body ? JSON.stringify(body) : undefined,
-      }));
+      });
+      await apiCall(response);
       if (msg) setToast(msg);
-    } catch (e: any) {
-      setErr(e.message || "Action failed");
-    }
-  };
-
-  const createAccessory = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!fName || !fCat || !fAddr) { setErr("Fill Name, Category, and Address"); return; }
-    setCreatingAcc(true);
-    setErr(null);
-    try {
-      await j(await fetch(`${API}/accessories`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          name: fName,
-          categoryId: Number(fCat),
-          controlType: fType,
-          address: fAddr,
-          isActive: fActive,
-          timedMs: fTimedMs === "" ? null : Number(fTimedMs),
-        }),
-      }));
-      setFName(""); setFCat(""); setFType("onOff"); setFAddr(""); setFActive(true); setFTimedMs("");
-      setOffset(0);
-      await loadAccs();
-      setToast("Accessory created");
-    } catch (e: any) {
-      setErr(e.message || "Create failed");
-    } finally {
-      setCreatingAcc(false);
-    }
-  };
-
-  const createCategory = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!cName.trim()) { setErr("Category name is required"); return; }
-    setCreatingCat(true);
-    setErr(null);
-    try {
-      await j(await fetch(`${API}/categories`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          name: cName.trim(),
-          description: cDesc.trim() || null,
-          sortOrder: cSort === "" ? 0 : Number(cSort),
-        }),
-      }));
-      setCName(""); setCDesc(""); setCSort("");
-      await loadCats();
-      setToast("Category created");
-    } catch (e: any) {
-      setErr(e.message || "Create category failed");
-    } finally {
-      setCreatingCat(false);
-    }
-  };
-
-  const deleteAccessory = async (id: number) => {
-    if (!confirm("Delete this accessory?")) return;
-    setErr(null);
-    try {
-      await j(await fetch(`${API}/accessories/${id}`, { method: "DELETE" }));
-      await loadAccs();
-      setToast("Accessory deleted");
-    } catch (e: any) {
-      setErr(e.message || "Delete failed");
+    } catch (e) {
+      setErr((e as Error).message || "Action failed");
     }
   };
 
@@ -308,9 +350,19 @@ export default function App() {
           {/* Sidebar */}
           <Box sx={{ width: { xs: '100%', md: 320 }, flexShrink: 0 }}>
             <Paper sx={{ p: spacing.md, height: 'fit-content' }}>
-              <Typography variant="h6" gutterBottom>
-                Categories
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: spacing.md }}>
+                <Typography variant="h6">
+                  Categories
+                </Typography>
+                <IconButton
+                  onClick={() => openCategoryDialog()}
+                  color="primary"
+                  size="small"
+                  title="Add Category"
+                >
+                  <AddIcon fontSize="small" />
+                </IconButton>
+              </Box>
 
               <Button
                 onClick={() => setSelCat("all")}
@@ -326,134 +378,51 @@ export default function App() {
                 .slice()
                 .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name))
                 .map((c) => (
-                  <Button
-                    key={c.id}
-                    onClick={() => setSelCat(c.id)}
-                    variant={selCat === c.id ? "contained" : "outlined"}
-                    fullWidth
-                    sx={{ mb: spacing.sm }}
-                  >
-                    {c.name}
-                  </Button>
+                  <Box key={c.id} sx={{ display: 'flex', gap: spacing.xs, mb: spacing.sm }}>
+                    <Button
+                      onClick={() => setSelCat(c.id)}
+                      variant={selCat === c.id ? "contained" : "outlined"}
+                      fullWidth
+                      sx={{ flex: 1 }}
+                    >
+                      {c.name}
+                    </Button>
+                    <IconButton
+                      onClick={() => openCategoryDialog(c)}
+                      size="small"
+                      title="Edit Category"
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      onClick={() => openDeleteCategoryModal(c)}
+                      size="small"
+                      color="error"
+                      title="Delete Category"
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
                 ))}
-
-              {/* New Category */}
-              <Typography variant="h6" sx={{ mt: spacing.lg, mb: spacing.md }}>
-                New Category
-              </Typography>
-              <Box component="form" onSubmit={createCategory} sx={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
-                <TextField
-                  value={cName}
-                  onChange={(e) => setCName(e.target.value)}
-                  label="Name"
-                  size="small"
-                  fullWidth
-                />
-                <TextField
-                  value={cDesc}
-                  onChange={(e) => setCDesc(e.target.value)}
-                  label="Description (optional)"
-                  size="small"
-                  fullWidth
-                />
-                <TextField
-                  type="number"
-                  value={cSort}
-                  onChange={(e) => setCSort(e.target.value === "" ? "" : Number(e.target.value))}
-                  label="Sort order"
-                  size="small"
-                  fullWidth
-                />
-                <Button
-                  type="submit"
-                  disabled={creatingCat}
-                  {...buttonVariants.primary}
-                  fullWidth
-                >
-                  {creatingCat ? "Creating…" : "Create"}
-                </Button>
-              </Box>
-
-              {/* New Accessory */}
-              <Typography variant="h6" sx={{ mt: spacing.lg, mb: spacing.md }}>
-                New Accessory
-              </Typography>
-              <Box component="form" onSubmit={createAccessory} sx={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
-                <TextField
-                  value={fName}
-                  onChange={(e) => setFName(e.target.value)}
-                  label="Name"
-                  size="small"
-                  fullWidth
-                />
-                <FormControl size="small" fullWidth>
-                  <InputLabel>Category</InputLabel>
-                  <Select
-                    value={fCat}
-                    onChange={(e) => setFCat(e.target.value ? Number(e.target.value) : "")}
-                    label="Category"
-                  >
-                    <MenuItem value="">
-                      <em>Select Category...</em>
-                    </MenuItem>
-                    {cats.map((c) => (
-                      <MenuItem key={c.id} value={c.id}>
-                        {c.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl size="small" fullWidth>
-                  <InputLabel>Type</InputLabel>
-                  <Select
-                    value={fType}
-                    onChange={(e) => setFType(e.target.value as any)}
-                    label="Type"
-                  >
-                    <MenuItem value="onOff">onOff</MenuItem>
-                    <MenuItem value="toggle">toggle</MenuItem>
-                    <MenuItem value="timed">timed</MenuItem>
-                  </Select>
-                </FormControl>
-                <TextField
-                  value={fAddr}
-                  onChange={(e) => setFAddr(e.target.value)}
-                  label="Address"
-                  size="small"
-                  fullWidth
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={fActive}
-                      onChange={(e) => setFActive(e.target.checked)}
-                    />
-                  }
-                  label="Active"
-                />
-                <TextField
-                  type="number"
-                  value={fTimedMs}
-                  onChange={(e) => setFTimedMs(e.target.value === "" ? "" : Number(e.target.value))}
-                  label="Timed ms (optional)"
-                  size="small"
-                  fullWidth
-                />
-                <Button
-                  type="submit"
-                  disabled={creatingAcc}
-                  {...buttonVariants.primary}
-                  fullWidth
-                >
-                  {creatingAcc ? "Creating…" : "Create"}
-                </Button>
-              </Box>
             </Paper>
           </Box>
 
           {/* Content */}
           <Box sx={{ flex: 1 }}>
             <Paper sx={{ p: spacing.md }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: spacing.md }}>
+                <Typography variant="h5">
+                  Accessories & Categories
+                </Typography>
+                <Button
+                  startIcon={<AddIcon />}
+                  onClick={() => openAccessoryDialog()}
+                  {...buttonVariants.primary}
+                >
+                  Add Accessory
+                </Button>
+              </Box>
+
               <Box sx={{ display: 'flex', gap: spacing.md, alignItems: 'center', mb: spacing.md, flexWrap: 'wrap' }}>
                 <TextField
                   value={q}
@@ -538,186 +507,84 @@ export default function App() {
                       <TableCell>Category</TableCell>
                       <TableCell>Type</TableCell>
                       <TableCell>Address</TableCell>
-                      <TableCell>Active</TableCell>
-                      <TableCell>Timed ms</TableCell>
-                      <TableCell>Actions</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell>Timed (ms)</TableCell>
+                      <TableCell align="right">Actions</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {accs.map((a) => {
-                      const editing = editId === a.id;
-                      return (
-                        <TableRow key={a.id}>
-                          <TableCell>
-                            {editing ? (
-                              <TextField
-                                value={eaName}
-                                onChange={(e) => setEaName(e.target.value)}
-                                size="small"
-                                fullWidth
-                              />
-                            ) : (
-                              a.name
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {editing ? (
-                              <FormControl size="small" fullWidth>
-                                <Select
-                                  value={eaCat}
-                                  onChange={(e) => setEaCat(e.target.value ? Number(e.target.value) : "")}
-                                  displayEmpty
-                                >
-                                  <MenuItem value="">
-                                    <em>Category…</em>
-                                  </MenuItem>
-                                  {cats.map((c) => (
-                                    <MenuItem key={c.id} value={c.id}>
-                                      {c.name}
-                                    </MenuItem>
-                                  ))}
-                                </Select>
-                              </FormControl>
-                            ) : (
-                              a.category?.name ?? a.categoryId
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {editing ? (
-                              <FormControl size="small" fullWidth>
-                                <Select
-                                  value={eaType}
-                                  onChange={(e) => setEaType(e.target.value as any)}
-                                >
-                                  <MenuItem value="onOff">onOff</MenuItem>
-                                  <MenuItem value="toggle">toggle</MenuItem>
-                                  <MenuItem value="timed">timed</MenuItem>
-                                </Select>
-                              </FormControl>
-                            ) : (
-                              a.controlType
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {editing ? (
-                              <TextField
-                                value={eaAddr}
-                                onChange={(e) => setEaAddr(e.target.value)}
-                                size="small"
-                                fullWidth
-                              />
-                            ) : (
-                              a.address
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {editing ? (
-                              <Checkbox
-                                checked={eaActive}
-                                onChange={(e) => setEaActive(e.target.checked)}
-                              />
-                            ) : (
-                              <Chip
-                                label={a.isActive ? "Active" : "Inactive"}
-                                color={a.isActive ? "success" : "default"}
-                                size="small"
-                                variant={a.isActive ? "filled" : "outlined"}
-                              />
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {editing ? (
-                              <TextField
-                                type="number"
-                                value={eaTimedMs}
-                                onChange={(e) => setEaTimedMs(e.target.value === "" ? "" : Number(e.target.value))}
-                                placeholder="(optional)"
-                                size="small"
-                                fullWidth
-                              />
-                            ) : (
-                              a.timedMs ?? "—"
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Box sx={{ display: 'flex', gap: spacing.sm, flexWrap: 'wrap' }}>
-                              {editing ? (
-                                <>
-                                  <Button
-                                    onClick={(e) => saveAccessory(e, a.id)}
-                                    disabled={savingAcc}
-                                    {...buttonVariants.primary}
-                                    size="small"
-                                  >
-                                    {savingAcc ? "Saving…" : "Save"}
-                                  </Button>
-                                  <Button
-                                    onClick={cancelEdit}
-                                    {...buttonVariants.outline}
-                                    size="small"
-                                  >
-                                    Cancel
-                                  </Button>
-                                </>
-                              ) : (
-                                <>
-                                  <Button
-                                    onClick={() => act(a.id, "on", undefined, "ON")}
-                                    disabled={!a.isActive}
-                                    {...buttonVariants.success}
-                                    size="small"
-                                  >
-                                    On
-                                  </Button>
-                                  <Button
-                                    onClick={() => act(a.id, "off", undefined, "OFF")}
-                                    disabled={!a.isActive}
-                                    {...buttonVariants.secondary}
-                                    size="small"
-                                  >
-                                    Off
-                                  </Button>
-                                  <Button
-                                    onClick={() => act(a.id, "apply", undefined, "Applied")}
-                                    disabled={!a.isActive}
-                                    {...buttonVariants.outline}
-                                    size="small"
-                                  >
-                                    Apply
-                                  </Button>
-                                  <Button
-                                    onClick={() => act(a.id, "apply", { milliseconds: 2000 }, "2s Applied")}
-                                    disabled={!a.isActive}
-                                    {...buttonVariants.outline}
-                                    size="small"
-                                  >
-                                    Apply 2s
-                                  </Button>
-                                  <Button
-                                    onClick={() => beginEdit(a)}
-                                    {...buttonVariants.outline}
-                                    size="small"
-                                  >
-                                    Edit
-                                  </Button>
-                                  <Button
-                                    onClick={() => deleteAccessory(a.id)}
-                                    {...buttonVariants.error}
-                                    size="small"
-                                  >
-                                    Delete
-                                  </Button>
-                                </>
-                              )}
-                            </Box>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                    {accs.map((a) => (
+                      <TableRow key={a.id}>
+                        <TableCell>{a.name}</TableCell>
+                        <TableCell>{a.category?.name ?? a.categoryId}</TableCell>
+                        <TableCell>{a.controlType}</TableCell>
+                        <TableCell>{a.address}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={a.isActive ? "Active" : "Inactive"}
+                            color={a.isActive ? "success" : "default"}
+                            size="small"
+                            variant={a.isActive ? "filled" : "outlined"}
+                          />
+                        </TableCell>
+                        <TableCell>{a.timedMs ?? "—"}</TableCell>
+                        <TableCell align="right">
+                          <Box sx={{ display: 'flex', gap: spacing.xs, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                            <Button
+                              onClick={() => act(a.id, "on", undefined, "ON")}
+                              disabled={!a.isActive}
+                              {...buttonVariants.success}
+                              size="small"
+                            >
+                              On
+                            </Button>
+                            <Button
+                              onClick={() => act(a.id, "off", undefined, "OFF")}
+                              disabled={!a.isActive}
+                              {...buttonVariants.secondary}
+                              size="small"
+                            >
+                              Off
+                            </Button>
+                            <Button
+                              onClick={() => act(a.id, "apply", undefined, "Applied")}
+                              disabled={!a.isActive}
+                              {...buttonVariants.outline}
+                              size="small"
+                            >
+                              Apply
+                            </Button>
+                            <Button
+                              onClick={() => act(a.id, "apply", { milliseconds: 2000 }, "2s Applied")}
+                              disabled={!a.isActive}
+                              {...buttonVariants.outline}
+                              size="small"
+                            >
+                              Apply 2s
+                            </Button>
+                            <IconButton
+                              onClick={() => openAccessoryDialog(a)}
+                              size="small"
+                              title="Edit Accessory"
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton
+                              onClick={() => openDeleteAccessoryModal(a)}
+                              size="small"
+                              color="error"
+                              title="Delete Accessory"
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                     {accs.length === 0 && !loading && (
                       <TableRow>
                         <TableCell colSpan={7} align="center" sx={{ py: spacing.lg, color: 'text.secondary' }}>
-                          No accessories
+                          No accessories found
                         </TableCell>
                       </TableRow>
                     )}
@@ -739,6 +606,50 @@ export default function App() {
           {toast}
         </Alert>
       </Snackbar>
+
+      {/* Accessory Modal */}
+      <EntityModal
+        open={accessoryDialogOpen}
+        onClose={closeAccessoryDialog}
+        onSave={saveAccessory}
+        config={accessoryModalConfig}
+        initialData={editingAccessory || undefined}
+        isEditing={!!editingAccessory}
+        loading={savingAccessory}
+        error={err}
+      />
+
+      {/* Category Modal */}
+      <EntityModal
+        open={categoryDialogOpen}
+        onClose={closeCategoryDialog}
+        onSave={saveCategory}
+        config={categoryModalConfig}
+        initialData={editingCategory || undefined}
+        isEditing={!!editingCategory}
+        loading={savingCategory}
+        error={err}
+      />
+
+      {/* Delete Accessory Confirmation */}
+      <DeleteConfirmationModal
+        open={deleteAccessoryModalOpen}
+        onClose={closeDeleteAccessoryModal}
+        onConfirm={confirmDeleteAccessory}
+        entityName={deletingAccessory?.name || ''}
+        entityType="Accessory"
+        warning="This will permanently delete the accessory and all its associated data."
+      />
+
+      {/* Delete Category Confirmation */}
+      <DeleteConfirmationModal
+        open={deleteCategoryModalOpen}
+        onClose={closeDeleteCategoryModal}
+        onConfirm={confirmDeleteCategory}
+        entityName={deletingCategory?.name || ''}
+        entityType="Category"
+        warning="This will delete the category. Make sure no accessories are using this category."
+      />
     </>
   );
 }

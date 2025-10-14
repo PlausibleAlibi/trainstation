@@ -165,3 +165,86 @@ export const createConnectionModalConfig = (
     },
   ],
 });
+
+export const createAccessoryModalConfig = (
+  categories: Array<{id: number; name: string}>
+): ModalConfig => ({
+  title: 'Accessory',
+  maxWidth: 'sm',
+  fields: [
+    {
+      name: 'name',
+      label: 'Name',
+      type: 'text',
+      required: true,
+      placeholder: 'Enter accessory name',
+    },
+    {
+      name: 'categoryId',
+      label: 'Category',
+      type: 'select',
+      required: true,
+      options: categories.map(cat => ({
+        value: cat.id,
+        label: cat.name
+      })),
+    },
+    {
+      name: 'controlType',
+      label: 'Control Type',
+      type: 'select',
+      required: true,
+      options: [
+        { value: 'onOff', label: 'On/Off' },
+        { value: 'toggle', label: 'Toggle' },
+        { value: 'timed', label: 'Timed' },
+      ],
+    },
+    {
+      name: 'address',
+      label: 'Address',
+      type: 'text',
+      required: true,
+      placeholder: 'Enter hardware address',
+    },
+    {
+      name: 'timedMs',
+      label: 'Timed Duration (ms)',
+      type: 'number',
+      placeholder: 'Optional duration in milliseconds',
+    },
+    {
+      name: 'isActive',
+      label: 'Active',
+      type: 'checkbox',
+    },
+  ],
+});
+
+export const categoryModalConfig: ModalConfig = {
+  title: 'Category',
+  maxWidth: 'sm',
+  fields: [
+    {
+      name: 'name',
+      label: 'Name',
+      type: 'text',
+      required: true,
+      placeholder: 'Enter category name',
+    },
+    {
+      name: 'description',
+      label: 'Description',
+      type: 'textarea',
+      placeholder: 'Optional description',
+      multiline: true,
+      rows: 3,
+    },
+    {
+      name: 'sortOrder',
+      label: 'Sort Order',
+      type: 'number',
+      placeholder: 'Optional sort order (default: 0)',
+    },
+  ],
+};
