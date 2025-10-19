@@ -28,102 +28,72 @@
 - `requirements.txt`: Python dependencies.
 - `Makefile`: Common build/test commands.
 - Root-level Docker Compose files for different environments.
+````instructions
+# Copilot instructions for AI coding agents — trainstation
 
-## Developer Workflows
-- **Backend**:
-  - Development: `cd app && uvicorn main:app --reload` (port 8000)
-  - Production: Use Docker compose with `make dev` or `make prod`
-  - Migrations: `cd app && alembic revision --autogenerate -m "description"` then `alembic upgrade head`
-  - Seed data: `python seed.py` or `python run_dev_seed.py` for development data
-  - Testing: `python -m pytest app/tests/ -v` (requires database setup)
-  
-- **Frontend**:
-  - Development: `cd frontend && npm install && npm run dev` (port 5173)
-  - Build: `npm run build` (outputs to `dist/`)
-  - Testing: `npm run test` (Vitest), `npm run test:coverage` for coverage
-  - Linting: `npm run lint` (ESLint with TypeScript support)
-  
-- **Full Stack Development**:
-  - Development mode: `make dev` or `./Scripts/dev.sh` (uses Vite dev server + HMR)
-  - Production mode: `make prod` or `./Scripts/prod.sh` (builds static files)
-  - Service management: `make up`, `make down`, `make logs`, `make ps`
+Summary
+- Backend: FastAPI app in `app/` (entry: `app/main.py`). Frontend: React + TypeScript + Vite in `frontend/`.
+- Multi-service Docker compose + nginx reverse proxy. Postgres + Alembic for DB. Seq used for structured logs.
 
-## Architecture & Infrastructure
-- **Multi-service Docker setup** with nginx reverse proxy
-- **Services**: API (FastAPI), Frontend (React), PostgreSQL DB, Seq logging, nginx
-- **Networks**: All services communicate via `trainstation` Docker network
-- **Volumes**: Persistent storage for database (`dbdata`) and logs (`seqdata`)
-- **Health checks**: API and database have health monitoring
-- **Environment modes**: Development (with HMR) and production (optimized builds)
+What to read first (quick path to context)
+- `app/main.py` — app startup, middleware and router registration.
+- `app/db.py` and `app/models.py` — DB session and core models.
+- `app/routers/` — concrete API surfaces (follow patterns in `accessories`, `actions`).
+- `frontend/src/` and `frontend/AppRouter.tsx` — routing and API client patterns.
+- `Makefile`, `docker-compose.yml`, and `deploy/` — how services are composed for dev/prod.
 
-## Testing Infrastructure
-- **Backend**: pytest with asyncio support
-  - Location: `app/tests/`
-  - Includes: API endpoint tests, model tests, integration tests
-  - Coverage: Available via pytest-cov
-  - Note: Some tests may require database setup/mocking
-  
-- **Frontend**: Vitest with React Testing Library
-  - Location: `frontend/tests/`
-  - Setup: `tests/setup.ts` configures jsdom environment
-  - Coverage: V8 provider with HTML/JSON reports
-  - Includes: Component tests, service tests, modal tests
+Project-specific conventions (do not invent these)
+- API domain per router file (e.g., `app/routers/accessories.py`); register each router in `app/main.py`.
+- Keep SQLAlchemy models in `app/models.py` and Pydantic DTOs in `app/schemas.py`.
+- Alembic migrations live in `app/alembic/`; use `cd app && alembic ...` for migration commands.
+- Hardware abstraction: `app/hardware/` contains control code — changes here require careful integration testing (hardware sims available in `app/examples/`).
 
-## Patterns & Conventions
-- **API Routing**: Each API domain has its own file in `app/routers/` (accessories, actions, etc.)
-- **Models/Schemas**: SQLAlchemy models (`models.py`) and Pydantic schemas (`schemas.py`) kept separate
-- **Configuration**: Environment files (`.env`, `.env.dev`, `.env.prod`) and `version.env`
-- **Frontend**: TypeScript strict mode, ESLint with React hooks support, Material-UI components
-- **Database**: Alembic migrations with version tracking, PostgreSQL with health checks
-- **Logging**: Structured logging with Seq for centralized collection and analysis
+Developer workflows & exact commands
+- Local backend dev server (fast feedback):
+  - cd into backend and run: `cd app && uvicorn main:app --reload --port 8000`
+- Full-stack dev (recommended):
+  - From repo root: `make dev` (starts frontend dev server, API, Postgres, nginx proxy in compose)
+- Create and apply DB migrations:
+  - `cd app && alembic revision --autogenerate -m "describe"`
+  - `cd app && alembic upgrade head`
+- Seed development data: `python run_dev_seed.py` (root) or `python seed.py` depending on target seed file.
+- Tests:
+  - Backend: `python -m pytest app/tests/ -q` (some tests require a running Postgres/mocked DB)
+  - Frontend: `cd frontend && npm ci && npm run test`
 
-## Integration Points
-- **Database**: SQLAlchemy ORM + Alembic migrations, PostgreSQL with connection pooling
-- **API Communication**: REST endpoints with FastAPI automatic OpenAPI docs (`/api/docs`)
-- **Frontend/Backend**: nginx proxy routes `/api/*` to backend, frontend served as static files
-- **Docker Orchestration**: Multi-container setup with service dependencies and health checks
-- **Development**: Hot module replacement via Vite dev server proxied through nginx
-- **Logging**: Backend structured logs sent to Seq, accessible via web UI (port 5341)
+Patterns and examples to copy
+- Router handler pattern: take request, use DB session from `app/db.py`, call model methods, return Pydantic schema. See `app/routers/train_assets.py` for a typical example.
+- Logging: use structured logger configured in `app/logging_config.py`; include request/session ids for traceability.
+- Configuration: read from environment files in `deploy/` and `version.env`. Prefer existing env vars rather than adding new ones.
 
-## Common Commands
-```bash
-# Development (with hot reload)
-make dev                    # Start all services in dev mode
-docker compose logs -f api  # View API logs
-docker compose logs -f frontend  # View frontend logs
+Integration & cross-service notes
+- nginx proxies `/api/*` to the API container; frontend expects `/api` base paths. Keep route changes compatible with proxy.
+- Seq ingest runs on the compose network (ports in `docker-compose.yml`); avoid hardcoding localhost for log endpoints.
+- Docker compose networks: services communicate on `trainstation` network — use service names (e.g., `db`) in connection strings inside compose.
 
-# Production 
-make prod                   # Start optimized production build
-make up                     # Background start (uses root compose files)
-make down                   # Stop all services
+Small pitfalls observed
+- Many backend tests assume a DB is available or use fixtures that set up a test DB. If adding tests, either mock DB or add fixtures that create ephemeral test schemas.
+- Hardware changes require simulation: don't assume hardware is present in CI. Use example/mock implementations in `app/examples/`.
 
-# Database
-cd app && alembic upgrade head      # Apply migrations
-cd app && alembic revision --autogenerate -m "description"  # Create migration
+When changing project structure
+- Update `app/main.py` router registration and `Makefile` targets. Keep `docker-compose*.yml` in sync with service names and ports.
 
-# Testing
-cd frontend && npm run test         # Frontend tests
-cd / && python -m pytest app/tests/ -v  # Backend tests (from root)
+Style and safety hints for automated edits
+- Prefer small, focused diffs (one file/feature at a time). Follow existing naming (snake_case for python modules, PascalCase for React components).
+- Avoid changing migration history; add forward migrations only.
+- Do not commit secrets. Use `.env` and `deploy/sample.env` for guidance.
 
-# Linting & Code Quality
-cd frontend && npm run lint         # ESLint check
-cd frontend && npm run test:coverage # Test coverage report
-```
+Where to place tests
+- Backend unit/integration: `app/tests/` following pytest conventions.
+- Frontend tests: `frontend/tests/` with Vitest and React Testing Library.
 
-## Development Examples
-- **Add API route**: Create file in `app/routers/`, register router in `main.py` imports and app.include_router()
-- **Add frontend page**: Create component in `frontend/src/`, update routing in `AppRouter.tsx`
-- **Database changes**: Create migration with `alembic revision`, modify models in `models.py`, update schemas in `schemas.py`
-- **Add tests**: Backend tests in `app/tests/`, frontend tests in `frontend/tests/` following existing patterns
-- **Environment config**: Update `.env` files for different deployment modes, use environment variables in Docker compose
+Key files to reference in PRs or patches
+- app/main.py, app/db.py, app/models.py, app/schemas.py, app/routers/*, app/alembic/, frontend/src/, Makefile, docker-compose.yml
 
-## Troubleshooting
-- **Backend tests failing**: Check database connection, ensure migrations are applied
-- **Frontend build issues**: Check TypeScript errors, verify dependencies are installed
-- **Docker issues**: Use `docker compose down` then `make dev` or `make prod` to rebuild
-- **Database connection**: Verify PostgreSQL service is healthy, check connection strings in `.env`
-- **Port conflicts**: Default ports are 80 (nginx), 5341 (Seq UI), 5342 (Seq ingestion)
+If anything is unclear, ask for:
+- Which environment (dev vs prod) the change targets, and whether hardware sims should be used for testing.
 
----
+_This file is maintained for AI agents. Please tell me if you'd like additional examples or editable templates (PR body, migration checklist)._ 
 
-_This file is automatically maintained. Update when project structure or workflows change to keep AI agents productive._
+````
+
